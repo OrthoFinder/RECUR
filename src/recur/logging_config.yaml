@@ -1,0 +1,127 @@
+# version: 1
+# disable_existing_loggers: False
+# formatters:
+#     brief:
+#         format: '%(message)s'
+#     default:
+#         format: '%(asctime)s: %(name)s - %(levelname)s - %(message)s'
+#         datefmt: '%Y-%m-%d %H:%M:%S'
+# handlers:
+#   production_console:
+#     class: logging.StreamHandler
+#     level: DEBUG
+#     formatter: brief
+#     stream: ext://sys.stdout
+#     filters: [console_only]
+#   file:
+#     class: logging.FileHandler
+#     level: DEBUG
+#     formatter: default
+#     filename: '{log_path}'  # Placeholder for log path
+#     mode: w
+# loggers:
+#   production:
+#     level: DEBUG
+#     handlers: [production_console, file]
+#     propagate: no
+# filters:
+#   console_only:
+#     (): module.ConsoleOnlyFilter
+
+
+# version: 1
+# disable_existing_loggers: False
+# formatters:
+#   brief:
+#     format: '%(message)s'
+#   default:
+#     format: '%(asctime)s: %(name)s - %(levelname)s - %(message)s'
+#     datefmt: '%Y-%m-%d %H:%M:%S'
+# handlers:
+#   console:
+#     class: logging.StreamHandler
+#     level: DEBUG
+#     formatter: brief
+#     stream: ext://sys.stdout
+#     filters: [console_only]
+#   file:
+#     class: logging.FileHandler
+#     level: DEBUG
+#     formatter: default
+#     filename: ''  # Placeholder, will be replaced in the setup_logging function
+#     mode: w
+# loggers:
+#   production:
+#     level: DEBUG
+#     handlers: [console, file]
+#     propagate: no
+# filters:
+#   console_only:
+#     (): __main__.ConsoleOnlyFilter
+
+
+# version: 1
+# disable_existing_loggers: False
+# formatters:
+#   brief:
+#     format: '%(message)s'
+#   default:
+#     format: '%(asctime)s: %(name)s - %(levelname)s - %(message)s'
+#     datefmt: '%Y-%m-%d %H:%M:%S'
+# handlers:
+#   console:
+#     class: logging.StreamHandler
+#     level: DEBUG
+#     formatter: brief
+#     stream: ext://sys.stdout
+#     filters: [console_and_file]
+#   file:
+#     class: logging.FileHandler
+#     level: DEBUG
+#     formatter: default
+#     filename: '{log_path}'  # Placeholder, will be replaced in the setup_logging function
+#     mode: w
+#     filters: [file_only]
+# loggers:
+#   production:
+#     level: DEBUG
+#     handlers: [console, file]
+#     propagate: no
+# filters:
+#   console_and_file:
+#     (): module.ConsoleAndFileFilter  # Placeholder to be replaced dynamically
+#   file_only:
+#     (): module.FileOnlyFilter  # Placeholder to be replaced dynamically
+
+
+version: 1
+disable_existing_loggers: False
+formatters:
+  brief:
+    format: '%(message)s'
+  default:
+    format: '%(asctime)s: %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: brief
+    stream: ext://sys.stdout
+    filters: [console_only]
+  file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: default
+    filename: ''  # Placeholder, will be replaced in the setup_logging function
+    mode: w
+loggers:
+  production:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: no
+filters:
+  console_only:
+    (): placeholder.ConsoleOnlyFilter  # Placeholder to be replaced dynamically
+  file_only:
+    (): placeholder.FileOnlyFilter 

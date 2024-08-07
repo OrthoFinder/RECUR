@@ -1,0 +1,7 @@
+numpy
+scipy
+dendropy
+pyyaml
+types-PyYAML
+resource
+psutil

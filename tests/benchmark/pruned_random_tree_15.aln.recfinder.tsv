@@ -1,0 +1,4 @@
+Site	Parent	Child	Recurrence	Reversion	P-Value	AllSiteSubs	SiteComposition
+2	K	S	2	0	0.09	K>S:2	K:6,S:2
+4	A	Q	2	0	0.09	A>Q:2	A:5,Q:3
+6	F	Y	2	0	0.18	F>Y:2	F:5,Y:3

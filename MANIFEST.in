@@ -1,0 +1,8 @@
+recursive-include src/recur/genetic_codes *
+recursive-include ExampleData *
+include src/recur/logging_config.yaml
+recursive-include src/recur/bin *
+global-exclude __pycache__
+global-exclude *.py[cod]
+include README.md
+include LICENSE
