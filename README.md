@@ -16,48 +16,49 @@ Finding Recurrent Substitutions in Multiple Sequence Alignments
 ## Installation
 The recurrence analysis implemented by RECUR utilises two main feaures from IQ-TREE2, i.e., [Ancestral sequence reconstruction](http://www.iqtree.org/doc/Command-Reference#ancestral-sequence-reconstruction) to infer the extinct node sequences and [Sequence simulators](http://www.iqtree.org/doc/AliSim) to build the simulated phylogeny. 
 
-- Linux
+- **Linux**
 
-    If you are working on a Linux machine or WSL2, runing RECUR is straigtforward. Installation of IQ-TREE2 is not necessary.
+  If you are working on a Linux machine or WSL2, runing RECUR is straigtforward. Installation of IQ-TREE2 is not necessary.
 
-    Before installing any relevant dependencies or packages, it is recommanded that you create and activate a new virtual environment. You can do so by running:
-    ```
-    python3 -m venv .venv && . .venv/bin/activate
-    ```
+  Before installing any relevant dependencies or packages, it is recommanded that you create and activate a new virtual environment. You can do so by running:
+  ```
+  python3 -m venv .venv && . .venv/bin/activate
+  ```
 
-    1. Clone the repository
-    ```
-    git clone https://github.com/OrthoFinder/RECUR.git
-    ```
-    2. Navigate into the cloned repository
-    ```
-    cd RECUR
-    ```
-    3. Install the package [Optional]
-    ```
-    pip install .
-    ```
-    To test your installation, please run
+  1. Clone the repository
+  ```
+  git clone https://github.com/OrthoFinder/RECUR.git
+  ```
+  2. Navigate into the cloned repository
+  ```
+  cd RECUR
+  ```
+  3. Install the package [Optional]
+  ```
+  pip install .
+  ```
+  To test your installation, please run
 
-    ```
-    recur -f ExampleData -st AA --outgroups ExampleData
-    ```
-     
-    If you do not wish to install the RECUR package, you can simply run the following command to install the required dependencies.
-
-    ```
-    pip install -r requirements.txt
-    ```
-    Then run 
-    ```
-    python3 recur.py -f ExampleData -st AA --outgroups ExampleData
-    ```
-    to test the installation and the environment. 
+  ```
+  recur -f ExampleData -st AA --outgroups ExampleData
+  ```
     
-    > NOTE: if python3 does not work, please try python.
+  If you do not wish to install the RECUR package, you can simply run the following command to install the required dependencies.
 
-- Windows and macOS
-  If you are on a Windows machine or MAC, you need to install the IQ-TREE2 first before you can run RECUR. You can download the latest version of IQ-TREE2 in [here](http://www.iqtree.org/#download).
+  ```
+  pip install -r requirements.txt
+  ```
+  Then run 
+  ```
+  python3 recur.py -f ExampleData -st AA --outgroups ExampleData -te ExampleData
+  ```
+  to test the installation and the environment. 
+  
+  > NOTE: if python3 does not work, please try python.
+
+- **Windows and macOS**
+
+  If you are on a Windows machine or a MAC, you need to install the IQ-TREE2 first before you can run RECUR. You can download the latest version of IQ-TREE2 in [here](http://www.iqtree.org/#download).
 
   Once you have IQ-TREE2 installed, you can follow the previous steps to install RECUR or just the dependencies. Then run oen of the following commands (depending one whether you have installed RECUR or not) to test if RECUR runs on your machine
   * With RECUR installed 
@@ -70,7 +71,8 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
     ```
   where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package. 
 
-- Conda 
+- **Conda**
+
   Working in the conda environment can be the easiest when you do not have access to a Linux machine. You can create and activate a new environment by running:
 
     ```
@@ -85,15 +87,59 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
   Now that you have a suitable environment with IQ-TREE2 installed, you can follow the previous steps to install RECUR directly or the relevant dependencies.
   * With RECUR installed 
     ```
-    recur -f ExampleData -st AA --outgroups ExampleData -iv conda
+    recur -f ExampleData -st AA --outgroups ExampleData -te ExampleData -iv conda
     ```
   * Without RECUR installed 
       ```
-    python3 recur.py -f ExampleData -st AA --outgroups ExampleData -iv conda
+    python3 recur.py -f ExampleData -st AA --outgroups ExampleData  -te ExampleData -iv conda
     ```
+
+- **Docker**
+
+  Apart from the above methods, you can also run RECUR inside a container. 
+
+  - Personal computer
+  
+    Before you can run the RECUR container, you need to have Docker Desktop installed. 
+    - Windows: https://docs.docker.com/desktop/install/windows-install/
+    - macOS: https://docs.docker.com/desktop/install/mac-install/
+    - Linux: https://docs.docker.com/desktop/install/linux-install/
+
+    Once you have the Docker Desktop installed, please luanch it and run the following command in the terminal to check if it is up and running.
+
+    ```
+    docker version
+    ```
+  - **Server**
+
+    If you need to install the Docker Engine before you can run the RECUR container.
+
+    Please find the right docker engine to install on your server in [here](https://docs.docker.com/engine/install/).
+
+  With either Docker Decktop or Docker Engine installed on your machine, you can simply run the following command to test if you can run the RECUR container
+  ```
+  docker container run -it --rm orthofinder/recur:v1.0.0
+  ```
+  To run RECUR container on your dataset, you will need to create a folder which contains your data in your current working directory. For instance, you have a data folder called MyData, you can run the following command to start the RECUR container and make it run your dataset.
+  ```
+  docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData orthofinder/recur:v1.0.0 recur -f MyData -st AA --outgroups MyData   
+  ```
+  Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
 
 ## Usage
 (Instructions on how to use the project)
+
+In this section, we will dive deep into the options you can have to run RECUR. The command shown in this section will be based on the assumption that you have RECUR installed on your machine. 
+
+- **Simple usage**
+
+  RECUR can run on either a protien or a CODON alignment. 
+  ```
+  recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CODON>
+  ```
+
+
+- **Advanced usage**
 
 
 ## Contributing
