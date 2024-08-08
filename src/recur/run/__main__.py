@@ -818,6 +818,7 @@ def main(args: Optional[List[str]] = None):
                 production_logger = util.setup_logging(results_dir, "w", "brief")
                 
                 production_logger.info(f"{input_command}", extra={'to_file': True, 'to_console': False})
+                print()
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Starting RECUR v%s" % __version__, extra={'to_file': True, 'to_console': True})
                 # production_logger.info("Using %d thread(s) for RECUR algorithm\n" % options.nthreads, extra={'to_file': True, 'to_console': True})

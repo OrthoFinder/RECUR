@@ -69,7 +69,7 @@ class FileHandler(object):
                 print("\nWARNING: Files have been ignored as they don't appear to be ALN files:")
                 for f in excludedFiles:
                     print(f"    {f}")
-                print("RECUR expects ALN files to have one of the following extensions: %s" % (", ".join(alnExtensions)), end="\n"*2)
+                print("RECUR expects ALN files to have one of the following extensions: %s" % (", ".join(alnExtensions)))
             
             if len(originalALNFilenames) == 0:
                 print("\nNo fasta files found in supplied directory: %s" % alnDir)

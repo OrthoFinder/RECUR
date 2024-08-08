@@ -1,11 +1,6 @@
 import os 
 import sys
 import pytest
-import shutil
-import pathlib
-from typing import Tuple 
-import multiprocessing as mp
-import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
