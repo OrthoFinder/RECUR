@@ -24,24 +24,19 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
     ```
     python3 -m venv .venv && . .venv/bin/activate
     ```
-    - Option 1: Using pip to install directly from GitHub
-        ```
-        pip install git+https://github.com/OrthoFinder/RECUR.git
-        ```
-    - Option 2: Using pip to install directly from GitHub
 
-      1. Clone the repository
-      ```
-      git clone https://github.com/OrthoFinder/RECUR.git
-      ```
-      2. Navigate into the cloned repository
-      ```
-      cd RECUR
-      ```
-      3. Install the package [Optional]
-      ```
-      pip install .
-      ```
+    1. Clone the repository
+    ```
+    git clone https://github.com/OrthoFinder/RECUR.git
+    ```
+    2. Navigate into the cloned repository
+    ```
+    cd RECUR
+    ```
+    3. Install the package [Optional]
+    ```
+    pip install .
+    ```
     To test your installation, please run
 
     ```
