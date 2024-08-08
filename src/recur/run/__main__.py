@@ -80,23 +80,22 @@ def initialise_recur(iqtree_version: Optional[str] = None):
 
     my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
     system = platform.system()
-    if system == "Linux":  # Other Unix-like systems (e.g., Linux)
-        try:
-            mp.set_start_method('fork')
-            if iqtree_version == 'local':
-                my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
-                print(f"Updated PATH for local version: {my_env['PATH']}")
-                
-                if CanRunCommand(f"{local_iqtree2_path} --version"):
-                    return
-        except RuntimeError:
-            mp.set_start_method('spawn', force=True)
     
-    elif system == "Darwin":  # macOS
-            mp.set_start_method('fork')
-        
-    elif system == "Windows":  # Windows
-        mp.set_start_method('spawn', force=True)
+    try:
+        start_method = mp.get_start_method(allow_none=True)
+        if start_method is None:
+            if system == "Linux" or system == "Darwin":  # Unix-like systems (e.g., Linux, macOS)
+                mp.set_start_method('fork')
+            elif system == "Windows":  # Windows
+                mp.set_start_method('spawn', force=True)
+    except RuntimeError as e:
+        print(f"Multiprocessing context setting error: {e}")
+
+    if system == "Linux" and iqtree_version == 'local':
+        my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
+        print(f"Updated PATH for local version: {my_env['PATH']}")
+        if CanRunCommand(f"{local_iqtree2_path} --version"):
+            return
 
     if iqtree_version == "conda" and conda_prefix:
         if shutil.which("iqtree2"):
@@ -122,7 +121,6 @@ def initialise_recur(iqtree_version: Optional[str] = None):
     print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
     print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
     sys.exit(1)
-
 
 import threading       
 import gc
