@@ -178,27 +178,27 @@ class FileHandler(object):
         return mcs_treefile[0]
 
     def GetMutMatrixDir(self) -> str:
-        d = self.rd1 + "Substitution_Matrices/"
+        d = self.rd1 + "Substitution_Matrices" + os.sep
         if not os.path.exists(d): os.mkdir(d)
         return d
 
     def GetInferedSeqsDir(self) -> str:
-        d = self.rd1 + "Infered_Sequences/"
+        d = self.rd1 + "Infered_Sequences" + os.sep
         if not os.path.exists(d): os.mkdir(d)
         return d
 
     def GetMCSimulationDir(self) -> str:
-        d = self.rd1 + "Monte_Carlo_Similation/"
+        d = self.rd1 + "Monte_Carlo_Similation" + os.sep
         if not os.path.exists(d): os.mkdir(d)
         return d
 
     def GetMCSimulationFADir(self) -> str:
-        d = self.GetMCSimulationDir() + "FA_Files/"
+        d = self.GetMCSimulationDir() + "FA_Files" + os.sep
         if not os.path.exists(d): os.mkdir(d)
         return d
 
     def GetRealPhylogenyDir(self) -> str:
-        d = self.rd1 + "Real_Phylogeny/"
+        d = self.rd1 + "Real_Phylogeny" + os.sep
         if not os.path.exists(d): os.mkdir(d)
         return d
         
@@ -215,12 +215,14 @@ class FileReader(object):
         accession = ""
         seq = ""
         with open(fn, 'r') as infile:
-            for line in infile:
-                line = line.replace("\n", "").strip()
-                if line.startswith(">"):
+            for line_ in infile:
+                line = line_.replace("\n", "").strip()
+                if line.startswith(">") or ">" in line:
                     if accession:
                         msa[accession] = seq
                     accession = line[1:].replace('_', ' ')
+                    if ">" in line:
+                        accession = accession.replace('>', '')
                     seq = ""
                 else:
                     seq += line

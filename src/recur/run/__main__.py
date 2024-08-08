@@ -49,20 +49,16 @@ def setup_environment():
 
 def CanRunCommand(command: str) -> bool:
     try:
-        print(f"Running command: {command}")
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
-        while True:
-            output = process.stdout.readline()
-            error = process.stderr.readline()
-            if output == '' and error == '' and process.poll() is not None:
-                break
-            if output:
-                print(output.strip())
-            if error:
-                print(error.strip())
+        stdout, stderr = process.communicate()
 
-        returncode = process.poll()
+        # if stdout:
+        #     print(stdout.strip())
+        # if stderr:
+        #     print(stderr.strip())
+
+        returncode = process.returncode
         if returncode == 0:
             return True
         else:
@@ -80,7 +76,7 @@ def initialise_recur(iqtree_version: Optional[str] = None):
 
     my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
     system = platform.system()
-    
+
     try:
         start_method = mp.get_start_method(allow_none=True)
         if start_method is None:
@@ -93,7 +89,7 @@ def initialise_recur(iqtree_version: Optional[str] = None):
 
     if system == "Linux" and iqtree_version == 'local':
         my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
-        print(f"Updated PATH for local version: {my_env['PATH']}")
+        # print(f"Updated PATH for local version: {my_env['PATH']}")
         if CanRunCommand(f"{local_iqtree2_path} --version"):
             return
 
@@ -531,9 +527,10 @@ def WorkerProcessAndCount(file: str,
     try:
         file_path = os.path.join(mcs_alnDir, file)
         mcs_combined_prot_seqs_dict, _ = files.FileReader.ReadAlignment(file_path)
+
         if isnuc_fasta:
             mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, "CODON1")
-        
+
         if terminate_flag.is_set():
             msg = f"Terminating processing for file: {file} due to termination signal"
             return None, msg
