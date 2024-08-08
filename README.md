@@ -52,15 +52,22 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
     ```
     python3 recur.py -f ExampleData -st AA --outgroups ExampleData
     ```
-    to test the installation and the environment.
+    to test the installation and the environment. 
+    
+    > NOTE: if python3 does not work, please try python.
 
 - Windows and macOS
   If you are on a Windows machine or MAC, you need to install the IQ-TREE2 first before you can run RECUR. You can download the latest version of IQ-TREE2 in [here](http://www.iqtree.org/#download).
 
-  Once you have IQ-TREE2 installed, you can follow the previous steps to install RECUR or just the dependencies. Then run the following command to test if RECUR runs on your machine
-  ```
-  recur -f ExampleData -st AA --outgroups ExampleData -iv system
-  ```
+  Once you have IQ-TREE2 installed, you can follow the previous steps to install RECUR or just the dependencies. Then run oen of the following commands (depending one whether you have installed RECUR or not) to test if RECUR runs on your machine
+  * With RECUR installed 
+    ```
+    recur -f ExampleData -st AA --outgroups ExampleData -iv system
+    ```
+  * Without RECUR installed 
+      ```
+    python3 recur.py -f ExampleData -st AA --outgroups ExampleData -iv system
+    ```
   where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package. 
 
 - Conda 
@@ -70,9 +77,20 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
     conda create -n recur_env python=3.12
     conda activate recur_env
     ```
-  
-  Now that you have a suitable environment, you can follow the previous steps to install RECUR directly or the relevant dependencies.
-
+  Then install IQ-TREE2 package by running one of the following:
+  ```
+    conda install bioconda::iqtree
+    conda install bioconda/label/cf201901::iqtree
+  ```
+  Now that you have a suitable environment with IQ-TREE2 installed, you can follow the previous steps to install RECUR directly or the relevant dependencies.
+  * With RECUR installed 
+    ```
+    recur -f ExampleData -st AA --outgroups ExampleData -iv conda
+    ```
+  * Without RECUR installed 
+      ```
+    python3 recur.py -f ExampleData -st AA --outgroups ExampleData -iv conda
+    ```
 
 ## Usage
 (Instructions on how to use the project)
