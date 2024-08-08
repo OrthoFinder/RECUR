@@ -6,64 +6,67 @@ import platform
 import sys
 import os
 import csv
+import shutil
 from typing import Optional, Dict, List, Tuple, Union, Set
 
 def setup_environment():
     max_int = sys.maxsize
-    ok = False
-    while not ok:
+    while True:
         try:
             csv.field_size_limit(max_int)
-            ok = True
+            break
         except OverflowError:
             max_int = int(max_int / 10)
+    
+    # Set maximum recursion limit and OpenBLAS thread limit
     sys.setrecursionlimit(10**6)
     os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
     my_env = os.environ.copy()
 
-    if getattr(sys, 'frozen', False):
-        __location__ = os.path.split(sys.executable)[0]
+    if getattr(sys, 'frozen', False):  # For PyInstaller
+        base_dir = os.path.dirname(sys.executable)
     else:
-        __location__ = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 
-    local_iqtree2_path = os.path.join(__location__, 'recur', 'bin', 'iqtree2')
+    local_iqtree2_path = os.path.join(base_dir, 'recur', 'bin', 'iqtree2')
     bin_dir = os.path.dirname(local_iqtree2_path)
 
-    conda_prefix = None
-    if 'CONDA_PREFIX' in my_env or 'CONDA_DEFAULT_ENV' in my_env:
-        conda_prefix = my_env.get('CONDA_PREFIX')
-        if conda_prefix:
-            conda_bin = os.path.join(conda_prefix, 'Scripts') if os.name == 'nt' else os.path.join(conda_prefix, 'bin')
-            my_env['PATH'] = conda_bin + os.pathsep + my_env['PATH']
-    else:
-        if getattr(sys, 'frozen', False):
-            if os.name == 'nt':  # Windows-specific
-                if 'PATH_ORIG' in my_env:
-                    my_env['PATH'] = my_env['PATH_ORIG']
-                else:
-                    my_env['PATH'] = ''
-            else:  # Unix-like systems
-                if 'LD_LIBRARY_PATH_ORIG' in my_env:
-                    my_env['LD_LIBRARY_PATH'] = my_env['LD_LIBRARY_PATH_ORIG']
-                else:
-                    my_env['LD_LIBRARY_PATH'] = ''
-                if 'DYLD_LIBRARY_PATH_ORIG' in my_env:
-                    my_env['DYLD_LIBRARY_PATH'] = my_env['DYLD_LIBRARY_PATH_ORIG']
-                else:
-                    my_env['DYLD_LIBRARY_PATH'] = ''
+    conda_prefix = my_env.get('CONDA_PREFIX')
+    if conda_prefix:
+        conda_bin = os.path.join(conda_prefix, 'Scripts') if os.name == 'nt' else os.path.join(conda_prefix, 'bin')
+        my_env['PATH'] = conda_bin + os.pathsep + my_env['PATH']
+    
+    # Restore original paths if running from a frozen environment
+    if getattr(sys, 'frozen', False):
+        if os.name == 'nt':  # Windows-specific
+            my_env['PATH'] = my_env.get('PATH_ORIG', '')
+        else:  # Unix-like systems
+            my_env['LD_LIBRARY_PATH'] = my_env.get('LD_LIBRARY_PATH_ORIG', '')
+            my_env['DYLD_LIBRARY_PATH'] = my_env.get('DYLD_LIBRARY_PATH_ORIG', '')
     
     return my_env, local_iqtree2_path, bin_dir, conda_prefix 
 
 def CanRunCommand(command: str) -> bool:
     try:
-        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if result.returncode == 0:
+        print(f"Running command: {command}")
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        while True:
+            output = process.stdout.readline()
+            error = process.stderr.readline()
+            if output == '' and error == '' and process.poll() is not None:
+                break
+            if output:
+                print(output.strip())
+            if error:
+                print(error.strip())
+
+        returncode = process.poll()
+        if returncode == 0:
             return True
         else:
             print(f"Command '{command}' returned a non-zero exit code.")
-            print(f"stdout: {result.stdout}")
-            print(f"stderr: {result.stderr}")
             return False
     except FileNotFoundError:
         print(f"Command '{command}' not found.")
@@ -73,32 +76,53 @@ def CanRunCommand(command: str) -> bool:
         return False
 
 def initialise_recur(iqtree_version: Optional[str] = None):
+    # print(f"Initialising RECUR with IQ-TREE version: {iqtree_version}")
+
+    my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
     system = platform.system()
-    if system == "Darwin":  # macOS
-        mp.set_start_method('fork')
-    elif system == "Windows":  # Windows
-        mp.set_start_method('spawn', force=True)
-    else:  # Other Unix-like systems (e.g., Linux)
+    if system == "Linux":  # Other Unix-like systems (e.g., Linux)
         try:
             mp.set_start_method('fork')
+            if iqtree_version == 'local':
+                my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
+                print(f"Updated PATH for local version: {my_env['PATH']}")
+                
+                if CanRunCommand(f"{local_iqtree2_path} --version"):
+                    return
         except RuntimeError:
             mp.set_start_method('spawn', force=True)
     
-    my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
-    
-    if iqtree_version == 'local':
-        my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
-         
-        if CanRunCommand(f"{local_iqtree2_path} --version"):
+    elif system == "Darwin":  # macOS
+            mp.set_start_method('fork')
+        
+    elif system == "Windows":  # Windows
+        mp.set_start_method('spawn', force=True)
+
+    if iqtree_version == "conda" and conda_prefix:
+        if shutil.which("iqtree2"):
+            print("\nConda version of IQ-TREE2 found.")
+            print(f"IQ-TREE2 path: {shutil.which('iqtree2')}")
             return
-    elif conda_prefix and CanRunCommand("iqtree2 --version"):
-        print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
-    elif not conda_prefix and CanRunCommand("iqtree2 --version"):
+        
+    if iqtree_version == "system" and not conda_prefix:
+        if shutil.which("iqtree2"):
+            print("\nSystem-wide version of IQ-TREE2 found.")
+            print(f"IQ-TREE2 path: {shutil.which('iqtree2')}")
+            return
+
+    if conda_prefix:
+        if CanRunCommand("iqtree2 --version"):
+            print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
+            return
+        
+    if CanRunCommand("iqtree2 --version"):
         print("Local IQ-TREE2 binary failed to run, falling back to system-wide binary.")
-    else:
-        print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
-        print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
-        sys.exit(1)
+        return
+
+    print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
+    print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
+    sys.exit(1)
+
 
 import threading       
 import gc
@@ -743,7 +767,6 @@ def main(args: Optional[List[str]] = None):
         
         options, alnDir, alnPath, resultsDir_nonDefault = process_args.ProcessArgs(args)
         iqtree_version = options.iqtree_version if options.iqtree_version else "system" #os.getenv('IQTREE2_VERSION', 'local')
-
         if not os.getenv('ENV_SETUP_DONE'):
             initialise_recur(iqtree_version)
             os.environ['ENV_SETUP_DONE'] = '1'

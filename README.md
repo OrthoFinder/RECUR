@@ -72,11 +72,11 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
   Working in the conda environment can be the easiest when you do not have access to a Linux machine. You can create and activate a new environment by running:
 
     ```
-    conda create -n recur
-    conda activate recur
+    conda create -n recur_env python=3.12
+    conda activate recur_env
     ```
-
-  Now that you have a suitable environment, you can follow the previous steps to install RECUR or the relevant dependencies.
+  
+  Now that you have a suitable environment, you can follow the previous steps to install RECUR directly or the relevant dependencies.
 
 
 ## Usage
