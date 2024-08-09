@@ -9,15 +9,18 @@ The required input is either a protein or codon multiple sequence alignment (in 
 
 ## Table of Contents
 
-- [Features](#features)
+- [Getting started with RECUR](#getting-started-with-recur)
+  - [Installing RECUR on Linux](#installing-recur-on-linux)
+  - [Installing RECUR on Windows and MacOS](#installing-recur-on-windows-and-macos)
+  - [Running RECUR in conda](#running-recur-in-conda)
+  - [Running RECUR in a Docker Conatainer](#running-recur-in-a-docker-conatainer)
 - [Usage](#usage)
 - [Contributing](#contributing)
 
-
-## Installation
+## Getting started with RECUR
 The recurrence analysis implemented by RECUR utilises two main feaures from IQ-TREE2, i.e., [Ancestral sequence reconstruction](http://www.iqtree.org/doc/Command-Reference#ancestral-sequence-reconstruction) to infer the extinct node sequences and [Sequence simulators](http://www.iqtree.org/doc/AliSim) to build the simulated phylogeny. 
 
-- **Linux**
+### Installing RECUR on Linux
 
   If you are working on a Linux machine or WSL2, runing RECUR is straigtforward. Installation of IQ-TREE2 is not necessary.
 
@@ -25,7 +28,10 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
   ```
   python3 -m venv .venv && . .venv/bin/activate
   ```
-
+  *To deactivate the virtual enviroment* run
+  ```
+  deactivate
+  ```
   1. Clone the repository
   ```
   git clone https://github.com/OrthoFinder/RECUR.git
@@ -57,11 +63,39 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
   
   > NOTE: if python3 does not work, please try python.
 
-- **Windows and macOS**
+### Installing RECUR on Windows and MacOS 
 
   If you are on a Windows machine or a MAC, you need to install the IQ-TREE2 first before you can run RECUR. You can download the latest version of IQ-TREE2 in [here](http://www.iqtree.org/#download).
 
-  Once you have IQ-TREE2 installed, you can follow the previous steps to install RECUR or just the dependencies. Then run oen of the following commands (depending one whether you have installed RECUR or not) to test if RECUR runs on your machine
+  Once you have IQ-TREE2 installed, you can run the following commands based on your OS to create a virtual environment for RECUR to run.
+
+  - **Windows**
+
+  If you are on windows, please open a command prompt, and run the following commnad to create and activate the virtual environment.
+  ```
+  python -m venv win_venv
+  win_venv\Scripts\activate.bat
+  ```
+
+  *To deactivate the virtual enviroment* run
+  ```
+  win_venv\Scripts\deactivate.bat
+  ```
+  - **macOS**
+
+  If you are on macOS, please run the following commands in a terminal.
+
+  ```
+  python3 -m venv mac_venv
+  source mac_venv/bin/activate
+  ```
+
+  *To deactivate the virtual enviroment* run
+  ```
+  deactivate
+  ```
+  Now that you have successfully created and activated a new virtual environment, you can follow the three steps mentioned in [Installing RECUR on Linux](#installing-recur-on-linux) to install RECUR or just the python dependencies based on your needs. Then run one of the following commands (depending one whether you have installed RECUR or not) to test if RECUR runs on your machine.
+
   * With RECUR installed 
     ```
     recur -f ExampleData -st AA --outgroups ExampleData -iv system
@@ -72,7 +106,7 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
     ```
   where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package. 
 
-- **Conda**
+### Running RECUR in conda
 
   Working in the conda environment can be the easiest when you do not have access to a Linux machine. You can create and activate a new environment by running:
 
@@ -95,7 +129,7 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
     python3 recur.py -f ExampleData -st AA --outgroups ExampleData  -te ExampleData -iv conda
     ```
 
-- **Docker**
+### Running RECUR in a Docker Conatainer
 
   Apart from the above methods, you can also run RECUR inside a container. 
 
