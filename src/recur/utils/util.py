@@ -16,8 +16,6 @@ import tracemalloc
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
 
-
-
 class ConsoleOnlyFilter(logging.Filter):
     def filter(self, record):
         return getattr(record, 'to_console', True)
@@ -80,7 +78,6 @@ def setup_logging(log_folder: str,
 
     return production_logger
 
-
 def log_memory_usage(tag="", production_logger=None):
     process = psutil.Process(os.getpid())
     mem = process.memory_info().rss / (1024 ** 3)
@@ -88,7 +85,6 @@ def log_memory_usage(tag="", production_logger=None):
         production_logger.info(f"Memory usage {tag}: {mem:.2f} GB\n")
     else:
         print(f"Memory usage {tag}: {mem:.2f} GB\n")
-
 
 def delete_files_in_directory(dirpath: str) -> None:
    try:
@@ -100,16 +96,6 @@ def delete_files_in_directory(dirpath: str) -> None:
    except OSError:
      print("ERROR occurred while deleting files.")
      raise
-
-
-# def measure_memory_usage(func, *args):
-
-#     process = psutil.Process(os.getpid())
-#     mem_before = process.memory_info().rss
-#     result = func(*args)
-#     mem_after = process.memory_info().rss
-    
-#     return mem_after - mem_before, result
 
 def measure_memory_usage(func: Callable[..., Any], *args: Any, **kwargs: Any) -> int:
     tracemalloc.start()
@@ -141,16 +127,6 @@ def determine_optimal_batch_size(data: Any,
     optimal_batch_size = max(1, (total_memory // 4) // memory_usage)
     
     return int(min(optimal_batch_size, 100))
-
-
-# def monitor_memory_usage():
-#     process = psutil.Process()
-#     mem_info = process.memory_info()
-#     total_memory_usage = mem_info.rss
-#     for child in process.children(recursive=True):
-#         total_memory_usage += child.memory_info().rss
-#     return total_memory_usage / (1024 ** 3)  # Return memory usage in GB
-
 
 def print_centered_text(width, text):
     text_length = len(text)

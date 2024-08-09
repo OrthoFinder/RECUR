@@ -9,6 +9,7 @@ import csv
 import shutil
 from typing import Optional, Dict, List, Tuple, Union, Set
 
+
 def setup_environment():
     max_int = sys.maxsize
     while True:
@@ -72,51 +73,55 @@ def CanRunCommand(command: str) -> bool:
         return False
 
 def initialise_recur(iqtree_version: Optional[str] = None):
-    # print(f"Initialising RECUR with IQ-TREE version: {iqtree_version}")
-
     my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
     system = platform.system()
 
     try:
         start_method = mp.get_start_method(allow_none=True)
         if start_method is None:
-            if system == "Linux" or system == "Darwin":  # Unix-like systems (e.g., Linux, macOS)
+            if system in ["Linux", "Darwin"]:
                 mp.set_start_method('fork')
-            elif system == "Windows":  # Windows
+            elif system == "Windows":
                 mp.set_start_method('spawn', force=True)
     except RuntimeError as e:
         print(f"Multiprocessing context setting error: {e}")
+        return
+
+    iqtree_found = False
 
     if system == "Linux" and iqtree_version == 'local':
         my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
-        # print(f"Updated PATH for local version: {my_env['PATH']}")
         if CanRunCommand(f"{local_iqtree2_path} --version"):
-            return
+            iqtree_found = True
 
-    if iqtree_version == "conda" and conda_prefix:
-        if shutil.which("iqtree2"):
+    if iqtree_version == "conda" and conda_prefix and not iqtree_found:
+        iqtree_path = shutil.which("iqtree2")
+        if iqtree_path:
             print("\nConda version of IQ-TREE2 found.")
-            print(f"IQ-TREE2 path: {shutil.which('iqtree2')}")
-            return
+            print(f"IQ-TREE2 path: {iqtree_path}")
+            iqtree_found = True
         
-    if iqtree_version == "system" and not conda_prefix:
-        if shutil.which("iqtree2"):
+    if iqtree_version == "system" and not conda_prefix and not iqtree_found:
+        iqtree_path = shutil.which("iqtree2")
+        if iqtree_path:
             print("\nSystem-wide version of IQ-TREE2 found.")
-            print(f"IQ-TREE2 path: {shutil.which('iqtree2')}")
-            return
+            print(f"IQ-TREE2 path: {iqtree_path}")
+            iqtree_found = True
 
-    if conda_prefix:
+    if conda_prefix and not iqtree_found:
         if CanRunCommand("iqtree2 --version"):
             print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
-            return
+            iqtree_found = True
         
-    if CanRunCommand("iqtree2 --version"):
+    if not iqtree_found and CanRunCommand("iqtree2 --version"):
         print("Local IQ-TREE2 binary failed to run, falling back to system-wide binary.")
-        return
+        iqtree_found = True
 
-    print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
-    print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
-    sys.exit(1)
+    if not iqtree_found:
+        print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
+        print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
+        sys.exit(1)
+
 
 import threading       
 import gc
