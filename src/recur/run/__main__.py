@@ -90,18 +90,6 @@ def initialise_recur(iqtree_version: Optional[str] = None):
             print(f"Multiprocessing context setting error on Unix-like system: {e}")
             return  # Early exit on error
 
-    # try:
-    #     start_method = mp.get_start_method(allow_none=True)
-    #     if start_method is None:
-    #         if system in ["Linux", "Darwin"]:
-    #             mp.set_start_method('fork')
-    #         elif system == "Windows":
-    #             mp.set_start_method('spawn', force=True)
-    # except RuntimeError:
-    #     print("Multiprocessing context setting error")
-    #     return  # Early exit on error
-
-    # Check if IQ-TREE2 is found in various scenarios
     if system == "Linux" and iqtree_version == 'local':
         my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
         if CanRunCommand(f"{local_iqtree2_path} --version"):
