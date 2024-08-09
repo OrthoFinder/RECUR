@@ -3,7 +3,8 @@ Finding Recurrent Substitutions in Multiple Sequence Alignments
 
 ## Introduction
 ![RECUR method workflow](./docs/RECUR_workflow_figure.png)
-Figure 1: The RECUR workflow. 
+
+<p style="text-align: center;">Figure 1: The RECUR workflow. </p>
 
 The required input is either a protein or codon multiple sequence alignment (in FASTA format) and a defined outgroup species or clade. The output of RECUR is a list of recurrent amino acid substitutions that have been inferred to have occurred within the phylogeny (file suffix .recfinder.tsv). Outputs of intermediate steps, i.e. model selection, tree inference, ancestral state reconstruction and site substitution matrices, can be found in the .recfinder output directory. 
 
@@ -14,17 +15,24 @@ The required input is either a protein or codon multiple sequence alignment (in 
   - [Installing RECUR on Windows and MacOS](#installing-recur-on-windows-and-macos)
   - [Running RECUR in conda](#running-recur-in-conda)
   - [Running RECUR in a Docker Conatainer](#running-recur-in-a-docker-conatainer)
-- [Usage](#usage)
+- [How to use RECUR](#how-to-use-recur)
+  - [Simple usage](#simple-usage)
+  - [Advance usage](#advanced-usage)
+  - [Discussion](#discussion)
+- [Citations](#citations)
+  - [Credits and Acknowledgements](#credits-and-acknowledgements)
+- [References](#references)
 - [Contributing](#contributing)
 
+
 ## Getting started with RECUR
-The recurrence analysis implemented by RECUR utilises two main feaures from IQ-TREE2, i.e., [Ancestral sequence reconstruction](http://www.iqtree.org/doc/Command-Reference#ancestral-sequence-reconstruction) to infer the extinct node sequences and [Sequence simulators](http://www.iqtree.org/doc/AliSim) to build the simulated phylogeny. 
+The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic software package to infer the extinct node sequences and to build the simulated phylogeny. 
 
 ### Installing RECUR on Linux
 
   If you are working on a Linux machine or WSL2, runing RECUR is straigtforward. Installation of IQ-TREE2 is not necessary.
 
-  Before installing any relevant dependencies or packages, it is recommanded that you create and activate a new virtual environment. You can do so by running:
+  Before installing any relevant dependencies or packages, it is recommended that you create and activate a new virtual environment. You can do so by running:
   ```
   python3 -m venv .venv && . .venv/bin/activate
   ```
@@ -47,7 +55,7 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
   To test your installation, please run
 
   ```
-  recur -f ExampleData -st AA --outgroups ExampleData
+  recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
     
   If you do not wish to install the RECUR package, you can simply run the following command to install the required dependencies.
@@ -57,7 +65,7 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
   ```
   Then run 
   ```
-  python3 recur.py -f ExampleData -st AA --outgroups ExampleData -te ExampleData
+  python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
   to test the installation and the environment. 
   
@@ -98,11 +106,11 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
 
   * With RECUR installed 
     ```
-    recur -f ExampleData -st AA --outgroups ExampleData -iv system
+    recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv system
     ```
   * Without RECUR installed 
       ```
-    python3 recur.py -f ExampleData -st AA --outgroups ExampleData -iv system
+    python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv system
     ```
   where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package. 
 
@@ -122,11 +130,11 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
   Now that you have a suitable environment with IQ-TREE2 installed, you can follow the previous steps to install RECUR directly or the relevant dependencies.
   * With RECUR installed 
     ```
-    recur -f ExampleData -st AA --outgroups ExampleData -te ExampleData -iv conda
+    recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv conda
     ```
   * Without RECUR installed 
       ```
-    python3 recur.py -f ExampleData -st AA --outgroups ExampleData  -te ExampleData -iv conda
+    python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv conda
     ```
 
 ### Running RECUR in a Docker Conatainer
@@ -161,25 +169,50 @@ The recurrence analysis implemented by RECUR utilises two main feaures from IQ-T
   ```
   Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
 
-## Usage
-(Instructions on how to use the project)
+## How to use RECUR
 
-In this section, we will dive deep into the options you can have to run RECUR. The command shown in this section will be based on the assumption that you have RECUR installed on your machine. 
+In this section, we will dive deep into the options you can have to run RECUR. The commands shown in this section will be based on the assumption that you have RECUR installed on your machine. 
 
-- **Simple usage**
+### Simple usage
 
-  RECUR can run on either a protien or a CODON alignment. 
-  ```
-  recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CODON>
-  ```
+The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g.,RECUR can run on either a protien or a CODON alignment. 
+
+>`recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON>`
+
+* `--outgroups`: informs RECUR how to correctly root the tree. 
+
+   You can either provide a .txt file with each outgroup species listed on a new line, or if you have a few outgroup species you can write the species on the command line. e.g., `--outgroups "SpeciesA,SpeciesB,SpeciesC"`. 
+
+* `-st`: signals the sequence type in the MSA. 
+
+   For a protein MSA `-st AA` should be provided. For a codon MSA, the different NCBI genetic codes can be specified (found [here](http://www.iqtree.org/doc/Substitution-Models#codon-models)). `-st CODON` will use the standard genetic code. 
+
+For example, ...
 
 
-- **Advanced usage**
+
+
+### Advanced usage
+
+- Run RECUR on multiple genes
+
+```
+recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CODON>
+```
+
+- Run RECUR with parallel processing
+
+
+### Discussion
+
+## Citations
+
+### Credits and Acknowledgements
+
+## References
 
 
 ## Contributing
 
 If you find a bug :bug:, please open a [bug report](https://github.com/).
 If you have an idea for an improvement or new feature, please open a [feature request]().
-
-
