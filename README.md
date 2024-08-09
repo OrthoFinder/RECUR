@@ -2,7 +2,7 @@
 Finding Recurrent Substitutions in Multiple Sequence Alignments
 
 ## Introduction
-
+![RECUR method workflow](./docs/method_workflow.png)
 
 ## Table of Contents
 
@@ -10,8 +10,6 @@ Finding Recurrent Substitutions in Multiple Sequence Alignments
 - [Usage](#usage)
 - [Contributing](#contributing)
 
-## Features (Lizzie)
-* Finding recurrent substitutions in multiple sequence alignments  
 
 ## Installation
 The recurrence analysis implemented by RECUR utilises two main feaures from IQ-TREE2, i.e., [Ancestral sequence reconstruction](http://www.iqtree.org/doc/Command-Reference#ancestral-sequence-reconstruction) to infer the extinct node sequences and [Sequence simulators](http://www.iqtree.org/doc/AliSim) to build the simulated phylogeny. 
@@ -147,5 +145,4 @@ In this section, we will dive deep into the options you can have to run RECUR. T
 If you find a bug :bug:, please open a [bug report](https://github.com/).
 If you have an idea for an improvement or new feature, please open a [feature request]().
 
-## Method Workflow
-![RECUR method workflow](./docs/method_workflow.tif)
+
