@@ -72,55 +72,68 @@ def CanRunCommand(command: str) -> bool:
         print(f"An error occurred while trying to run '{command}': {e}")
         return False
 
+
 def initialise_recur(iqtree_version: Optional[str] = None):
     my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
     system = platform.system()
 
-    try:
-        start_method = mp.get_start_method(allow_none=True)
-        if start_method is None:
-            if system in ["Linux", "Darwin"]:
-                mp.set_start_method('fork')
-            elif system == "Windows":
-                mp.set_start_method('spawn', force=True)
-    except RuntimeError as e:
-        print(f"Multiprocessing context setting error: {e}")
-        return
+    if system == "Windows":
+        try:
+            mp.set_start_method('spawn', force=True)
+        except RuntimeError as e:
+            print(f"Multiprocessing context setting error on Windows: {e}")
+            return  # Early exit on error
+    elif system in ["Linux", "Darwin"]:
+        try:
+            mp.set_start_method('fork')
+        except RuntimeError as e:
+            print(f"Multiprocessing context setting error on Unix-like system: {e}")
+            return  # Early exit on error
 
-    iqtree_found = False
+    # try:
+    #     start_method = mp.get_start_method(allow_none=True)
+    #     if start_method is None:
+    #         if system in ["Linux", "Darwin"]:
+    #             mp.set_start_method('fork')
+    #         elif system == "Windows":
+    #             mp.set_start_method('spawn', force=True)
+    # except RuntimeError:
+    #     print("Multiprocessing context setting error")
+    #     return  # Early exit on error
 
+    # Check if IQ-TREE2 is found in various scenarios
     if system == "Linux" and iqtree_version == 'local':
         my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
         if CanRunCommand(f"{local_iqtree2_path} --version"):
-            iqtree_found = True
+            return
 
-    if iqtree_version == "conda" and conda_prefix and not iqtree_found:
+    if iqtree_version == "conda" and conda_prefix:
         iqtree_path = shutil.which("iqtree2")
         if iqtree_path:
             print("\nConda version of IQ-TREE2 found.")
             print(f"IQ-TREE2 path: {iqtree_path}")
-            iqtree_found = True
-        
-    if iqtree_version == "system" and not conda_prefix and not iqtree_found:
+            return
+
+    if iqtree_version == "system" and not conda_prefix:
         iqtree_path = shutil.which("iqtree2")
         if iqtree_path:
             print("\nSystem-wide version of IQ-TREE2 found.")
             print(f"IQ-TREE2 path: {iqtree_path}")
-            iqtree_found = True
+            return
 
-    if conda_prefix and not iqtree_found:
-        if CanRunCommand("iqtree2 --version"):
-            print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
-            iqtree_found = True
-        
-    if not iqtree_found and CanRunCommand("iqtree2 --version"):
+    # Additional fallbacks
+    if conda_prefix and CanRunCommand("iqtree2 --version"):
+        print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
+        return
+
+    if CanRunCommand("iqtree2 --version"):
         print("Local IQ-TREE2 binary failed to run, falling back to system-wide binary.")
-        iqtree_found = True
+        return
 
-    if not iqtree_found:
-        print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
-        print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
-        sys.exit(1)
+    # Final check, if all others fail
+    print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
+    print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
+    sys.exit(1)
 
 
 import threading       
@@ -767,9 +780,13 @@ def main(args: Optional[List[str]] = None):
         
         options, alnDir, alnPath, resultsDir_nonDefault = process_args.ProcessArgs(args)
         iqtree_version = options.iqtree_version if options.iqtree_version else "system" #os.getenv('IQTREE2_VERSION', 'local')
-        if not os.getenv('ENV_SETUP_DONE'):
-            initialise_recur(iqtree_version)
-            os.environ['ENV_SETUP_DONE'] = '1'
+        initialise_recur(iqtree_version)
+        # if os.getenv('ENV_SETUP_DONE') is None:
+        #     initialise_recur(iqtree_version)
+        #     os.environ['ENV_SETUP_DONE'] = '1'
+        # if not os.getenv('ENV_SETUP_DONE'):
+            # initialise_recur(iqtree_version)
+            # os.environ['ENV_SETUP_DONE'] = '1'
 
         aln_path_dict = files.FileHandler.ProcessesNewAln(alnDir, alnPath)
 
