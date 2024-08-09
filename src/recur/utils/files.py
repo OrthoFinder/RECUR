@@ -51,7 +51,7 @@ class FileHandler(object):
         originalALNFilenames = {}
         
         if alnPath is None:
-            alnExtensions = {"aln", "fasta"} # need to add more potential file extensions
+            alnExtensions = {"aln", "fasta", "fa"} # need to add more potential file extensions
             if not os.path.exists(alnDir):
                 print("\nDirectory does not exist: %s" % alnDir)
                 util.Fail()
