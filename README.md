@@ -251,9 +251,11 @@ recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CO
 
 ### Output Structure
 
-
-![RECUR output structure](./docs/RECUR_output_structure.PNG)
-
+<!-- 
+![RECUR output structure](./docs/RECUR_output_structure.PNG) -->
+<p align="center">
+  <img src="./docs/RECUR_output_structure.PNG" alt="RECUR output structure" width="250"/>
+</p>
 
 
 
