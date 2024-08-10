@@ -20,9 +20,9 @@ def PrintHelp():
     print(f"-nt <int>                    Number of threads provided to IQ-TREE2 [Default: 1 (without alrt); {iqtree_nthreads} (with alrt)]")
     print(f"-rt <int>                    Number of threads used for RECUR run on IQ-TREE2 [Default: {recur_iqtree_nthreads}]")
     print(f"-t <int>                     Number of threads used for RECUR internal processing [Default: {recur_nthreads}]")
-    print("--seed <int>                 Random starting see number. [Default: 8]")
-    print("-o <txt>                     Non-default results directory.") 
-    print("-iv <str>                    IQ-TREE2 path. [Default: local]")
+    print("--seed <int>                 Random starting see number [Default: 8]")
+    print("-o <txt>                     Non-default results directory") 
+    print("-iv <str>                    IQ-TREE2 path [Default: local]")
     
     
     print("")

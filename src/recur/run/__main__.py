@@ -77,18 +77,16 @@ def initialise_recur(iqtree_version: Optional[str] = None):
     my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
     system = platform.system()
 
-    if system == "Windows":
-        try:
-            mp.set_start_method('spawn', force=True)
-        except RuntimeError as e:
-            print(f"Multiprocessing context setting error on Windows: {e}")
-            return  # Early exit on error
-    elif system in ["Linux", "Darwin"]:
-        try:
-            mp.set_start_method('fork')
-        except RuntimeError as e:
-            print(f"Multiprocessing context setting error on Unix-like system: {e}")
-            return  # Early exit on error
+    try:
+        if system == "Windows":
+            if mp.get_start_method(allow_none=True) != 'spawn':
+                mp.set_start_method('spawn', force=True)
+        elif system in ["Linux", "Darwin"]:
+            if mp.get_start_method(allow_none=True) != 'fork':
+                mp.set_start_method('fork')
+    except RuntimeError as e:
+        print(f"Multiprocessing context setting error on {system}: {e}")
+        pass
 
     if system == "Linux" and iqtree_version == 'local':
         my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
@@ -109,7 +107,6 @@ def initialise_recur(iqtree_version: Optional[str] = None):
             print(f"IQ-TREE2 path: {iqtree_path}")
             return
 
-    # Additional fallbacks
     if conda_prefix and CanRunCommand("iqtree2 --version"):
         print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
         return
@@ -118,7 +115,6 @@ def initialise_recur(iqtree_version: Optional[str] = None):
         print("Local IQ-TREE2 binary failed to run, falling back to system-wide binary.")
         return
 
-    # Final check, if all others fail
     print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
     print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
     sys.exit(1)
@@ -767,14 +763,11 @@ def main(args: Optional[List[str]] = None):
         input_command = "RECUR command: " + " ".join(sys.argv)  + "\n"
         
         options, alnDir, alnPath, resultsDir_nonDefault = process_args.ProcessArgs(args)
-        iqtree_version = options.iqtree_version if options.iqtree_version else "system" #os.getenv('IQTREE2_VERSION', 'local')
-        initialise_recur(iqtree_version)
-        # if os.getenv('ENV_SETUP_DONE') is None:
-        #     initialise_recur(iqtree_version)
-        #     os.environ['ENV_SETUP_DONE'] = '1'
-        # if not os.getenv('ENV_SETUP_DONE'):
-            # initialise_recur(iqtree_version)
-            # os.environ['ENV_SETUP_DONE'] = '1'
+        iqtree_version = options.iqtree_version if options.iqtree_version else "system"
+        if not os.getenv('ENV_SETUP_DONE'):
+            initialise_recur(iqtree_version)
+            os.environ['ENV_SETUP_DONE'] = '1'
+
 
         aln_path_dict = files.FileHandler.ProcessesNewAln(alnDir, alnPath)
 
@@ -965,10 +958,6 @@ def main(args: Optional[List[str]] = None):
                     statefile = filehandler.GetStateFileFN()
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + f"Ancestral state reconstruction complete\n", extra={'to_file': True, 'to_console': True})
-                
-                for file in os.listdir(real_phyDir):
-                    if file.endswith("treefile.log"):
-                        os.remove(os.path.join(real_phyDir, file))
 
                 filehandler.CheckFileCorrespondance(gene, statefile, treefile)
                 residue_dict, residue_dict_flip = util.residue_table()
@@ -994,23 +983,6 @@ def main(args: Optional[List[str]] = None):
                 node_seq_dict.clear()
                 combined_seq_dict.clear()
 
-                # print(combined_prot_seqs_dict)
-
-
-                # msa_str =  [*combined_prot_seqs_dict.values()]
-                # msa_int = []
-                # for seq in msa_str:
-                #     msa_int_seq = [residue_dict.get(s, len(residue_dict)) for s in seq]
-                #     msa_int.append(msa_int_seq)
-
-                # msa_array = np.stack(msa_int)
-                # fig, ax = plt.subplots()
-                # im = heatmap(msa_array, range(len(msa_str)), range(alignment_len), ax=ax,
-                #              cmap='jet',  cbarlabel="Residue") #cmap="viridis",
-                # texts = annotate_heatmap(im, valfmt="{x:d}", residue_dict_flip=residue_dict_flip)
-                # fig.tight_layout()
-                # plt.show()
-
                 try:
                     root_node, outgroup_mrca, mut_matrices = count_mutations(treefile, 
                                                                             combined_prot_seqs_dict,
@@ -1024,14 +996,8 @@ def main(args: Optional[List[str]] = None):
                                                                             batch_size=options.batch_size)
                 finally:
                     reset_terminate_flag(terminate_flag)
-                
-                
-                # sequence_list = [seq for key, seq in combined_prot_seqs_dict.items() if key not in outgroup_mrca]
-                # window_size = protein_len
-                # recurrent_plot(sequence_list, window_size)
 
                 production_logger.info(f"Root of species of interest: {root_node}", extra={'to_file': True, 'to_console': True})
-                # production_logger.info(f"Best-fitting evolution model: {best_evolution_model}", extra={'to_file': True, 'to_console': True})
                 production_logger.info(f"Substitution matrix output: {filehandler.GetMutMatrixDir()}\n", extra={'to_file': True, 'to_console': True})
 
                 filewriter.WriteMutMatrix(mut_matrices, 
@@ -1053,6 +1019,7 @@ def main(args: Optional[List[str]] = None):
                                            extra={'to_file': True, 'to_console': True})
                     continue 
 
+
                 res_loc_set = set(int(res_list[0]) for res_list in recurrence_list)
 
                 if not gene_tree:
@@ -1065,7 +1032,6 @@ def main(args: Optional[List[str]] = None):
                 step2_results_info = f"Results Directory: {filehandler.GetMCSimulationDir()}\n"
                 production_logger.info(step2_results_info, extra={'to_file': True, 'to_console': True})
 
-                
                 mcs_faDir = filehandler.GetMCSimulationFADir()
                 if len(os.listdir(mcs_faDir)) != options.nalign or \
                     (options.restart_from == 2 or options.restart_from == 1):
@@ -1110,6 +1076,13 @@ def main(args: Optional[List[str]] = None):
                 else:
                     production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip step2.\n", 
                                         extra={'to_file': True, 'to_console': True})
+                    
+                for file in os.listdir(real_phyDir):
+                    file_path = os.path.join(real_phyDir, file)
+                    if os.path.exists(file_path):
+                        if file.endswith(".treefile.txt") or file.endswith(".treefile.log"):
+                            print(f"Match found: {file}")
+                            os.remove(file_path)
 
                 afasta = random.choice(os.listdir(mcs_faDir))
                 fasta_dict, fasta_len = filereader.ReadAlignment(os.path.join(mcs_faDir, afasta))
@@ -1135,6 +1108,8 @@ def main(args: Optional[List[str]] = None):
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Starting create substitution matrices for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
                 production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
+                
+
 
                 
                 try:
