@@ -13,11 +13,13 @@ The required input is either a protein or codon multiple sequence alignment (in 
 - [Getting started with RECUR](#getting-started-with-recur)
   - [Installing RECUR on Linux](#installing-recur-on-linux)
   - [Installing RECUR on Windows and MacOS](#installing-recur-on-windows-and-macos)
-  - [Running RECUR in conda](#running-recur-in-conda)
+  - [Running RECUR in Conda](#running-recur-in-conda)
   - [Running RECUR in a Docker Conatainer](#running-recur-in-a-docker-conatainer)
 - [How to use RECUR](#how-to-use-recur)
-  - [Simple usage](#simple-usage)
-  - [Advance usage](#advanced-usage)
+  - [Options Overview](#options-overview)
+  - [Simple Usage](#simple-usage)
+  - [Advance Usage](#advanced-usage)
+  - [Output Structure](#output-structure)
   - [Discussion](#discussion)
 - [Citations](#citations)
   - [Credits and Acknowledgements](#credits-and-acknowledgements)
@@ -25,7 +27,7 @@ The required input is either a protein or codon multiple sequence alignment (in 
 - [Contributing](#contributing)
 
 
-## Getting started with RECUR
+## Getting Started with RECUR
 The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic software package to infer the extinct node sequences and to build the simulated phylogeny. 
 
 ### Installing RECUR on Linux
@@ -114,7 +116,7 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
     ```
   where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package. 
 
-### Running RECUR in conda
+### Running RECUR in Conda
 
   Working in the conda environment can be the easiest when you do not have access to a Linux machine. You can create and activate a new environment by running:
 
@@ -148,7 +150,7 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
     - macOS: https://docs.docker.com/desktop/install/mac-install/
     - Linux: https://docs.docker.com/desktop/install/linux-install/
 
-    Once you have the Docker Desktop installed, please luanch it and run the following command in the terminal to check if it is up and running.
+    Once you have the Docker Desktop installed, please launch it and run the following command in the terminal to check if it is up and running.
 
     ```
     docker version
@@ -163,9 +165,9 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   ```
   docker container run -it --rm orthofinder/recur:v1.0.0
   ```
-  To run RECUR container on your dataset, you will need to create a folder which contains your data in your current working directory. For instance, you have a data folder called MyData, you can run the following command to start the RECUR container and make it run your dataset.
+  To run the RECUR container on your dataset, you will need to create a folder which contains your data in your current working directory. For instance, you have a data folder called MyData which contains an protein alignment file called `my_alignment.aln` and a file called `my_alignment.outgroups.txt` that contains all the ourgroups, you can run the following command to start the RECUR container and make it run your dataset.
   ```
-  docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData orthofinder/recur:v1.0.0 recur -f MyData -st AA --outgroups MyData   
+  docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData orthofinder/recur:v1.0.0 recur -f MyData/my_alignment.aln -st AA --outgroups MyData/my_alignment.outgroups.txt   
   ```
   Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
 
@@ -173,9 +175,27 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
 
 In this section, we will dive deep into the options you can have to run RECUR. The commands shown in this section will be based on the assumption that you have RECUR installed on your machine. 
 
-### Simple usage
+### Options Overview
 
-The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g.,RECUR can run on either a protien or a CODON alignment. 
+```
+  -f <dir/file>                FASTA format alignment of protein or corresponding codon alignment [Required]
+  -s <str>                     <AA|CODON> [Required][Default: CODON11]
+  --outgroups <dir/file/str>   List of outgroup species [Required]
+  --num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]
+  -te <dir/file>               Complete constraint tree [Default: Estimated from alignment]
+  -m <str>                     Model of sequence evolution [Default: estimated from alignment]
+  -nt <int>                    Number of threads provided to IQ-TREE2
+  -rt <int>                    Number of threads used for RECUR run on IQ-TREE2 
+  -t <int>                     Number of threads used for RECUR internal processing 
+  --seed <int>                 Random starting see number [Default: 8]
+  -o <txt>                     Non-default results directory
+  -iv <str>                    IQ-TREE2 path [Default: local]
+```
+
+
+### Simple Usage
+
+The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g., RECUR can run on either a protien or a CODON alignment. 
 
 >`recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON>`
 
@@ -187,20 +207,54 @@ The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format wi
 
    For a protein MSA `-st AA` should be provided. For a codon MSA, the different NCBI genetic codes can be specified (found [here](http://www.iqtree.org/doc/Substitution-Models#codon-models)). `-st CODON` will use the standard genetic code. 
 
-For example, ...
+For example, the example commands mentioned in the [Getting started with RECUR](#getting-started-with-recur) section runs on an example_alignments.aln file which sits inside the ExampleData folder with the outgroups specified in the example_alignments.outgroups.txt file.
 
+### Advanced Usage
 
+- Using a constraint tree 
 
+To specify the topology of the phylogeny used by RECUR the user can provide a constraint tree using the `-te` flag. The argument is a file containing a tree in Newick format. E.g., 
 
-### Advanced usage
+```
+recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> 
+```
 
-- Run RECUR on multiple genes
+Furthermore, a model of sequence evolution (as long as it is supported by IQ-TREE2) can be provided using the -m flag. 
+
+Running RECUR on a directory 
+
+recur [options] -f <directory> --outgroups <directory> -st <AA|CODON> 
+
+How do the files need to be named in the directory??? 
+
+Multi-threading 
+
+- Running RECUR on multiple genes
 
 ```
 recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CODON>
 ```
 
-- Run RECUR with parallel processing
+- Running RECUR with parallel processing
+
+
+
+
+> **important information**:
+>  * `<alignment_file>`: can have `.aln`, `fasta`, or `fa` as the file extensions
+>  * `<outgroups_file>`: needs to have `.outgroup` in the file name.
+>  * `<treefile>`: needs to have `.tree` in the file name.
+
+
+
+
+
+### Output Structure
+
+
+![RECUR output structure](./docs/RECUR_output_structure.PNG)
+
+
 
 
 ### Discussion
