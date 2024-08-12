@@ -1,4 +1,6 @@
-![Tested](https://img.shields.io/badge/status-Tested-brightgreen) ![Build Status](https://github.com/OrthoFinder/RECUR/actions/workflows/recur-python-main.yml/badge.svg)
+<!-- ![Tested](https://img.shields.io/badge/status-Tested-brightgreen) ![Build Status](https://github.com/OrthoFinder/RECUR/actions/workflows/recur-python-main.yml/badge.svg) -->
+![Tested](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OrthoFinder/RECUR/main/badge-status.json)
+
 
 # RECUR
 Finding Recurrent Substitutions in Multiple Sequence Alignments
