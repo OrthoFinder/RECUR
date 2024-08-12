@@ -93,12 +93,16 @@ jobs:
       uses: actions/upload-artifact@v4
       with: 
         name: ExampleData-Output-${{ matrix.python-version }}
-        path: ExampleData
-
+        path: ExampleData/
     - name: Get artifacts
       uses: actions/download-artifact@v4
       with: 
         name: ExampleData-Output-${{ matrix.python-version }}
+        path: ExampleData/
+    - name: Move files to ExampleData directory
+      run: |
+        mkdir -p ExampleData
+        mv example_alignments* ExampleData/
     - name: Output contents
       run: ls -al
     - name: Test with pytest
