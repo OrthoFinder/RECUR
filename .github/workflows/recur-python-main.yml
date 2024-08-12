@@ -55,13 +55,6 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test screen printout
       run: python recur.py
-    - name: Run on ExampleData
-      run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with: 
-        name: ExampleData-Output
-        path: ExampleData
   test:
     needs: build
     runs-on: ubuntu-latest
@@ -91,6 +84,14 @@ jobs:
 
     - name: Test with mypy
       run: mypy src/
+
+    - name: Run on ExampleData
+      run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with: 
+        name: ExampleData-Output
+        path: ExampleData
 
     # - name: Lint with flake8
     #   run: |
