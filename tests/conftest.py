@@ -7,7 +7,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 @pytest.fixture()
 def test_data():
     cwd = os.getcwd()
-    test_data_path = os.path.join(cwd, "tests", "benchmark", "example_alignments.aln.recur.tsv")
+    test_data_path = os.path.join(cwd, "ExampleData", "example_alignments.aln.recur.tsv")
+    # test_data_path = os.path.join(cwd, "tests", "benchmark", "example_alignments.aln.recur.tsv")
     if not os.path.exists(test_data_path):
         print("Test file does not exist!")
         sys.exit()

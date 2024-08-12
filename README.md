@@ -15,7 +15,7 @@ The required input is either a protein or codon multiple sequence alignment (in 
   - [Installing RECUR on Windows and MacOS](#installing-recur-on-windows-and-macos)
   - [Running RECUR in Conda](#running-recur-in-conda)
   - [Running RECUR in a Docker Conatainer](#running-recur-in-a-docker-conatainer)
-- [How to use RECUR](#how-to-use-recur)
+- [How to Use RECUR](#how-to-use-recur)
   - [Options Overview](#options-overview)
   - [Simple Usage](#simple-usage)
   - [Advance Usage](#advanced-usage)
@@ -141,9 +141,9 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
 
 ### Running RECUR in a Docker Conatainer
 
-  Apart from the above methods, you can also run RECUR inside a container. 
+  Apart from the above methods, you can also run RECUR inside a container. You can find the RECUR image on [Docker Hub](https://hub.docker.com/repository/docker/orthofinder/recur/general).
 
-  - Personal computer
+  - **Personal computer**
   
     Before you can run the RECUR container, you need to have Docker Desktop installed. 
     - Windows: https://docs.docker.com/desktop/install/windows-install/
@@ -169,9 +169,9 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   ```
   docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData orthofinder/recur:v1.0.0 recur -f MyData/my_alignment.aln -st AA --outgroups MyData/my_alignment.outgroups.txt   
   ```
-  Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
+  Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections. 
 
-## How to use RECUR
+## How to Use RECUR
 
 In this section, we will dive deep into the options you can have to run RECUR. The commands shown in this section will be based on the assumption that you have RECUR installed on your machine. 
 
