@@ -84,7 +84,9 @@ jobs:
         python -m pip install mypy pytest pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Add iqtree2 to PATH
-      run: echo "::add-path::$(pwd)/src/recur/bin"
+      run: echo "$(pwd)/src/recur/bin" >> $GITHUB_PATH
+    - name: Ensure iqtree2 is executable
+      run: chmod +x src/recur/bin/iqtree2
     - name: Test with mypy
       run: mypy src/
     - name: Run on ExampleData
