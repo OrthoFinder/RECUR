@@ -55,6 +55,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test screen printout
       run: python recur.py
+
   test:
     needs: build
     runs-on: ubuntu-latest
@@ -76,6 +77,7 @@ jobs:
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -90,19 +92,13 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with: 
-        name: ExampleData-Output
+        name: ExampleData-Output-${{ matrix.python-version }}
         path: ExampleData
 
-    # - name: Lint with flake8
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Get artifacts
       uses: actions/download-artifact@v4
       with: 
-        name: ExampleData-Output
+        name: ExampleData-Output-${{ matrix.python-version }}
     - name: Output contents
       run: ls -al
     - name: Test with pytest
