@@ -1,9 +1,12 @@
 from typing import Tuple
 import multiprocessing as mp
-from importlib.metadata import version
+from importlib.metadata import version, PackageNotFoundError
 
 
-__version__ = version(__name__)
+try: 
+    __version__ = version(__name__)
+except PackageNotFoundError:
+    from ._version import __version__
 
 
 def find_balanced_pair(n: int) -> Tuple[int, int]:
