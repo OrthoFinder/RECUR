@@ -108,5 +108,22 @@ jobs:
     - name: Test with pytest
       run: |
         pytest -sv tests/
+    - name: Update badge status to passing
+      if: ${{ success() }}
+      run: |
+        echo '{"schemaVersion": 1, "label": "Tested", "message": "passing", "color": "brightgreen"}' > badge-status.json
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add badge-status.json
+        git commit -m "Update badge status to passing"
+        git push
 
-
+    - name: Update badge status to failing
+      if: ${{ failure() }}
+      run: |
+        echo '{"schemaVersion": 1, "label": "Tested", "message": "failing", "color": "red"}' > badge-status.json
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add badge-status.json
+        git commit -m "Update badge status to failing"
+        git push
