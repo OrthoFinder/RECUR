@@ -83,10 +83,10 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install mypy pytest pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
+    - name: Add iqtree2 to PATH
+      run: echo "::add-path::$(pwd)/src/recur/bin"
     - name: Test with mypy
       run: mypy src/
-
     - name: Run on ExampleData
       run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData
     - name: Upload artifacts
