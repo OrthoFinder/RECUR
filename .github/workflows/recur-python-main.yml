@@ -99,12 +99,15 @@ jobs:
       with: 
         name: ExampleData-Output-${{ matrix.python-version }}
         path: ExampleData/
-    - name: Move files to ExampleData directory
-      run: |
-        mkdir -p ExampleData
-        mv example_alignments* ExampleData/
     - name: Output contents
       run: ls -al
+    # - name: Move files to ExampleData directory
+    #   run: |
+    #     mkdir -p ExampleData
+    #     mv example_alignments* ExampleData/
+    # - name: Output contents
+    #   run: |
+    #     cd ExampleData && ls -al
     - name: Test with pytest
       run: |
         pytest -sv tests/
