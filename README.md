@@ -1,3 +1,5 @@
+![Tested](https://img.shields.io/badge/status-Tested-brightgreen) ![Build Status](https://github.com/OrthoFinder/RECUR/actions/workflows/recur-python-main.yml/badge.svg)
+
 # RECUR
 Finding Recurrent Substitutions in Multiple Sequence Alignments
 
@@ -20,6 +22,7 @@ The required input is either a protein or codon multiple sequence alignment (in 
   - [Simple Usage](#simple-usage)
   - [Advance Usage](#advanced-usage)
   - [Output Structure](#output-structure)
+  - [Interpretation of the Recurrence List](#interpretation-of-the-recurrence-list)
   - [Discussion](#discussion)
 - [Citations](#citations)
   - [Credits and Acknowledgements](#credits-and-acknowledgements)
@@ -192,7 +195,6 @@ In this section, we will dive deep into the options you can have to run RECUR. T
   -iv <str>                    IQ-TREE2 path [Default: local]
 ```
 
-
 ### Simple Usage
 
 The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g., RECUR can run on either a protien or a CODON alignment. 
@@ -209,6 +211,11 @@ The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format wi
 
 For example, the example commands mentioned in the [Getting started with RECUR](#getting-started-with-recur) section runs on an example_alignments.aln file which sits inside the ExampleData folder with the outgroups specified in the example_alignments.outgroups.txt file.
 
+> **important information**:
+>  * `<alignment_file>`: can have `.aln`, `fasta`, or `fa` as the file extensions
+>  * `<outgroups_file>`: needs to have `.outgroup` in the file name.
+>  * `<treefile>`: needs to have `.tree` in the file name.
+
 ### Advanced Usage
 
 - Using a constraint tree 
@@ -216,56 +223,93 @@ For example, the example commands mentioned in the [Getting started with RECUR](
 To specify the topology of the phylogeny used by RECUR the user can provide a constraint tree using the `-te` flag. The argument is a file containing a tree in Newick format. E.g., 
 
 ```
-recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> 
+recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile>
 ```
 
-Furthermore, a model of sequence evolution (as long as it is supported by IQ-TREE2) can be provided using the -m flag. 
+- Providing a model of evolution
 
-Running RECUR on a directory 
-
-recur [options] -f <directory> --outgroups <directory> -st <AA|CODON> 
-
-How do the files need to be named in the directory??? 
-
-Multi-threading 
-
-- Running RECUR on multiple genes
+A model of sequence evolution (as long as it is supported by IQ-TREE2) can be provided using the `-m` flag. E.g.,
 
 ```
-recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CODON>
+recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> -m <model_of_evolution>
 ```
+
+- Running RECUR on a directory 
+
+To free you from typing multiple commands in a terminal to run on multiple genes, RECUR provides an option to run on a folder. E.g., 
+
+```
+recur [options] -f <directory> --outgroups <directory> -st <AA|CODON> -te <directory>
+````
+For example, if you have three genes files, each have a different set of outgroups and treefiles. You can place those outgroups files and tree files with the corresponding gene names inside the same MSA data folder. E.g.,
+<p align="center">
+  <img src="./docs/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="300"/>
+</p>
+
+If your genes share the same outgroups and tree, you only need to create a single outgroups file and tree file in your data folder. Those two files will be share by all the genes for your RECUR analysis. E.g., 
+
+<p align="center">
+  <img src="./docs/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="300"/>
+</p>
 
 - Running RECUR with parallel processing
 
+To speed up the analysing process, RECUR has introduced both multiprocessing and multithreading in the package. You can use the following three options to manage your resources and maximise the speed.
 
+- `-rt`: Number of threads runs on the IQ-TREE2 commands
+- `-nt`: Number of threads for IQ-TREE2 to run in parallel (**[only for the SH-aLRT test](http://iqtree.org/doc/Command-Reference#tree-search-for-pathogen-datae)**)
+- `t`: Number of threads used for the RECUR algorithms
 
+By default, all three values will be automatically defined based the configureation of your machine. Neither of them, if defined by a user,  cannot exceed the computer allownce, which is defined by the specific architecture of the CPU, namely, 
 
-> **important information**:
->  * `<alignment_file>`: can have `.aln`, `fasta`, or `fa` as the file extensions
->  * `<outgroups_file>`: needs to have `.outgroup` in the file name.
->  * `<treefile>`: needs to have `.tree` in the file name.
+> * `-t` <= maximum_num_logical_threads
+> * `-rt` <= maximum_num_logical_threads
+> * `-nt` <= maximum_num_logical_threads
+> * `-rt` * `-nt` <= maximum_num_logical_threads
 
+For instance, if your computer has 8 lolgic threads, you can have the following setup,
 
+```
+recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -rt 1 -nt 8
+```
+or 
 
-
+```
+recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -rt 2 -nt 4
+```
 
 ### Output Structure
 
-<!-- 
-![RECUR output structure](./docs/RECUR_output_structure.PNG) -->
 <p align="center">
   <img src="./docs/RECUR_output_structure.PNG" alt="RECUR output structure" width="500"/>
 </p>
 
+Every time when you run RECUR, it will output a folder which contains some subfolders with intermediate results and a `.tsv` file which contains the final recurrence list of your data. 
 
+If you do not specify the output folder using `-o`, after successfully running RECUR, you can find the recurrence list inside the same data folder where you have your MSA alignment files. 
+
+For example, after you have run RECUR on alignment file inside the ExampleData, you will obtain a folder which has same name of your input alignment file with a trailing `.recur`. In this case, it is `example_alignments.aln.recur`. 
+
+Inside the `example_alignments.aln.recur` folder, you will find two `.txt` files, i.e., `Citation.txt` and `Log.txt`, and four subdirectories, i.e., `Real_Phylogeny`, `Infered_Sequences`, Monte_Carlo_Simulation` and `Substitution_Matirces`. 
+
+### Interpretation of the Recurrence List
+
+<p align="center">
+  <img src="./docs/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="300"/>
+</p>
 
 ### Discussion
+
+According to Shen et al. (2020), irreproducibility in maximum likelihood phylogenetic inference is a significant issue [^1]. Regardless of the method related parameters that would affect the reprocibility of the final outputs, different random starting seed number, number of threads and processor type can also introduce uncertainties to the results. Such effect can be observed by setting different combination of `-rt` and `-nt`, or setting different seed number using `--seed` in RECUR for each run. When running RECUR on different machine with different processor type even with the fixed `-rt`, `-nt` and `--seed`, the results can still be different. Nevertheless, the results should stay the same for each run when running RECUR on the same machine with the fixed input parameters.  
+
 
 ## Citations
 
 ### Credits and Acknowledgements
 
 ## References
+[^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](https://zenodo.org/badge/DOI/10.1038/s41467-020-20005-6.svg)](https://doi.org/10.1038/s41467-020-20005-6)
+
 
 
 ## Contributing
