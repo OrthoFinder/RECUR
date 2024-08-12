@@ -117,7 +117,10 @@ jobs:
         git add badge-status.json
         git commit -m "Update badge status"
         git push origin main
-            
+    - name: Debug - Show Token
+      run: echo "Token: ${{ secrets.MY_PAT:0:5 }}..."
+    - name: Debug - Show Repo URL
+      run: git remote -v            
     - name: Update badge status to passing
       if: ${{ success() }}
       run: |
