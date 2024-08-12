@@ -100,7 +100,9 @@ jobs:
         name: ExampleData-Output-${{ matrix.python-version }}
         path: ExampleData/
     - name: Output contents
-      run: ls -al
+      run: |
+        ls -al
+        ls -al ExampleData/
     # - name: Move files to ExampleData directory
     #   run: |
     #     mkdir -p ExampleData
