@@ -108,14 +108,14 @@ jobs:
     - name: Test with pytest
       run: |
         pytest -sv tests/
-    - name: Commit and Push initial changes
+    - name: Commit and Push changes
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.MY_PAT }}
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git add badge-status.json
-        git commit -m "Update badge status to failing"
+        git commit -m "Update badge status"
         git push origin main
             
     - name: Update badge status to passing
