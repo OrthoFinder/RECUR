@@ -1081,7 +1081,6 @@ def main(args: Optional[List[str]] = None):
                     file_path = os.path.join(real_phyDir, file)
                     if os.path.exists(file_path):
                         if file.endswith(".treefile.txt") or file.endswith(".treefile.log"):
-                            print(f"Match found: {file}")
                             os.remove(file_path)
 
                 afasta = random.choice(os.listdir(mcs_faDir))
