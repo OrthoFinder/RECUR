@@ -52,25 +52,27 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   ```
   cd RECUR
   ```
-  3. Install the package [Optional]
-  ```
-  pip install .
-  ```
-  To test your installation, please run
+  Once you are inside the package's root directory, based on your requirments, you can choose either to install RECUR on your machine or just the required public python dependencies.
+  * Option 1:  Install RECUR
 
-  ```
-  recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
-  ```
-    
-  If you do not wish to install the RECUR package, you can simply run the following command to install the required dependencies.
+    Running the following command will help you install RECUR in your current virtual environment.
+    ```
+    pip install .
+    ```
+    To test your installation, please run
+    ```
+    recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
+    ```
+  * Option 2: Install the requirements.txt without installing the package
 
-  ```
-  pip install -r requirements.txt
-  ```
-  Then run 
-  ```
-  python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
-  ```
+    If you do not wish to install the RECUR package, you can simply run the following command to install the required dependencies.
+    ```
+    pip install -r requirements.txt
+    ```
+    Then run 
+    ```
+    python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
+    ```
   to test the installation and the environment. 
   
   > NOTE: if python3 does not work, please try python.
@@ -192,6 +194,13 @@ In this section, we will dive deep into the options you can have to run RECUR. T
   --seed <int>                 Random starting see number [Default: 8]
   -o <txt>                     Non-default results directory
   -iv <str>                    IQ-TREE2 path [Default: local]
+```
+
+Please note that the default values for `-nt`, `-rt`, `-t` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actaul default setting for your machine.
+
+```
+recur 
+python3 recur.py
 ```
 
 ### Simple Usage
