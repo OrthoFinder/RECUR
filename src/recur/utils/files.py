@@ -130,7 +130,7 @@ class FileHandler(object):
     def GetAccumMutCountMatricesFN(self) -> str:
         if self.GetMutMatrixDir() is None: 
             raise Exception("No Substitution_Matrices directory.")
-        mut_matrix_file = os.path.join(self.GetMutMatrixDir(), f"{self.gene_of_interest}.accum_substituion_matrix.tsv")
+        mut_matrix_file = os.path.join(self.GetMutMatrixDir(), f"{self.gene_of_interest}.accum_substituion_matrix.txt")
         return mut_matrix_file 
 
     def GetCombinedDNASeqsFN(self) -> str:
@@ -138,7 +138,6 @@ class FileHandler(object):
             raise Exception("No Infered_Sequences directory.")
         combined_seqs_file = os.path.join(self.GetInferedSeqsDir(), f"{self.gene_of_interest}.combined_dna_sequences.aln")
         return combined_seqs_file 
-
     
     def GetNodeDNASeqsFN(self) -> str:
         if self.GetInferedSeqsDir() is None: 
@@ -152,7 +151,6 @@ class FileHandler(object):
         combined_seqs_file = os.path.join(self.GetInferedSeqsDir(), f"{self.gene_of_interest}.combined_protein_sequences.aln")
         return combined_seqs_file 
 
-    
     def GetNodeProtSeqsFN(self) -> str:
         if self.GetInferedSeqsDir() is None: 
             raise Exception("No Infered_Sequences directory.")
@@ -165,7 +163,6 @@ class FileHandler(object):
         
         recurrence_list_file = os.path.join(recDir, f"{self.gene_of_interest}.recur.tsv")
         return recurrence_list_file
-
 
     def GetMCSimulationTreeFN(self) -> str:
         if self.GetMCSimulationDir() is None: 
@@ -189,11 +186,6 @@ class FileHandler(object):
 
     def GetMCSimulationDir(self) -> str:
         d = self.rd1 + "Monte_Carlo_Similation" + os.sep
-        if not os.path.exists(d): os.mkdir(d)
-        return d
-
-    def GetMCSimulationFADir(self) -> str:
-        d = self.GetMCSimulationDir() + "FA_Files" + os.sep
         if not os.path.exists(d): os.mkdir(d)
         return d
 
@@ -291,7 +283,7 @@ class FileWriter(object):
 
         # fn_path = os.path.join(mut_matrix_dir, "mutation_matrices.tsv")
         mut_matricex_tuple = sorted([(pos, mut) for pos, mut in mut_matrices.items()])
-        colname = ["Site", "Parent:Child:MutCount", "RowIndex", "ColIndex"]
+        colname = ["Site", "Parent>Child:MutCount", "RowIndex", "ColIndex"]
         accum_mutation_matrix = np.zeros((20, 20), dtype=np.int64)
         with open(mut_matrix_path, "w") as writer:
             writer.write("\t".join(colname) + "\n")
@@ -309,23 +301,33 @@ class FileWriter(object):
                         child = residue_dict_flip[col]
                         parent_child.append(">".join((parent, child)) + ":" + str(data))
                     parent_child_str = ",".join(parent_child)
-                    row_str = ",".join(map(str, coo.row))
-                    col_str = ",".join(map(str, coo.col))
+                    row_str = ",".join(map(str, coo.row + 1))
+                    col_str = ",".join(map(str, coo.col + 1))
                     line = "\t".join((str(pos+1), parent_child_str, row_str, col_str))
                 line += "\n"
                 writer.write(line)
 
-        # accum_mut_fnpath = os.path.join(mut_matrix_dir, "accum_mutation_matrix.tsv")
         with open(accum_matrix_path, "w") as writer:
-            col_index = "\t".join(util.residues)
-            col_index = "\t".join((" ", col_index)) + "\n"
+            col_index = "    ".join(util.residues)
+            col_index = "          ".join((" ", col_index)) + "\n"
+            col_val0 = [*map(str, range(1, 10))]
+            col_val1 = [*map(str, range(10, 21))]
+            col_val0 = "    ".join(col_val0) 
+            col_val1 = "   ".join(col_val1)
+            col_val = col_val0 + "    " + col_val1
+            col_val = "          ".join((" ", col_val)) + "\n"
+            writer.write(col_val)
             writer.write(col_index)
+            
             for i in range(accum_mutation_matrix.shape[0]):
-                row_str = "\t".join(map(str, accum_mutation_matrix[i]))
-                row_str = "\t".join((util.residues[i], row_str))
+                row_str = "    ".join(map(str, accum_mutation_matrix[i]))
+                row_str = "    ".join((util.residues[i], row_str))
+                if i + 1 < 10:
+                    row_str = "     ".join((str(i+1), row_str))
+                else:
+                    row_str = "    ".join((str(i+1), row_str))
                 row_str += "\n"
                 writer.write(row_str)
-
 
     @staticmethod
     def WriteSeqsToAln(seqs_dict: Dict[str, str], outFilename: str) -> None:

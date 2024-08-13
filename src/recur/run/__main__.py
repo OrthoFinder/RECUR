@@ -1032,7 +1032,7 @@ def main(args: Optional[List[str]] = None):
                 step2_results_info = f"Results Directory: {filehandler.GetMCSimulationDir()}\n"
                 production_logger.info(step2_results_info, extra={'to_file': True, 'to_console': True})
 
-                mcs_faDir = filehandler.GetMCSimulationFADir()
+                mcs_faDir = filehandler.GetMCSimulationDir()
                 if len(os.listdir(mcs_faDir)) != options.nalign or \
                     (options.restart_from == 2 or options.restart_from == 1):
 
@@ -1067,9 +1067,8 @@ def main(args: Optional[List[str]] = None):
                     run_commands.RunCommand(mcs_commands, 
                                             mcs_faDir, 
                                             nthreads=options.recur_nthreads,
-                                            move_files=True,
                                             delete_files=True,
-                                            files_to_keep=["fasta", "fa", "treefile"],
+                                            files_to_keep=["fasta", "fa"],
                                             fd_limit=options.fd_limit)
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Monte-Carlo Simulation complete.\n", extra={'to_file': True, 'to_console': True})
@@ -1090,7 +1089,7 @@ def main(args: Optional[List[str]] = None):
                 if options.usr_mcs_alnDir:
                     mcs_alnDir = options.usr_mcs_alnDir
                 else:
-                    mcs_alnDir = filehandler.GetMCSimulationFADir()
+                    mcs_alnDir = mcs_faDir
 
                 if not options.recDir:
                     recurrenceDir = alnDir
@@ -1108,12 +1107,9 @@ def main(args: Optional[List[str]] = None):
                 production_logger.info(prepend + "Starting create substitution matrices for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
                 production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
                 
-
-
-                
                 try:
                     mcs_results = process_mcs_files_in_chunks(mcs_alnDir, 
-                                                        filehandler.GetMCSimulationTreeFN(), 
+                                                        treefile, 
                                                         residue_dict, 
                                                         n_species, 
                                                         outgroup_mrca, 

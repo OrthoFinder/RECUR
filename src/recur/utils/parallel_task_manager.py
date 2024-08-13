@@ -9,7 +9,6 @@ import contextlib
 import warnings
 import threading
 import concurrent.futures
-import shutil
 from typing import Optional, List, Set
 
 
@@ -30,12 +29,9 @@ def PrintTime(message: str) -> None:
 def Fail():
     sys.stderr.flush()
     print(traceback.format_exc())
-    # print("ERROR: An error occurred, ***please review the error messages*** they may contain useful information about the problem.")
     sys.exit(1)
 
-
 def RunCommand(command: str, qPrintOnError: bool = False, qPrintStderr: bool = True) -> int:
-    """ Run a single command """
     try:
         popen = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = popen.communicate()
@@ -109,8 +105,7 @@ def set_file_descriptor_limit(new_limit: int) -> None:
 
 def RunParallelCommands(nProcesses: int, 
                         commands: List[str], 
-                        fileDir: str,
-                        move_files: bool = False, 
+                        fileDir: str, 
                         delete_files: bool = False, 
                         files_to_keep: Optional[List[str]] = None, 
                         files_to_remove: Optional[List[str]] = None, 
@@ -135,12 +130,6 @@ def RunParallelCommands(nProcesses: int,
                                        q_always_print_stderr) 
                        for cmd in commands]
             concurrent.futures.wait(futures)
-
-        if move_files:
-            for file in os.listdir(fileDir):
-                if file.endswith("alisim.full.treefile"):
-                    shutil.move(os.path.join(fileDir, file), 
-                                os.path.join(os.path.dirname(os.path.dirname(fileDir)), file))
 
         if delete_files:
             # PrintTime("Cleaning up the directory.")
