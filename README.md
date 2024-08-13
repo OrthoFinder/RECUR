@@ -296,9 +296,29 @@ Every time when you run RECUR, it will output a folder which contains some subfo
 
 If you do not specify the output folder using `-o`, after successfully running RECUR, you can find the recurrence list inside the same data folder where you have your MSA alignment files. 
 
-For example, after you have run RECUR on alignment file inside the ExampleData, you will obtain a folder which has same name of your input alignment file with a trailing `.recur`. In this case, it is `example_alignments.aln.recur`. 
+For example, after you have run RECUR on the alignment file inside the ExampleData, you will obtain a folder which has the same name of your input alignment file with a trailing `.recur`. In this case, it is `example_alignments.aln.recur`. 
 
-Inside the `example_alignments.aln.recur` folder, you will find two `.txt` files, i.e., `Citation.txt` and `Log.txt`, and four subdirectories, i.e., `Real_Phylogeny`, `Infered_Sequences`, Monte_Carlo_Simulation` and `Substitution_Matirces`. 
+Inside the `example_alignments.aln.recur` folder, you will find two `.txt` files, i.e., `Citation.txt` and `Log.txt`, and four subdirectories, i.e., `Real_Phylogeny`, `Infered_Sequences`, `Monte_Carlo_Simulation` and `Substitution_Matirces`. 
+
+- `Real_Phylogeny`: contains the necessary IQ-TREE2 output files, i.e., `*.iqtree`, `*.state` and `*.treefile`,  to reconstruct the ancestral sequences.
+- `Infered_Sequences`: contains the infered ancestral sequences alignemnt files. Depending on the input sequence type, you can either find one protein alignment file or one codon alignment file and a protein alignment file. Since the `example_alignments.aln` contains the protein sequences, you can only see one infered ancestral sequence inside this folder.
+- `Substitution_Matirces`: contains a `*.substituion_matrix.tsv` file and a `*.accum_substituion_matrix.txt` file. The `*.substituion_matrix.tsv` summarises the substitution happened between the parent sequence and the child sequence at each residue for the infered real phylogeny, while the `*.accum_substituion_matrix.txt` presents the accumulated subsititution for all residues of the infered real phylogeny. 
+
+For example, by running RECUR on the `example_alignments.aln` file, the `example_alignments.aln.substituion_matrix.tsv` would have the following content
+<p align="center">
+  <img src="./docs/RECUR_substitution_matrices.PNG" alt="RECUR substitution matrices" width="300"/>
+</p>
+
+The `Site` is ordered in an continuous accending order. If subsitution was found between the parent and child sequence, the letter representation of the parent residue and the child as well as the mutation count was presented in the `Parent>Child:MutCount` column, 
+`-` is used to indicate that there is no subsitution was found.
+
+<p align="center">
+  <img src="./docs/RECUR_accum_substitution_matrices.PNG" alt="RECUR accum substitution matrices" width="400"/>
+</p>
+
+- `Monte_Carlo_Simulation`: 
+
+
 
 ### Interpretation of the Recurrence List
 
