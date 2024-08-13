@@ -117,6 +117,20 @@ jobs:
         else 
           echo "Token is set"; 
         fi   
+
+    - name: Debug - Show Badge Status File
+      run: cat badge-status.json
+
+    - name: Check Git Status
+      run: git status
+      
+    - name: Add and Commit Changes
+      run: |
+        git add badge-status.json
+        git status
+        git commit -m "Update badge status" || echo "No changes to commit"
+        git push origin main
+
     - name: Commit and Push changes
       env:
         GITHUB_TOKEN: ${{ secrets.MY_PAT }}
