@@ -3,8 +3,8 @@ import os
 from typing import Optional, List
 
 
-asr_command_str = "iqtree2 -s alignment_file -redo -T iqtree_nthreads -m evolution_model -pre path_to_output --seed phy_seed" 
-Monte_Carlo_simulation_command_str = "iqtree2 --alisim  output_prefix -T iqtree_nthreads -m best_evolution_model -te gene_tree --keep-seq-order --root-seq root_node --num-alignments nalign --seed mcs_seed --write-all --out-format fasta"
+asr_command_str = "iqtree2 -s alignment_file -redo -T iqtree_nthreads -m evolution_model -pre path_to_output --seed phy_seed -safe" 
+Monte_Carlo_simulation_command_str = "iqtree2 --alisim  output_prefix -T iqtree_nthreads -m best_evolution_model -te gene_tree --keep-seq-order --root-seq root_node --num-alignments nalign --seed mcs_seed --write-all --out-format fasta -safe"
 
 def GetGeneTreeBuildCommands(alignment_file_list: list[str], 
                               output_dir: str, 
