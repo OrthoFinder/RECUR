@@ -294,7 +294,7 @@ Inside the `example_alignments.aln.recur` folder, you will find two `.txt` files
 ### Interpretation of the Recurrence List
 
 <p align="center">
-  <img src="./docs/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="300"/>
+  <img src="./docs/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="400"/>
 </p>
 
 ### Discussion
