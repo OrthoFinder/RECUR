@@ -310,10 +310,8 @@ class FileWriter(object):
         with open(accum_matrix_path, "w") as writer:
             col_index = "    ".join(util.residues)
             col_index = "          ".join((" ", col_index)) + "\n"
-            col_val0 = [*map(str, range(1, 10))]
-            col_val1 = [*map(str, range(10, 21))]
-            col_val0 = "    ".join(col_val0) 
-            col_val1 = "   ".join(col_val1)
+            col_val0 = "    ".join(map(str, range(1, 10)))
+            col_val1 = "   ".join(map(str, range(10, 21)))
             col_val = col_val0 + "    " + col_val1
             col_val = "          ".join((" ", col_val)) + "\n"
             writer.write(col_val)

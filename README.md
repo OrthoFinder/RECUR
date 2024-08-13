@@ -313,7 +313,7 @@ The `Site` is ordered in an continuous accending order. If subsitution was found
 `-` is used to indicate that there is no subsitution was found.
 
 <p align="center">
-  <img src="./docs/RECUR_accum_substitution_matrices.PNG" alt="RECUR accum substitution matrices" width="400"/>
+  <img src="./docs/RECUR_accum_substitution_matrices.PNG" alt="RECUR accum substitution matrices" width="500"/>
 </p>
 
 - `Monte_Carlo_Simulation`: 
@@ -323,7 +323,7 @@ The `Site` is ordered in an continuous accending order. If subsitution was found
 ### Interpretation of the Recurrence List
 
 <p align="center">
-  <img src="./docs/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="400"/>
+  <img src="./docs/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="500"/>
 </p>
 
 ### Discussion
@@ -335,12 +335,11 @@ According to Shen et al. (2020), irreproducibility in maximum likelihood phyloge
 
 ### Credits and Acknowledgements
 
-## References
-[^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](https://zenodo.org/badge/DOI/10.1038/s41467-020-20005-6.svg)](https://doi.org/10.1038/s41467-020-20005-6)
-
-
-
 ## Contributing
 
 If you find a bug :bug:, please open a [bug report](https://github.com/).
 If you have an idea for an improvement or new feature, please open a [feature request]().
+
+## References
+[^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](https://zenodo.org/badge/DOI/10.1038/s41467-020-20005-6.svg)](https://doi.org/10.1038/s41467-020-20005-6)
+
