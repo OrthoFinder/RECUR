@@ -58,6 +58,8 @@ jobs:
 
   test:
     needs: build
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -108,18 +110,6 @@ jobs:
     - name: Test with pytest
       run: |
         pytest -sv tests/
-
-    - name: Debug - Check Token
-      run: |
-        if [ -z "${{ secrets.MY_PAT }}" ]; then 
-          echo "Token is not set or empty";
-          exit 1;
-        else 
-          echo "Token is set"; 
-        fi   
-
-    - name: Debug - Show Badge Status File
-      run: cat badge-status.json
 
     - name: Check Git Status
       run: git status
