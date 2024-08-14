@@ -2,8 +2,6 @@
 
 import os
 import sys
-import datetime
-import traceback
 import subprocess
 import contextlib
 import warnings
@@ -19,17 +17,7 @@ from typing import Optional, List, Set
 #         subprocess.call("taskset -p 0xffffffffffff %d" % os.getpid(), shell=True, stdout=f)
 
 
-
 lock = threading.RLock()
-
-def PrintTime(message: str) -> None:
-    print((str(datetime.datetime.now()).rsplit(".", 1)[0] + " : " + message))
-    sys.stdout.flush()
-
-def Fail():
-    sys.stderr.flush()
-    print(traceback.format_exc())
-    sys.exit(1)
 
 def RunCommand(command: str, qPrintOnError: bool = False, qPrintStderr: bool = True) -> int:
     try:
@@ -132,7 +120,7 @@ def RunParallelCommands(nProcesses: int,
             concurrent.futures.wait(futures)
 
         if delete_files:
-            # PrintTime("Cleaning up the directory.")
+            # util.PrintTime("Cleaning up the directory.")
             clean_up_files(fileDir, processed_files, already_deleted_files, files_to_keep, files_to_remove)
 
     except KeyboardInterrupt:

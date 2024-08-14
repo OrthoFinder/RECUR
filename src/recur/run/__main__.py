@@ -335,7 +335,6 @@ def ParentChildRelation(t,
         print(traceback.format_exc())
         return res_loc, root_node, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
 
-      
 def CountMutations(treefile: str,
                    outgroup_species: List[str],
                    sequence_dict: Dict[str, str], 
@@ -351,15 +350,12 @@ def CountMutations(treefile: str,
         
         if error_msg:
             return res_loc, root_node, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
-        # print(f"No. outgroups before updating {len(outgroup_species)}, taxon_count: {taxon_count}, No. outgroup_subtree_species {len(outgroup_subtree_species)}")
         
         if len(outgroup_subtree_species) != len(outgroup_species):
-            # print(f"Outgroup species provided not monophyletic. Outgroup will be updated.")
             outgroup_species = outgroup_subtree_species
 
         expected_relationships = 2 * (n_species - len(outgroup_species)) - 2
         if taxon_count != expected_relationships:
-            # print(f"No. outgroups after updating {len(outgroup_species)}, taxon_count: {taxon_count}, expected_relationships: {expected_relationships}")
             return res_loc, root_node, outgroup_species, residue_mut, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}"
         
         return res_loc, root_node, outgroup_species, residue_mut, ""
@@ -440,7 +436,6 @@ def count_mutations(treefile: str,
             outgroups = outgroup_species
         return root, outgroups, mut_results_dict
 
-#Outgroup species provided not monophyletic. Outgroup updated to <Outgoup_subtree_species>
 def GetRecurrenceList(rec_loc: int,
                       mut_matrix: np.typing.NDArray[np.int64], 
                       terminate_flag) -> Union[List[List[Union[int, str, float]]], str]:
@@ -728,7 +723,7 @@ def compute_p_values(mcs_results: List[Dict[int, np.typing.NDArray[np.int64]]],
                 print(error_msg)
                 print(traceback.format_exc())
                 terminate_flag.set()
-                break  # Stop processing further lists
+                break 
 
         recurrence_list_pvalue.sort(key=lambda x: (float(x[-1]), -float(x[-3])))
     except Exception as e:
@@ -786,7 +781,6 @@ def main(args: Optional[List[str]] = None):
         for gene, aln_path in aln_path_dict.items():
 
             if terminate_flag.is_set():
-                # print("Termination flag is set. Exiting.")
                 break
             
             try:    
@@ -824,7 +818,6 @@ def main(args: Optional[List[str]] = None):
                 print()
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Starting RECUR v%s" % __version__, extra={'to_file': True, 'to_console': True})
-                # production_logger.info("Using %d thread(s) for RECUR algorithm\n" % options.nthreads, extra={'to_file': True, 'to_console': True})
 
                 alignment_dict, alignment_len = filereader.ReadAlignment(aln_path)
                 n_species = len(alignment_dict)

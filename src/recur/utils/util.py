@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 import os
+import sys
 import datetime
 from recur.citation import citation, print_citation
 from recur.utils import parallel_task_manager, files
@@ -12,7 +13,7 @@ import logging
 import logging.config
 import yaml
 import tracemalloc
-
+import traceback
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
 
@@ -92,7 +93,6 @@ def delete_files_in_directory(dirpath: str) -> None:
        for entry in entries:
          if entry.is_file():
             os.unlink(entry.path)
-    #  print("All files deleted successfully.")
    except OSError:
      print("ERROR occurred while deleting files.")
      raise
@@ -140,8 +140,8 @@ def print_centered_text(width, text):
         print()
 
 def get_system_info():
-    num_cpus = psutil.cpu_count(logical=False)  # Physical cores
-    num_logical_cpus = psutil.cpu_count(logical=True)  # Logical cores
+    num_cpus = psutil.cpu_count(logical=False) 
+    num_logical_cpus = psutil.cpu_count(logical=True)
     print("Machine Information:")
     print(f"Number of Physical CPUs: {num_cpus}, Number of Logical CPUs: {num_logical_cpus}")
     print()
@@ -225,7 +225,13 @@ def GetSeqsDict(dna_seq_dict: Dict[str, str], sequence_type: str) -> Tuple[Dict[
     return prot_sequence_dict, protein_len
 
 def PrintTime(message: str) -> None:
-    parallel_task_manager.PrintTime(message)   
+    print((str(datetime.datetime.now()).rsplit(".", 1)[0] + " : " + message))
+    sys.stdout.flush()
+
+def Fail():
+    sys.stderr.flush()
+    print(traceback.format_exc())
+    sys.exit(1)
                
 def GetDirectoryName(baseDirName: str, 
                      i: int, 
