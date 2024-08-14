@@ -276,9 +276,6 @@ def CreateNewWorkingDirectory(baseDirectoryName: str,
 
     return newDirectoryName
    
-def Fail():
-    parallel_task_manager.Fail()
-
 def WriteCitation(d: str) -> None:
     with open(d + "Citation.txt", 'w') as outfile:
         outfile.write(citation)
