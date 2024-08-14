@@ -8,7 +8,27 @@ import os
 import csv
 import shutil
 from typing import Optional, Dict, List, Tuple, Union, Set
-
+import threading       
+import gc
+import time
+import datetime
+import numpy as np
+from collections import Counter
+import scipy as spy
+import warnings
+import psutil
+import signal
+import traceback
+import random
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import dendropy
+from functools import partial
+from collections import defaultdict
+from recur.run import run_commands
+from recur.utils import files, util, process_args
+import logging
+import warnings
+# warnings.filterwarnings("ignore", module='dendropy')
 
 def setup_environment():
     max_int = sys.maxsize
@@ -118,29 +138,6 @@ def initialise_recur(iqtree_version: Optional[str] = None):
     print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
     print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
     sys.exit(1)
-
-
-import threading       
-import gc
-import time
-import datetime
-import numpy as np
-from collections import Counter
-import scipy as spy
-import warnings
-import psutil
-import signal
-import traceback
-import random
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import dendropy
-from functools import partial
-from collections import defaultdict
-from recur.run import run_commands
-from recur.utils import files, util, process_args
-import logging
-import warnings
-# warnings.filterwarnings("ignore", module='dendropy')
 
 
 def initialise_terminate_flag() -> threading.Event:

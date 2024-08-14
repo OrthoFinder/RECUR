@@ -10,9 +10,9 @@ import dendropy
 import multiprocessing as mp     
 
 
-class Options(object):#
+class Options(object):
+    
     def __init__(self):
-
         self.nthreads = recur_nthreads
         self.recur_nthreads, self.iqtree_nthreads = recur_iqtree_nthreads, iqtree_nthreads
         self.tree_program = "iqtree2"
@@ -30,7 +30,6 @@ class Options(object):#
         self.nalign = 1000
         self.batch_size = None
         self.outgroups = None 
-        # self.species_of_interest = None
         self.bootstrap = 1000
         self.sh_alrt = 1000
         self.usr_node_aln = None 
@@ -61,7 +60,6 @@ def GetDirectoryArgument(arg: str) -> str:
         print("Specified directory doesn't exist: %s" % directory)
         util.Fail()
     return directory
-
 
 def GetFileArgument(arg: str) -> str:
     file_path = os.path.abspath(arg)
