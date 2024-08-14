@@ -81,7 +81,9 @@ jobs:
       id: cache
       uses: actions/cache@v4
       with:
-        path: ~/.cache/pip
+        path: |
+          ~/.cache/pip
+          $(python -c 'import site; print(site.getsitepackages()[0])')
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-${{ matrix.python-version }}
@@ -92,6 +94,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install mypy pytest pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
     - name: Add iqtree2 to PATH
       run: echo "$(pwd)/src/recur/bin" >> $GITHUB_PATH
     - name: Ensure iqtree2 is executable
