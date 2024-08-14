@@ -42,14 +42,21 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+  
+    - name: Print Pip Paths
+      run: |
+        python -m site
     - name: Cache dependencies
       id: cache
       uses: actions/cache@v4
       with:
-        path: ~/.cache/pip
+        path: |
+          ~/.cache/pip
+          $(python -c 'import site; print(site.getsitepackages()[0])')
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-${{ matrix.python-version }}
+          
     - name: Install dependencies
       if : steps.cache.outputs.cache-hit != 'true'
       run: |
