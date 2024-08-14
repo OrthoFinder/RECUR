@@ -43,6 +43,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache dependencies
+      id: cache
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
@@ -50,12 +51,12 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-${{ matrix.python-version }}-
     - name: Install dependencies
+      if : steps.cache.outputs.cache-hit != 'true'
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test screen printout
       run: python recur.py
-
   test:
     needs: build
     permissions:
@@ -120,10 +121,13 @@ jobs:
       if: ${{ job.status == 'success' }}
       run: |
         echo '{"schemaVersion": 1, "label": "Tested", "message": "passing", "color": "brightgreen"}' > badge-status.json
-        git add badge-status.json
-        git commit -m "Update badge status to passing"
-        git pull --rebase origin main
-        git push
+        if ! git diff --quiet; then
+          git add badge-status.json
+          git commit -m "Update badge status to passing"
+          git push origin main
+        else
+          echo "No changes to commit"
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -131,9 +135,12 @@ jobs:
       if: ${{ job.status == 'failure' }}
       run: |
         echo '{"schemaVersion": 1, "label": "Tested", "message": "failing", "color": "red"}' > badge-status.json
-        git add badge-status.json
-        git commit -m "Update badge status to failing"
-        git pull --rebase origin main
-        git push
+        if ! git diff --quiet; then
+          git add badge-status.json
+          git commit -m "Update badge status to failing"
+          git push origin main
+        else
+          echo "No changes to commit"
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
