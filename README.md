@@ -3,7 +3,7 @@
 Finding Recurrent Substitutions in Multiple Sequence Alignments
 
 ## Introduction
-![RECUR method workflow](./docs/RECUR_workflow_figure.png)
+![RECUR method workflow](./docs/images/RECUR_workflow_figure.png)
 
 <p style="text-align: center;">Figure 1: The RECUR workflow. </p>
 
@@ -150,9 +150,9 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   - **Personal computer**
   
     Before you can run the RECUR container, you need to have Docker Desktop installed. 
-    - Windows: https://docs.docker.com/desktop/install/windows-install/
-    - macOS: https://docs.docker.com/desktop/install/mac-install/
-    - Linux: https://docs.docker.com/desktop/install/linux-install/
+    - Windows: https://docs/images.docker.com/desktop/install/windows-install/
+    - macOS: https://docs/images.docker.com/desktop/install/mac-install/
+    - Linux: https://docs/images.docker.com/desktop/install/linux-install/
 
     Once you have the Docker Desktop installed, please launch it and run the following command in the terminal to check if it is up and running.
 
@@ -163,7 +163,7 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
 
     If you need to install the Docker Engine before you can run the RECUR container.
 
-    Please find the right docker engine to install on your server in [here](https://docs.docker.com/engine/install/).
+    Please find the right docker engine to install on your server in [here](https://docs/images.docker.com/engine/install/).
 
   With either Docker Decktop or Docker Engine installed on your machine, you can simply run the following command to test if you can run the RECUR container
   ```
@@ -251,13 +251,13 @@ recur [options] -f <directory> --outgroups <directory> -st <AA|CODON> -te <direc
 ````
 For example, if you have three genes files, each have a different set of outgroups and treefiles. You can place those outgroups files and tree files with the corresponding gene names inside the same MSA data folder. E.g.,
 <p align="center">
-  <img src="./docs/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="300"/>
+  <img src="./docs/images/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="300"/>
 </p>
 
 If your genes share the same outgroups and tree, you only need to create a single outgroups file and tree file in your data folder. Those two files will be share by all the genes for your RECUR analysis. E.g., 
 
 <p align="center">
-  <img src="./docs/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="300"/>
+  <img src="./docs/images/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="300"/>
 </p>
 
 - Running RECUR with parallel processing
@@ -289,7 +289,7 @@ recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.
 ### Output Structure
 
 <p align="center">
-  <img src="./docs/RECUR_output_structure.PNG" alt="RECUR output structure" width="500"/>
+  <img src="./docs/images/RECUR_output_structure.PNG" alt="RECUR output structure" width="500"/>
 </p>
 
 Every time when you run RECUR, it will output a folder which contains some subfolders with intermediate results and a `.tsv` file which contains the final recurrence list of your data. 
@@ -306,14 +306,14 @@ Inside the `example_alignments.aln.recur` folder, you will find two `.txt` files
 
 For example, by running RECUR on the `example_alignments.aln` file, the `example_alignments.aln.substituion_matrix.tsv` would have the following content
 <p align="center">
-  <img src="./docs/RECUR_substitution_matrices.PNG" alt="RECUR substitution matrices" width="300"/>
+  <img src="./docs/images/RECUR_substitution_matrices.PNG" alt="RECUR substitution matrices" width="300"/>
 </p>
 
 The `Site` is ordered in an continuous accending order. If subsitution was found between the parent and child sequence, the letter representation of the parent residue and the child as well as the mutation count was presented in the `Parent>Child:MutCount` column, 
 `-` is used to indicate that there is no subsitution was found.
 
 <p align="center">
-  <img src="./docs/RECUR_accum_substitution_matrices.PNG" alt="RECUR accum substitution matrices" width="500"/>
+  <img src="./docs/images/RECUR_accum_substitution_matrices.PNG" alt="RECUR accum substitution matrices" width="700"/>
 </p>
 
 - `Monte_Carlo_Simulation`: 
@@ -323,7 +323,7 @@ The `Site` is ordered in an continuous accending order. If subsitution was found
 ### Interpretation of the Recurrence List
 
 <p align="center">
-  <img src="./docs/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="500"/>
+  <img src="./docs/images/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="500"/>
 </p>
 
 ### Discussion
@@ -341,5 +341,5 @@ If you find a bug :bug:, please open a [bug report](https://github.com/).
 If you have an idea for an improvement or new feature, please open a [feature request]().
 
 ## References
-[^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](https://zenodo.org/badge/DOI/10.1038/s41467-020-20005-6.svg)](https://doi.org/10.1038/s41467-020-20005-6)
+[^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](./docs/images/doi-badge_1.svg)](https://doi.org/10.1038/s41467-020-20005-6)
 
