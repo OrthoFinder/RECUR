@@ -39,21 +39,11 @@ jobs:
     - name: Get Code
       uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      id: cache
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-  
-    - name: Print Pip Paths
-      run: |
-        python -m site
-    - name: Cache dependencies
-      id: cache
-      uses: actions/cache@v4
-      with:
-        path: /opt/hostedtoolcache/Python/${{ matrix.python-version }}/x64/lib/python${{ matrix.python-version }}/site-packages
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+        cache: 'pip'  # Use built-in pip cache
 
     - name: Install dependencies
       if : steps.cache.outputs.cache-hit != 'true'
@@ -78,21 +68,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      id: cache
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Print Pip Paths
-      run: |
-        python -m site
-    - name: Cache dependencies
-      id: cache
-      uses: actions/cache@v4
-      with:
-        path: /opt/hostedtoolcache/Python/${{ matrix.python-version }}/x64/lib/python${{ matrix.python-version }}/site-packages
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+        cache: 'pip'  # Use built-in pip cache
 
     - name: Install dependencies
       if : steps.cache.outputs.cache-hit != 'true'
