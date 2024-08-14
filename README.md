@@ -341,6 +341,5 @@ If you find a bug :bug:, please open a [bug report](https://github.com/).
 If you have an idea for an improvement or new feature, please open a [feature request]().
 
 ## References
-[^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6]([![DOI:10.1038/s41467-020-20005-6](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/.docs/images/doi-badge.svg)](https://doi.org/10.1038/s41467-020-20005-6)
-/docs/images/doi-badge.svg)](https://doi.org/10.1038/s41467-020-20005-6)
+[^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1038/s41467-020-20005-6)
 
