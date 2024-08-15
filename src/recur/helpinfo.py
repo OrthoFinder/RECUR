@@ -11,8 +11,8 @@ def PrintHelp():
     
     print("")
     print("OPTIONS:")
-    print("-f <dir/file>                FASTA format alignment of protein or corresponding codon alignment [Required]")
-    print("-s <str>                     <AA|CODON> [Required][Default: CODON11]")
+    print("-f <dir/file>                Protein or codon alignment in FASTA format [Required]")
+    print("-s <str>                     <AA|CODON> [Required][Default: CODON1]")
     print("--outgroups <dir/file/str>   List of outgroup species [Required]")
     print("--num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]")
     print("-te <dir/file>               Complete constraint tree [Default: Estimated from alignment]")
@@ -21,7 +21,7 @@ def PrintHelp():
     print(f"-rt <int>                    Number of threads used for RECUR run on IQ-TREE2 [Default: {recur_iqtree_nthreads}]")
     print(f"-t <int>                     Number of threads used for RECUR internal processing [Default: {recur_nthreads}]")
     print("--seed <int>                 Random starting see number [Default: 8]")
-    print("-o <txt>                     Non-default results directory") 
+    print("-o <txt>                     Results directory [Default: same directory as MSA files]") 
     print("-iv <str>                    IQ-TREE2 path [Default: local]")
     
     
