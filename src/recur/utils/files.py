@@ -134,27 +134,27 @@ class FileHandler(object):
         return mut_matrix_file 
 
     def GetCombinedDNASeqsFN(self) -> str:
-        if self.GetInferedSeqsDir() is None: 
-            raise Exception("No Infered_Sequences directory.")
-        combined_seqs_file = os.path.join(self.GetInferedSeqsDir(), f"{self.gene_of_interest}.combined_dna_sequences.aln")
+        if self.GetInferredSeqsDir() is None: 
+            raise Exception("No Inferred_Sequences directory.")
+        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.combined_dna_sequences.aln")
         return combined_seqs_file 
     
     def GetNodeDNASeqsFN(self) -> str:
-        if self.GetInferedSeqsDir() is None: 
-            raise Exception("No Infered_Sequences directory.")
-        combined_seqs_file = os.path.join(self.GetInferedSeqsDir(), f"{self.gene_of_interest}.infered_ancestral_sequences.dna.aln")
+        if self.GetInferredSeqsDir() is None: 
+            raise Exception("No Inferred_Sequences directory.")
+        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.dna.aln")
         return combined_seqs_file 
 
     def GetCombinedProtSeqsFN(self) -> str:
-        if self.GetInferedSeqsDir() is None: 
-            raise Exception("No Infered_Sequences directory.")
-        combined_seqs_file = os.path.join(self.GetInferedSeqsDir(), f"{self.gene_of_interest}.combined_protein_sequences.aln")
+        if self.GetInferredSeqsDir() is None: 
+            raise Exception("No Inferred_Sequences directory.")
+        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.combined_protein_sequences.aln")
         return combined_seqs_file 
 
     def GetNodeProtSeqsFN(self) -> str:
-        if self.GetInferedSeqsDir() is None: 
-            raise Exception("No Infered_Sequences directory.")
-        combined_seqs_file = os.path.join(self.GetInferedSeqsDir(), f"{self.gene_of_interest}.infered_ancestral_sequences.prot.aln")
+        if self.GetInferredSeqsDir() is None: 
+            raise Exception("No Inferred_Sequences directory.")
+        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.prot.aln")
         return combined_seqs_file 
 
     def GetRecurrenceListFN(self, recDir: Optional[str] = None) -> str:
@@ -179,8 +179,8 @@ class FileHandler(object):
         if not os.path.exists(d): os.mkdir(d)
         return d
 
-    def GetInferedSeqsDir(self) -> str:
-        d = self.rd1 + "Infered_Sequences" + os.sep
+    def GetInferredSeqsDir(self) -> str:
+        d = self.rd1 + "Inferred_Sequences" + os.sep
         if not os.path.exists(d): os.mkdir(d)
         return d
 
