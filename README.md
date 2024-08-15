@@ -7,7 +7,7 @@ Finding Recurrent Substitutions in Multiple Sequence Alignments
 
 <p style="text-align: center;">Figure 1: The RECUR workflow. </p>
 
-The required input is either a protein or codon multiple sequence alignment (in FASTA format) and a defined outgroup species or clade. The output of RECUR is a list of recurrent amino acid substitutions, that have occurred in the inferred phylogeny (file suffix.recur.tsv). Outputs of intermediate steps, i.e. model selection, tree inference, ancestral state reconstruction and site substitution matrices, can be found in the .recur output directory.
+The required input is either a protein or codon multiple sequence alignment (in FASTA format) and a defined outgroup species or clade. The output of RECUR is a list of recurrent amino acid substitutions, that have occurred in the inferred phylogeny (file suffix: `.recur.tsv`). Outputs of intermediate steps, i.e. model selection, tree inference, ancestral state reconstruction and site substitution matrices, can be found in the .recur output directory.
 
 ## Table of Contents
 
