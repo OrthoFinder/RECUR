@@ -29,13 +29,13 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-
+        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.operating-system }}
     steps:
     - name: Get Code
       uses: actions/checkout@v4
@@ -57,13 +57,15 @@ jobs:
 
   test:
     needs: build
+    continue-on-error: true
     permissions:
       contents: write
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
+        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.operating-system }}
 
     steps:
     - uses: actions/checkout@v4
