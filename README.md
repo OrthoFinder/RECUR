@@ -249,8 +249,8 @@ If your genes share the same outgroups and tree, you only need to create a singl
   <img src="./docs/images/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="300"/>
 </p>
 
-> **important information**:
->  * `<alignment_file>`: can have `.aln`, `fasta`, or `fa` as the file extensions
+> **Important Information when running RECUR on a directory**:
+>  * `<alignment_file>`: can only have `.aln`, `fasta`, or `fa` as the file extensions. (When running RECUR directly on an alignment file, extension requirement does not apply.)
 >  * `<outgroups_file>`: needs to have `.outgroup` in the file name.
 >  * `<treefile>`: needs to have `.tree` in the file name.
 

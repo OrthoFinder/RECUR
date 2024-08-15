@@ -108,7 +108,10 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 isfile = True
                 alnPath = GetFileArgument(arg)
                 alnDir = os.path.dirname(alnPath) 
-                options.gene = os.path.basename(alnPath).split(".", 1)[0]
+                if "." in alnPath:
+                    options.gene = os.path.basename(alnPath).split(".", 1)[0]
+                else:
+                    options.gene = os.path.basename(alnPath)
             elif os.path.isdir(arg):
                 isdir = True
                 alnDir = GetDirectoryArgument(arg)

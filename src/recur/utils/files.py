@@ -77,10 +77,14 @@ class FileHandler(object):
 
         else:
             f = os.path.basename(alnPath)
-            if len(f.rsplit(".", 1)) == 2 and f.rsplit(".", 1)[1].lower():
-                if len(f.split(".", 1)) == 2:
-                    gene_of_interest = f.split(".", 1)[0]
-                    originalALNFilenames[gene_of_interest] = alnPath
+            if "." in f:
+                if len(f.rsplit(".", 1)) == 2 and f.rsplit(".", 1)[1].lower():
+                    if len(f.split(".", 1)) == 2:
+                        gene_of_interest = f.split(".", 1)[0]
+                        originalALNFilenames[gene_of_interest] = alnPath
+            else:
+                gene_of_interest = f.split(".", 1)[0]
+                originalALNFilenames[gene_of_interest] = alnPath
         
         return originalALNFilenames
 

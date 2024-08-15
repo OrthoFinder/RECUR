@@ -139,7 +139,6 @@ def initialise_recur(iqtree_version: Optional[str] = None):
     print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
     sys.exit(1)
 
-
 def initialise_terminate_flag() -> threading.Event:
     manager = mp.Manager()
     return manager.Event()
@@ -263,9 +262,8 @@ def get_subtree_species(node):
         species.append(leaf.taxon.label)
     return species
 
-
-def ParentChildRelation(t, 
-                        outgroup_species, 
+def ParentChildRelation(t: dendropy.Tree, 
+                        outgroup_species: List[str],
                         sequence_dict: Dict[str, str], 
                         residue_dict: Dict[str, int], 
                         res_loc: int, 
@@ -760,7 +758,6 @@ def main(args: Optional[List[str]] = None):
             initialise_recur(iqtree_version)
             os.environ['ENV_SETUP_DONE'] = '1'
 
-
         aln_path_dict = files.FileHandler.ProcessesNewAln(alnDir, alnPath)
 
         aln_len = len(aln_path_dict)
@@ -847,7 +844,6 @@ def main(args: Optional[List[str]] = None):
                 production_logger.info("="*len(step1_info), extra={'to_file': True, 'to_console': True})
                 production_logger.info(f"Results Directory: {real_phyDir}\n", extra={'to_file': True, 'to_console': True})
 
-
                 if (options.usr_state and options.usr_tree and options.usr_iqtree):
                     statefile = options.usr_state
                     treefile = options.usr_tree
@@ -901,7 +897,6 @@ def main(args: Optional[List[str]] = None):
                     treefile = filehandler.GetTreeFileFN() 
                     iqtreefile = filehandler.GetIQTreeFileFN()
                     
-
                 best_evolution_model = filereader.ReadIQTreeFile(iqtreefile)
 
                 if not gene_tree:
