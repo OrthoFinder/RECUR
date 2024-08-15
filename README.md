@@ -170,7 +170,7 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   ```
   To run the RECUR container on your dataset, you will need to create a folder which contains your data in your current working directory. For instance, you have a data folder called MyData which contains an protein alignment file called `my_alignment.aln` and a file called `my_alignment.outgroups.txt` that contains all the ourgroups, you can run the following command to start the RECUR container and make it run your dataset.
   ```
-  docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData orthofinder/recur:v1.0.0 recur -f MyData/my_alignment.aln -st AA --outgroups MyData/my_alignment.outgroups.txt   
+  docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData:Z orthofinder/recur:v1.0.0 recur -f MyData/my_alignment.aln -st AA --outgroups MyData/my_alignment.outgroups.txt   
   ```
   Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections. 
 
