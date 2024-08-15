@@ -28,7 +28,6 @@ The required input is either a protein or codon multiple sequence alignment (in 
 - [References](#references)
 - [Contributing](#contributing)
 
-
 ## Getting Started with RECUR
 The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic software package to infer the extinct node sequences and to build the simulated phylogeny. 
 
@@ -37,40 +36,40 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   If you are working on a Linux machine or WSL2, runing RECUR is straigtforward. Installation of IQ-TREE2 is not necessary.
 
   Before installing any relevant dependencies or packages, it is recommended that you create and activate a new virtual environment. You can do so by running:
-  ```
+  ```bash
   python3 -m venv .venv && . .venv/bin/activate
   ```
   *To deactivate the virtual enviroment* run
-  ```
+  ```bash
   deactivate
   ```
   1. Clone the repository
-  ```
+  ```bash
   git clone https://github.com/OrthoFinder/RECUR.git
   ```
   2. Navigate into the cloned repository
-  ```
+  ```bash
   cd RECUR
   ```
   Once you are inside the package's root directory, based on your requirments, you can choose either to install RECUR on your machine or just the required public python dependencies.
   * Option 1:  Install RECUR
 
     Running the following command will help you install RECUR in your current virtual environment.
-    ```
+    ```bash
     pip install .
     ```
     To test your installation, please run
-    ```
+    ```bash
     recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
     ```
   * Option 2: Install the requirements.txt without installing the package
 
     If you do not wish to install the RECUR package, you can simply run the following command to install the required dependencies.
-    ```
+    ```bash
     pip install -r requirements.txt
     ```
     Then run 
-    ```
+    ```bash
     python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
     ```
   to test the installation and the environment. 
@@ -86,36 +85,36 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   - **Windows**
 
   If you are on windows, please open a command prompt, and run the following commnad to create and activate the virtual environment.
-  ```
+  ```bash
   python -m venv win_venv
   win_venv\Scripts\activate.bat
   ```
 
   *To deactivate the virtual enviroment* run
-  ```
+  ```bash
   win_venv\Scripts\deactivate.bat
   ```
   - **macOS**
 
   If you are on macOS, please run the following commands in a terminal.
 
-  ```
+  ```bash
   python3 -m venv mac_venv
   source mac_venv/bin/activate
   ```
 
   *To deactivate the virtual enviroment* run
-  ```
+  ```bash
   deactivate
   ```
   Now that you have successfully created and activated a new virtual environment, you can follow the three steps mentioned in [Installing RECUR on Linux](#installing-recur-on-linux) to install RECUR or just the python dependencies based on your needs. Then run one of the following commands (depending one whether you have installed RECUR or not) to test if RECUR runs on your machine.
 
   * With RECUR installed 
-    ```
+    ```bash
     recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv system
     ```
   * Without RECUR installed 
-      ```
+    ```bash
     python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv system
     ```
   where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package. 
@@ -124,22 +123,22 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
 
   Working in the conda environment can be the easiest when you do not have access to a Linux machine. You can create and activate a new environment by running:
 
-    ```
+    ```bash
     conda create -n recur_env python=3.12
     conda activate recur_env
     ```
   Then install IQ-TREE2 package by running one of the following:
-  ```
+  ```bash
     conda install bioconda::iqtree
     conda install bioconda/label/cf201901::iqtree
   ```
   Now that you have a suitable environment with IQ-TREE2 installed, you can follow the previous steps to install RECUR directly or the relevant dependencies.
   * With RECUR installed 
-    ```
+    ```bash
     recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv conda
     ```
   * Without RECUR installed 
-      ```
+    ```bash
     python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv conda
     ```
 
@@ -156,7 +155,7 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
 
     Once you have the Docker Desktop installed, please launch it and run the following command in the terminal to check if it is up and running.
 
-    ```
+    ```bash
     docker version
     ```
   - **Server**
@@ -181,7 +180,7 @@ In this section, we will dive deep into the options you can have to run RECUR. T
 
 ### Options Overview
 
-```
+```bash
   -f <dir/file>                FASTA format alignment of protein or corresponding codon alignment [Required]
   -s <str>                     <AA|CODON> [Required][Default: CODON11]
   --outgroups <dir/file/str>   List of outgroup species [Required]
@@ -195,14 +194,11 @@ In this section, we will dive deep into the options you can have to run RECUR. T
   -o <txt>                     Non-default results directory
   -iv <str>                    IQ-TREE2 path [Default: local]
 ```
-
 Please note that the default values for `-nt`, `-rt`, `-t` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actaul default setting for your machine.
-
-```
+```bash
 recur 
 python3 recur.py
 ```
-
 ### Simple Usage
 
 The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g., RECUR can run on either a protien or a CODON alignment. 
@@ -230,7 +226,7 @@ For example, the example commands mentioned in the [Getting started with RECUR](
 
 To specify the topology of the phylogeny used by RECUR the user can provide a constraint tree using the `-te` flag. The argument is a file containing a tree in Newick format. E.g., 
 
-```
+```bash
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile>
 ```
 
@@ -238,7 +234,7 @@ recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|
 
 A model of sequence evolution (as long as it is supported by IQ-TREE2) can be provided using the `-m` flag. E.g.,
 
-```
+```bash
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> -m <model_of_evolution>
 ```
 
@@ -246,9 +242,9 @@ recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|
 
 To free you from typing multiple commands in a terminal to run on multiple genes, RECUR provides an option to run on a folder. E.g., 
 
-```
+```bash
 recur [options] -f <directory> --outgroups <directory> -st <AA|CODON> -te <directory>
-````
+```
 For example, if you have three genes files, each have a different set of outgroups and treefiles. You can place those outgroups files and tree files with the corresponding gene names inside the same MSA data folder. E.g.,
 <p align="center">
   <img src="./docs/images/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="300"/>
@@ -268,7 +264,7 @@ To speed up the analysing process, RECUR has introduced both multiprocessing and
 - `-nt`: Number of threads for IQ-TREE2 to run in parallel (**[only for the SH-aLRT test](http://iqtree.org/doc/Command-Reference#tree-search-for-pathogen-datae)**)
 - `t`: Number of threads used for the RECUR algorithms
 
-By default, all three values will be automatically defined based the configureation of your machine. Neither of them, if defined by a user,  cannot exceed the computer allownce, which is defined by the specific architecture of the CPU, namely, 
+By default, all three values will be automatically defined based the configureation of your machine. Neither of them, if defined by a user, cannot exceed the computer allownce, which is defined by the specific architecture of the CPU, namely, 
 
 > * `-t` <= maximum_num_logical_threads
 > * `-rt` <= maximum_num_logical_threads
@@ -277,12 +273,12 @@ By default, all three values will be automatically defined based the configureat
 
 For instance, if your computer has 8 lolgic threads, you can have the following setup,
 
-```
+```bash
 recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -rt 1 -nt 8
 ```
 or 
 
-```
+```bash
 recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -rt 2 -nt 4
 ```
 
@@ -302,23 +298,22 @@ Inside the `example_alignments.aln.recur` folder, you will find two `.txt` files
 
 - `Real_Phylogeny`: contains the necessary IQ-TREE2 output files, i.e., `*.iqtree`, `*.state` and `*.treefile`,  to reconstruct the ancestral sequences.
 - `Infered_Sequences`: contains the infered ancestral sequences alignemnt files. Depending on the input sequence type, you can either find one protein alignment file or one codon alignment file and a protein alignment file. Since the `example_alignments.aln` contains the protein sequences, you can only see one infered ancestral sequence inside this folder.
-- `Substitution_Matirces`: contains a `*.substituion_matrix.tsv` file and a `*.accum_substituion_matrix.txt` file. The `*.substituion_matrix.tsv` summarises the substitution happened between the parent sequence and the child sequence at each residue for the infered real phylogeny, while the `*.accum_substituion_matrix.txt` presents the accumulated subsititution for all residues of the infered real phylogeny. 
+- `Substitution_Matirces`: contains a `*.substituion_matrix.tsv` file and a `*.accum_substituion_matrix.txt` file. The `*.substituion_matrix.tsv` summarises the substitution happened between the parent sequence and the child sequence at each site for the infered real phylogeny, while the `*.accum_substituion_matrix.txt` presents the accumulated subsititution for all residues of the infered real phylogeny. 
 
 For example, by running RECUR on the `example_alignments.aln` file, the `example_alignments.aln.substituion_matrix.tsv` would have the following content
 <p align="center">
   <img src="./docs/images/RECUR_substitution_matrices.PNG" alt="RECUR substitution matrices" width="300"/>
 </p>
 
-The `Site` is ordered in an continuous accending order. If subsitution was found between the parent and child sequence, the letter representation of the parent residue and the child as well as the mutation count was presented in the `Parent>Child:MutCount` column, 
-`-` is used to indicate that there is no subsitution was found.
+The `Site` is ordered in an continuous accending order with the index starting from 1. If subsitution was found between the parent and child sequence, the letter representation of the parent residue and the child residue as well as the mutation count are presented in the `Parent>Child:MutCount` column. Otherwise, `-` is used to indicate that there is no subsitution was found. Multiple substitution can happen at each site. In this case, the `Parent>Child:MutCount` for each distinct substitution is separeted by a comma, e.g., across the whole phylogeny, amino acide H at site 7 has changed to Y once and E once. 
+
+As for the `RowIndex` and `ColIndex` columns, they encode the position of the amino acides arranged in a mutation matrix where substitution has happened. A slimpse of the enconding and the mutation matrix can be found in the accummulated substition matrix. Here, the accummulated substition matrix is obtained by summing up all the mutation matrix at each site. 
 
 <p align="center">
   <img src="./docs/images/RECUR_accum_substitution_matrices.PNG" alt="RECUR accum substitution matrices" width="700"/>
 </p>
 
-- `Monte_Carlo_Simulation`: 
-
-
+- `Monte_Carlo_Simulation`: contains the simulated alignments based on the best evolution model, real phylogeny and root node sequence of interest. The number of alignment files in this dorectory will match the number of Monte Carlo Simulation used in your analysis. It can be adjusted by setting `--num-alignments` to a different value.  
 
 ### Interpretation of the Recurrence List
 
@@ -329,7 +324,6 @@ The `Site` is ordered in an continuous accending order. If subsitution was found
 ### Discussion
 
 According to Shen et al. (2020), irreproducibility in maximum likelihood phylogenetic inference is a significant issue [^1]. Regardless of the method related parameters that would affect the reprocibility of the final outputs, different random starting seed number, number of threads and processor type can also introduce uncertainties to the results. Such effect can be observed by setting different combination of `-rt` and `-nt`, or setting different seed number using `--seed` in RECUR for each run. When running RECUR on different machine with different processor type even with the fixed `-rt`, `-nt` and `--seed`, the results can still be different. Nevertheless, the results should stay the same for each run when running RECUR on the same machine with the fixed input parameters.  
-
 
 ## Citations
 
