@@ -39,18 +39,29 @@ jobs:
     steps:
     - name: Get Code
       uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      id: cache
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'  # Use built-in pip cache
 
-    - name: Install dependencies
+    - name: Load & Cache Dependencies
+      id: cache-dependencies
+      uses: ./.github/actions/cached-dependencies
+      with:
+        caching: 'true' # default
+    
+    - name: Output information
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install mypy pytest pytest-cov
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        echo "Cache used? ${{ steps.cache-dependencies.outputs.used-cache}}"
+
+    # - name: Set up Python ${{ matrix.python-version }}
+    #   id: cache
+    #   uses: actions/setup-python@v5
+    #   with:
+    #     python-version: ${{ matrix.python-version }}
+    #     cache: 'pip'  # Use built-in pip cache
+
+    # - name: Install dependencies
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     python -m pip install mypy pytest pytest-cov
+    #     if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Test screen printout
       run: python recur.py
@@ -68,19 +79,31 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      id: cache
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'  # Use built-in pip cache
+    - name: Get Code
+      uses: actions/checkout@v4
 
-    - name: Install dependencies
+    - name: Load & Cache Dependencies
+      id: cache-dependencies
+      uses: ./.github/actions/cached-dependencies
+      with:
+        caching: 'true' # default
+    
+    - name: Output information
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install mypy pytest pytest-cov
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        echo "Cache used? ${{ steps.cache-dependencies.outputs.used-cache}}"
+
+    # - name: Set up Python ${{ matrix.python-version }}
+    #   id: cache
+    #   uses: actions/setup-python@v5
+    #   with:
+    #     python-version: ${{ matrix.python-version }}
+    #     cache: 'pip'  # Use built-in pip cache
+
+    # - name: Install dependencies
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     python -m pip install mypy pytest pytest-cov
+    #     if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Add iqtree2 to PATH
       run: echo "$(pwd)/src/recur/bin" >> $GITHUB_PATH
