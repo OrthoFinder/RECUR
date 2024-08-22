@@ -54,11 +54,11 @@ class Options(object):
 
 def GetDirectoryArgument(arg: str) -> str:
     directory = os.path.abspath(arg)
-    if not os.path.isfile(directory) and directory[-1] != os.sep: 
-        directory += os.sep
     if not os.path.exists(directory):
         print("Specified directory doesn't exist: %s" % directory)
         util.Fail()
+    if not os.path.isfile(directory) and directory[-1] != os.sep: 
+        directory += os.sep
     return directory
 
 def GetFileArgument(arg: str) -> str:
@@ -470,7 +470,7 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         
         print("Adjusting the threads as follows: ")
         print(f"RECUR threads: {options.recur_nthreads}, IQ-TREE2 threads: {options.iqtree_nthreads}")
-        print("\nRECOMMANDATION: To ensure reproducibility and optimal performance, configure the number of threads used by IQ-TREE2 to be either 1 or to match the number of threads used by RECUR.")
+        print("\nRECOMMENDATION: To ensure reproducibility and optimal performance, configure the number of threads used by IQ-TREE2 to be either 1 or to match the number of threads used by RECUR.")
      
     if not options.qStartFromMSA:
         print("ERROR: Please specify the input directory for RECUR using the option: '-f'.")
