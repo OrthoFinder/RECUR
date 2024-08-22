@@ -97,14 +97,18 @@ def delete_files_in_directory(dirpath: str) -> None:
      print("ERROR occurred while deleting files.")
      raise
 
-def measure_memory_usage(func: Callable[..., Any], *args: Any, **kwargs: Any) -> int:
+def measure_memory_usage(func: Callable[..., Any], 
+                         *args: Any, 
+                         **kwargs: Any) -> int:
     tracemalloc.start()
     func(*args, **kwargs)
     current, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     return peak
 
-def adjust_batch_size(current_batch_size: int, max_memory_usage: int, total_memory: int) -> int:
+def adjust_batch_size(current_batch_size: int, 
+                      max_memory_usage: int, 
+                      total_memory: int) -> int:
     target_memory_usage = total_memory * 0.75  # Target to use up to 75% of total memory
     if max_memory_usage > target_memory_usage:
         return max(1, current_batch_size // 2)
@@ -128,7 +132,7 @@ def determine_optimal_batch_size(data: Any,
     
     return int(min(optimal_batch_size, 100))
 
-def print_centered_text(width, text):
+def print_centered_text(width: int, text: str) -> None:
     text_length = len(text)
     if text_length >= width:
         print(text)
@@ -139,7 +143,7 @@ def print_centered_text(width, text):
         print(f"{dashes} {text} {dashes}")
         print()
 
-def get_system_info():
+def get_system_info() -> None:
     num_cpus = psutil.cpu_count(logical=False) 
     num_logical_cpus = psutil.cpu_count(logical=True)
     print("Machine Information:")
@@ -209,7 +213,8 @@ def Translate(seq: str, table: Dict[str, str]) -> str:
 
     return protein
 
-def GetSeqsDict(dna_seq_dict: Dict[str, str], sequence_type: str) -> Tuple[Dict[str, str], int]:
+def GetSeqsDict(dna_seq_dict: Dict[str, str], 
+                sequence_type: str) -> Tuple[Dict[str, str], int]:
 
     codon_table = ImportCodon(sequence_type)     #NCBI's genetic code 11 (for plant plastids)
 
