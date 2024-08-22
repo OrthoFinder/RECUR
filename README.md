@@ -240,13 +240,13 @@ recur [options] -f <directory> --outgroups <directory> -st <AA|CODON> -te <direc
 ```
 For example, if you have three genes files, each have a different set of outgroups and tree files. You can place those outgroups files and tree files with the corresponding gene names inside the same MSA data folder. E.g.,
 <p align="center">
-  <img src="./docs/images/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="300"/>
+  <img src="./docs/images/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="250"/>
 </p>
 
 If your genes share the same outgroups and tree, you only need to create a single outgroups file and tree file in your data folder. Those two files will be share by all the genes for your RECUR analysis. E.g., 
 
 <p align="center">
-  <img src="./docs/images/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="300"/>
+  <img src="./docs/images/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="250"/>
 </p>
 
 > **Important Information when running RECUR on a directory**:
