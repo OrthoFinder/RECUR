@@ -262,13 +262,16 @@ def get_subtree_species(node):
         species.append(leaf.taxon.label)
     return species
 
-def ParentChildRelation(t: dendropy.Tree, 
+
+def ParentChildRelation(treefile: str, 
                         outgroup_species: List[str],
-                        sequence_dict: Dict[str, str], 
-                        residue_dict: Dict[str, int], 
-                        res_loc: int, 
-                        terminate_flag: threading.Event) -> Tuple[int, Optional[str], List[str], np.typing.NDArray[np.int64], str]:
+                        n_species: int,
+                        terminate_flag: threading.Event) -> Tuple[Optional[str], List[str], Set[Tuple[str, str]], str]:
     try:
+
+        with open(treefile, 'r') as f:
+            t = dendropy.Tree.get(file=f, schema="newick")
+
         t.is_rooted = True
         if len(outgroup_species) == 1:
             outgroup_mrca = t.find_node_with_taxon_label(outgroup_species[0])
@@ -283,18 +286,18 @@ def ParentChildRelation(t: dendropy.Tree,
 
         if root_of_interest is None:
  
-            return res_loc, None, outgroup_species, np.zeros((20, 20), dtype=np.int64), "No root of interest found; tree structure might be incorrect."
+            return None, outgroup_species, "No root of interest found; tree structure might be incorrect."
 
         root_node = root_of_interest.label
         root_node = root_node if "/" not in root_node else root_node.split("/")[0]
 
         outgroup_subtree_species = get_subtree_species(outgroup_mrca)
 
-        residue_mut = np.zeros((20, 20), dtype=np.int64)
         taxon_count = 0
+        parent_child_set = set()
         for nd in root_of_interest.postorder_iter():
             if terminate_flag.is_set():
-                return res_loc, root_node, outgroup_species, np.zeros((20, 20), dtype=np.int64), "Terminated"
+                return root_node, outgroup_species, parent_child_set, "Terminated"
 
             if nd.parent_node is None:
                 continue
@@ -309,68 +312,96 @@ def ParentChildRelation(t: dendropy.Tree,
                 child = child if "/" not in child else child.split("/")[0]
                 parent = parent if "/" not in parent else parent.split("/")[0]
 
-                child_ident = sequence_dict[child][res_loc]
-                parent_ident = sequence_dict[parent][res_loc]
-
-                child_pos = residue_dict.get(child_ident)  # implicitly avoiding -, *, ., etc.
-                parent_pos = residue_dict.get(parent_ident)
-
-                if (child_pos is not None and parent_pos is not None) and (child_pos != parent_pos):
-                    residue_mut[parent_pos, child_pos] += 1
+                parent_child_set.add((parent, child))
 
                 taxon_count += 1
 
-        return taxon_count, root_node, outgroup_subtree_species, residue_mut, ""
-    except BrokenPipeError:
-        print("Broken pipe error while checking termination flag.")
-        return res_loc, root_node, outgroup_species, np.zeros((20, 20), dtype=np.int64), "Broken pipe error"
-    except Exception as e:
-        error_msg = f"ERROR in ParentChildRelation: {e}"
-        print(error_msg)
-        print(traceback.format_exc())
-        return res_loc, root_node, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
-
-def CountMutations(treefile: str,
-                   outgroup_species: List[str],
-                   sequence_dict: Dict[str, str], 
-                   residue_dict: Dict[str, int], 
-                   n_species: int,
-                   res_loc: int,
-                   terminate_flag: threading.Event) -> Tuple[int, Optional[str], List[str], np.typing.NDArray[np.int64], str]:
-    try:
-        with open(treefile, 'r') as f:
-            t = dendropy.Tree.get(file=f, schema="newick")
-
-        taxon_count, root_node, outgroup_subtree_species, residue_mut, error_msg = ParentChildRelation(t, outgroup_species, sequence_dict, residue_dict, res_loc, terminate_flag)
-        
-        if error_msg:
-            return res_loc, root_node, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
-        
         if len(outgroup_subtree_species) != len(outgroup_species):
             outgroup_species = outgroup_subtree_species
 
         expected_relationships = 2 * (n_species - len(outgroup_species)) - 2
+
         if taxon_count != expected_relationships:
-            return res_loc, root_node, outgroup_species, residue_mut, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}"
+            return root_node, outgroup_species, parent_child_set, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}."
         
-        return res_loc, root_node, outgroup_species, residue_mut, ""
+        return root_node, outgroup_species, parent_child_set, ""
+    except BrokenPipeError:
+        print("Broken pipe error while checking termination flag.")
+        return root_node, outgroup_species, parent_child_set, "Broken pipe error"
     except Exception as e:
-        error_msg = f"ERROR in CountMutations for treefile {treefile}, res_loc {res_loc}: {e}"
+        error_msg = f"ERROR in ParentChildRelation: {e}"
         print(error_msg)
         print(traceback.format_exc())
-        return res_loc, None, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
+        return root_node, outgroup_species, parent_child_set, error_msg 
+
+# def CountMutations(treefile: str,
+#                    outgroup_species: List[str],
+#                    sequence_dict: Dict[str, str], 
+#                    residue_dict: Dict[str, int], 
+#                    n_species: int,
+#                    res_loc: int,
+#                    terminate_flag: threading.Event) -> Tuple[Optional[str], List[str], str]:
+#     try:
+#         with open(treefile, 'r') as f:
+#             t = dendropy.Tree.get(file=f, schema="newick")
+
+#         taxon_count, root_node, outgroup_subtree_species, residue_mut, error_msg = ParentChildRelation(t, outgroup_species, sequence_dict, residue_dict, res_loc, terminate_flag)
+        
+#         if error_msg:
+#             return res_loc, root_node, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
+        
+#         if len(outgroup_subtree_species) != len(outgroup_species):
+#             outgroup_species = outgroup_subtree_species
+
+#         expected_relationships = 2 * (n_species - len(outgroup_species)) - 2
+#         if taxon_count != expected_relationships:
+#             return res_loc, root_node, outgroup_species, residue_mut, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}"
+        
+#         return res_loc, root_node, outgroup_species, residue_mut, ""
+#     except Exception as e:
+#         error_msg = f"ERROR in CountMutations for treefile {treefile}, res_loc {res_loc}: {e}"
+#         print(error_msg)
+#         print(traceback.format_exc())
+#         return res_loc, None, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
+    
+
+def CountMutations(res_loc: int,
+                   parent_child_set: Set[Tuple[str, str]],
+                    sequence_dict: Dict[str, str], 
+                    residue_dict: Dict[str, int],
+                    terminate_flag: logging.Logger) -> Tuple[int, np.typing.NDArray[np.int64], str]:
+    residue_mut = np.zeros((20, 20), dtype=np.int64)
+    try: 
+        for parent, child in parent_child_set:
+            if terminate_flag.is_set():
+                return res_loc, residue_mut, "Terminated"
+            
+            child_ident = sequence_dict[child][res_loc]
+            parent_ident = sequence_dict[parent][res_loc]
+
+            child_pos = residue_dict.get(child_ident)  # implicitly avoiding -, *, ., etc.
+            parent_pos = residue_dict.get(parent_ident)
+
+            if (child_pos is not None and parent_pos is not None) and (child_pos != parent_pos):
+                residue_mut[parent_pos, child_pos] += 1
+
+        return res_loc, residue_mut, ""
+    
+    except Exception as e:
+        error_msg = f"ERROR in CountMutations for res_loc {res_loc}: {e}"
+        print(error_msg)
+        print(traceback.format_exc())
+        return res_loc, residue_mut, error_msg
 
 
-def count_mutations(treefile: str, 
+def count_mutations(parent_child_set: Set[Tuple[str, str]], 
                     sequence_dict: Dict[str, str], 
                     residue_dict: Dict[str, int], 
                     protein_len: int,
-                    n_species: int, 
-                    outgroups: List[str], 
                     nthreads: int, 
                     production_logger: logging.Logger,
                     terminate_flag: threading.Event,
-                    batch_size: Optional[int] = None) -> Tuple[Optional[str], List[str], Dict[int, np.typing.NDArray[np.int64]]]:
+                    batch_size: Optional[int] = None) -> Dict[int, np.typing.NDArray[np.int64]]:
     
     all_res_locs = range(protein_len)
     total_memory = psutil.virtual_memory().total
@@ -381,29 +412,28 @@ def count_mutations(treefile: str,
     batches = [all_res_locs[i:i + batch_size] for i in range(0, len(all_res_locs), batch_size)]
 
     mut_results_dict = {}
-    root: Optional[str] = None
-    outgroup_species: Optional[List[str]] = None
 
+    countmut_worker = partial(CountMutations,
+                              parent_child_set=parent_child_set,
+                              sequence_dict=sequence_dict, 
+                              residue_dict=residue_dict,
+                              terminate_flag=terminate_flag)
     try:
         with ProcessPoolExecutor(max_workers=nthreads, initializer=initialise_worker, initargs=(terminate_flag,)) as executor:
-            futures = [executor.submit(CountMutations, treefile, outgroups, sequence_dict, residue_dict, n_species, res_loc, terminate_flag) for batch in batches for res_loc in batch]
+            futures = [executor.submit(countmut_worker, res_loc) for batch in batches for res_loc in batch]
 
             for future in as_completed(futures):
                 if terminate_flag.is_set():
                     break
                 try:
                     result = future.result()
-                    res_loc, batch_root, batch_outgroup_species, residue_mut, error_msg = result
+                    res_loc, residue_mut, error_msg = result
                     if error_msg:
                         print(error_msg)
                         production_logger.error(error_msg)
                         terminate_flag.set()
                         break
-
-                    if root is None:
-                        root = batch_root
                     mut_results_dict[res_loc] = residue_mut
-                    outgroup_species = batch_outgroup_species
 
                 except BrokenPipeError:
                     error_msg = "Broken pipe error during parallel processing."
@@ -418,18 +448,13 @@ def count_mutations(treefile: str,
                     production_logger.error(error_msg)
                     terminate_flag.set()
                     break
-
     except Exception as e:
         error_msg = f"ERROR during parallel processing: {e}"
         print(error_msg)
         print(traceback.format_exc())
         production_logger.error(error_msg)
     finally:
-        if outgroup_species and len(outgroups) != len(outgroup_species):
-            warnings.warn(f"Outgroup species provided not monophyletic. Outgroups will be updated. Please find the updated outgroups in the log file.")
-            production_logger.info(f"Updated outgroups: {outgroup_species}", extra={'to_file': True, 'to_console': False})
-            outgroups = outgroup_species
-        return root, outgroups, mut_results_dict
+        return mut_results_dict
 
 def GetRecurrenceList(rec_loc: int,
                       mut_matrix: np.typing.NDArray[np.int64], 
@@ -462,6 +487,7 @@ def get_recurrence_list(mut_matrices: Dict[int, np.typing.NDArray[np.int64]],
                         extant_seq: Dict[str, str], 
                         outgroups: List[str],
                         nthreads: int,
+                        production_logger: logging.Logger,
                         terminate_flag: threading.Event) -> List[List[Union[str, int, float]]]:
 
     if len(extant_seq) == 0 or len(outgroups) == 0:
@@ -483,6 +509,7 @@ def get_recurrence_list(mut_matrices: Dict[int, np.typing.NDArray[np.int64]],
                     result = future.result()
                     if isinstance(result, str) and result.startswith("ERROR"):
                         print(result)
+                        production_logger.error(result)
                     elif isinstance(result, list) and len(result) > 0:
                         recurrence_list.extend(result)
                 except BrokenPipeError:
@@ -494,93 +521,77 @@ def get_recurrence_list(mut_matrices: Dict[int, np.typing.NDArray[np.int64]],
                     error_msg = f"ERROR during recurrence list processing: {e}"
                     print(error_msg)
                     print(traceback.format_exc())
+                    production_logger.error(error_msg)
                     terminate_flag.set()
-                    break  # Stop processing further futures
-                
-            # wait(futures)
+                    break 
+
     except Exception as e:
         error_msg = f"ERROR during get_recurrence_list: {e}"
         print(error_msg)
         print(traceback.format_exc())
+        production_logger.error(error_msg)
 
-    return recurrence_list
+    finally:
+        return recurrence_list
 
 
 def WorkerProcessAndCount(file: str, 
                           mcs_alnDir: str,
-                          mcs_treefile: str, 
-                          isnuc_fasta: bool, 
+                          parent_child_set: Set[Tuple[str, str]],
+                          isnuc_fasta: bool,
+                          sequence_type: str, 
                           residue_dict: Dict[str, int], 
-                          n_species: int, 
-                          outgroup_mrca: List[str], 
                           res_loc_set: Set[int],
                           production_logger: logging.Logger,
                           terminate_flag: threading.Event) -> Tuple[Optional[Dict[int, np.typing.NDArray[np.int64]]], Optional[str]]:
+    
+    mut_matrices = {}
+    error_msg = ""
     try:
         file_path = os.path.join(mcs_alnDir, file)
         mcs_combined_prot_seqs_dict, _ = files.FileReader.ReadAlignment(file_path)
 
         if isnuc_fasta:
-            mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, "CODON1")
+            mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
 
         if terminate_flag.is_set():
             msg = f"Terminating processing for file: {file} due to termination signal"
             return None, msg
 
-        mut_matrices = {}
-        root_node = None
         for res_loc in res_loc_set:
             if terminate_flag.is_set():
                 msg = f"Terminating processing for file: {file} at res_loc {res_loc} due to termination signal"
                 return None, msg
 
-            res_loc, current_root_node, _, mut_matrix, error_msg = CountMutations(mcs_treefile,
-                                                                    outgroup_mrca,
-                                                                    mcs_combined_prot_seqs_dict,
-                                                                    residue_dict,
-                                                                    n_species,
-                                                                    res_loc,
-                                                                    terminate_flag)
-
+            res_loc, mut_matrix, error_msg = CountMutations(res_loc,
+                                                            parent_child_set,
+                                                            mcs_combined_prot_seqs_dict,
+                                                            residue_dict,
+                                                            terminate_flag)
             if error_msg:
                 print(error_msg)
                 production_logger.error(error_msg)
                 continue
-
-            if current_root_node is None:
-                msg = f"CountMutations returned None for root_node at res_loc {res_loc}"
-                print(msg)
-                continue
-
             mut_matrices[res_loc] = mut_matrix
-            root_node = current_root_node
-
-        if root_node:
-            return mut_matrices, None
-        else:
-            error_msg = f"No valid root_node found for file: {file}, returning None."
-            print(error_msg)
-            return mut_matrices, error_msg
-
     except BrokenPipeError:
         error_msg = "Broken pipe error while processing file."
         print(error_msg)
-        return None, error_msg
+
     except Exception as e:
         error_msg = f"ERROR in WorkerProcessAndCount for mcs task {file}: {e}"
         print(error_msg)
         print(traceback.format_exc())
         production_logger.error(error_msg)
-        return None, error_msg
+    finally:
+        return mut_matrices if mut_matrices else None, error_msg if error_msg else None
     
 
 def process_mcs_files_in_chunks(mcs_alnDir: str, 
-                                mcs_treefile: str, 
+                                parent_child_set: Set[Tuple[str, str]], 
                                 residue_dict: Dict[str, int], 
-                                n_species: int, 
-                                outgroup_mrca: List[str], 
                                 nthreads: int, 
                                 isnuc_fasta: bool, 
+                                sequence_type: str,
                                 res_loc_set: Set[int],
                                 production_logger: logging.Logger,
                                 terminate_flag: threading.Event,
@@ -596,11 +607,10 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
     results = []
     worker = partial(WorkerProcessAndCount, 
                      mcs_alnDir=mcs_alnDir,
-                     mcs_treefile=mcs_treefile,
+                     parent_child_set=parent_child_set,
                      isnuc_fasta=isnuc_fasta,
+                     sequence_type=sequence_type,
                      residue_dict=residue_dict, 
-                     n_species=n_species, 
-                     outgroup_mrca=outgroup_mrca, 
                      res_loc_set=res_loc_set,
                      production_logger=production_logger,
                      terminate_flag=terminate_flag)
@@ -967,18 +977,27 @@ def main(args: Optional[List[str]] = None):
                 
                 node_seq_dict.clear()
                 combined_seq_dict.clear()
+              
+                root_node, outgroup_species, parent_child_set, error_msg = ParentChildRelation(treefile, outgroup_mrca, n_species, terminate_flag)
+                
+                if error_msg:
+                    production_logger.error(error_msg)
+                    continue
+
+                if outgroup_mrca and len(outgroup_mrca) != len(outgroup_species):
+                    warnings.warn(f"Outgroup species provided not monophyletic. Outgroups will be updated. Please find the updated outgroups in the log file.")
+                    production_logger.info(f"Updated outgroups: {outgroup_mrca}", extra={'to_file': True, 'to_console': False})
+                    outgroup_mrca = outgroup_species
 
                 try:
-                    root_node, outgroup_mrca, mut_matrices = count_mutations(treefile, 
-                                                                            combined_prot_seqs_dict,
-                                                                            residue_dict, 
-                                                                            protein_len, 
-                                                                            n_species,
-                                                                            outgroup_mrca, 
-                                                                            options.nthreads,
-                                                                            production_logger,
-                                                                            terminate_flag,
-                                                                            batch_size=options.batch_size)
+                    mut_matrices = count_mutations(parent_child_set,
+                                                    combined_prot_seqs_dict,
+                                                    residue_dict, 
+                                                    protein_len, 
+                                                    options.nthreads,
+                                                    production_logger,
+                                                    terminate_flag,
+                                                    batch_size=options.batch_size)
                 finally:
                     reset_terminate_flag(terminate_flag)
 
@@ -995,6 +1014,7 @@ def main(args: Optional[List[str]] = None):
                                                         combined_prot_seqs_dict,
                                                         outgroup_mrca, 
                                                         options.nthreads,
+                                                        production_logger,
                                                         terminate_flag)
                 finally:
                     reset_terminate_flag(terminate_flag)
@@ -1094,12 +1114,11 @@ def main(args: Optional[List[str]] = None):
                 
                 try:
                     mcs_results = process_mcs_files_in_chunks(mcs_alnDir, 
-                                                        treefile, 
+                                                        parent_child_set, 
                                                         residue_dict, 
-                                                        n_species, 
-                                                        outgroup_mrca, 
                                                         options.nthreads,
                                                         isnuc_fasta,
+                                                        options.sequence_type,
                                                         res_loc_set, 
                                                         production_logger,
                                                         terminate_flag,
