@@ -336,10 +336,14 @@ def ParentChildRelation(treefile: str,
 
 def CountMutations(res_loc: int,
                    parent_child_set: Set[Tuple[str, str]],
-                    sequence_dict: Dict[str, str], 
-                    residue_dict: Dict[str, int],
-                    terminate_flag: threading.Event) -> Tuple[int, np.typing.NDArray[np.int64], str]:
+                   sequence_dict: Dict[str, str], 
+                   residue_dict: Dict[str, int],
+                   terminate_flag: threading.Event) -> Tuple[int, np.typing.NDArray[np.int64], str]:
+    
     residue_mut = np.zeros((20, 20), dtype=np.int64)
+    parent_positions = []
+    child_positions = []
+    
     try: 
         for parent, child in parent_child_set:
             if terminate_flag.is_set():
@@ -352,7 +356,14 @@ def CountMutations(res_loc: int,
             parent_pos = residue_dict.get(parent_ident)
 
             if (child_pos is not None and parent_pos is not None) and (child_pos != parent_pos):
-                residue_mut[parent_pos, child_pos] += 1
+                parent_positions.append(parent_pos)
+                child_positions.append(child_pos)
+
+        if parent_positions and child_positions:
+            parent_positions = np.array(parent_positions, dtype=int)
+            child_positions = np.array(child_positions, dtype=int)
+
+            np.add.at(residue_mut, (parent_positions, child_positions), 1)
 
         return res_loc, residue_mut, ""
     
@@ -363,6 +374,35 @@ def CountMutations(res_loc: int,
         return res_loc, residue_mut, error_msg
 
 
+# def CountMutations(res_loc: int,
+#                    parent_child_set: Set[Tuple[str, str]],
+#                     sequence_dict: Dict[str, str], 
+#                     residue_dict: Dict[str, int],
+#                     terminate_flag: threading.Event) -> Tuple[int, np.typing.NDArray[np.int64], str]:
+#     residue_mut = np.zeros((20, 20), dtype=np.int64)
+#     try: 
+#         for parent, child in parent_child_set:
+#             if terminate_flag.is_set():
+#                 return res_loc, residue_mut, "Terminated"
+            
+#             child_ident = sequence_dict[child][res_loc]
+#             parent_ident = sequence_dict[parent][res_loc]
+
+#             child_pos = residue_dict.get(child_ident)  # implicitly avoiding -, *, ., etc.
+#             parent_pos = residue_dict.get(parent_ident)
+
+#             if (child_pos is not None and parent_pos is not None) and (child_pos != parent_pos):
+#                 residue_mut[parent_pos, child_pos] += 1
+
+#         return res_loc, residue_mut, ""
+    
+#     except Exception as e:
+#         error_msg = f"ERROR in CountMutations for res_loc {res_loc}: {e}"
+#         print(error_msg)
+#         print(traceback.format_exc())
+#         return res_loc, residue_mut, error_msg
+
+
 def count_mutations(parent_child_set: Set[Tuple[str, str]], 
                     sequence_dict: Dict[str, str], 
                     residue_dict: Dict[str, int], 
@@ -370,16 +410,9 @@ def count_mutations(parent_child_set: Set[Tuple[str, str]],
                     nthreads: int, 
                     production_logger: logging.Logger,
                     terminate_flag: threading.Event,
-                    batch_size: Optional[int] = None) -> Dict[int, np.typing.NDArray[np.int64]]:
+                    protein_batch_size: Optional[int] = None) -> Dict[int, np.typing.NDArray[np.int64]]:
     
     all_res_locs = range(protein_len)
-    total_memory = psutil.virtual_memory().total
-
-    if batch_size is None:
-        sample_data = list(all_res_locs)[:10]  # Use a sample of locations to estimate
-        batch_size = util.determine_optimal_batch_size(sample_data, 'mutation_count', total_memory)
-    batches = [all_res_locs[i:i + batch_size] for i in range(0, len(all_res_locs), batch_size)]
-
     mut_results_dict = {}
 
     countmut_worker = partial(CountMutations,
@@ -387,9 +420,10 @@ def count_mutations(parent_child_set: Set[Tuple[str, str]],
                               sequence_dict=sequence_dict, 
                               residue_dict=residue_dict,
                               terminate_flag=terminate_flag)
+    
     try:
-        with ProcessPoolExecutor(max_workers=nthreads, initializer=initialise_worker, initargs=(terminate_flag,)) as executor:
-            futures = [executor.submit(countmut_worker, res_loc) for batch in batches for res_loc in batch]
+        with ProcessPoolExecutor(max_workers=nthreads) as executor:
+            futures = {executor.submit(countmut_worker, res_loc): res_loc for res_loc in all_res_locs}
 
             for future in as_completed(futures):
                 if terminate_flag.is_set():
@@ -417,6 +451,7 @@ def count_mutations(parent_child_set: Set[Tuple[str, str]],
                     production_logger.error(error_msg)
                     terminate_flag.set()
                     break
+
     except Exception as e:
         error_msg = f"ERROR during parallel processing: {e}"
         print(error_msg)
@@ -424,6 +459,62 @@ def count_mutations(parent_child_set: Set[Tuple[str, str]],
         production_logger.error(error_msg)
     finally:
         return mut_results_dict
+
+
+    # all_res_locs = range(protein_len)
+    # total_memory = psutil.virtual_memory().total
+
+    # if protein_batch_size is None:
+    #     sample_data = list(all_res_locs)[:np.amin((10, protein_len))] 
+    #     protein_batch_size = util.determine_optimal_batch_size(sample_data, 'mutation_count', total_memory)
+    
+    # # protein_batch_size = np.amin((protein_batch_size, protein_len))
+    # batches = [all_res_locs[i:i + protein_batch_size] for i in range(0, len(all_res_locs), protein_batch_size)]
+
+    # mut_results_dict = {}
+
+    # countmut_worker = partial(CountMutations,
+    #                           parent_child_set=parent_child_set,
+    #                           sequence_dict=sequence_dict, 
+    #                           residue_dict=residue_dict,
+    #                           terminate_flag=terminate_flag)
+    # try:
+    #     with ProcessPoolExecutor(max_workers=nthreads, initializer=initialise_worker, initargs=(terminate_flag,)) as executor:
+    #         futures = [executor.submit(countmut_worker, res_loc) for batch in batches for res_loc in batch]
+
+    #         for future in as_completed(futures):
+    #             if terminate_flag.is_set():
+    #                 break
+    #             try:
+    #                 result = future.result()
+    #                 res_loc, residue_mut, error_msg = result
+    #                 if error_msg:
+    #                     print(error_msg)
+    #                     production_logger.error(error_msg)
+    #                     terminate_flag.set()
+    #                     break
+    #                 mut_results_dict[res_loc] = residue_mut
+
+    #             except BrokenPipeError:
+    #                 error_msg = "Broken pipe error during parallel processing."
+    #                 print(error_msg)
+    #                 production_logger.error(error_msg)
+    #                 terminate_flag.set()
+    #                 break
+    #             except Exception as e:
+    #                 error_msg = f"ERROR during parallel processing: {e}"
+    #                 print(error_msg)
+    #                 print(traceback.format_exc())
+    #                 production_logger.error(error_msg)
+    #                 terminate_flag.set()
+    #                 break
+    # except Exception as e:
+    #     error_msg = f"ERROR during parallel processing: {e}"
+    #     print(error_msg)
+    #     print(traceback.format_exc())
+    #     production_logger.error(error_msg)
+    # finally:
+    #     return mut_results_dict
 
 def GetRecurrenceList(rec_loc: int,
                       mut_matrix: np.typing.NDArray[np.int64], 
@@ -503,7 +594,6 @@ def get_recurrence_list(mut_matrices: Dict[int, np.typing.NDArray[np.int64]],
     finally:
         return recurrence_list
 
-
 def WorkerProcessAndCount(file: str, 
                           mcs_alnDir: str,
                           parent_child_set: Set[Tuple[str, str]],
@@ -527,21 +617,45 @@ def WorkerProcessAndCount(file: str,
             msg = f"Terminating processing for file: {file} due to termination signal"
             return None, msg
 
+        all_parent_positions = []
+        all_child_positions = []
+        all_res_locs = []
+        
         for res_loc in res_loc_set:
             if terminate_flag.is_set():
                 msg = f"Terminating processing for file: {file} at res_loc {res_loc} due to termination signal"
                 return None, msg
 
-            res_loc, mut_matrix, error_msg = CountMutations(res_loc,
-                                                            parent_child_set,
-                                                            mcs_combined_prot_seqs_dict,
-                                                            residue_dict,
-                                                            terminate_flag)
-            if error_msg:
-                print(error_msg)
-                production_logger.error(error_msg)
-                continue
-            mut_matrices[res_loc] = mut_matrix
+            parent_positions = []
+            child_positions = []
+
+            for parent, child in parent_child_set:
+                child_ident = mcs_combined_prot_seqs_dict[child][res_loc]
+                parent_ident = mcs_combined_prot_seqs_dict[parent][res_loc]
+
+                child_pos = residue_dict.get(child_ident)
+                parent_pos = residue_dict.get(parent_ident)
+
+                if isinstance(child_pos, int) and isinstance(parent_pos, int) and child_pos != parent_pos:
+                    parent_positions.append(parent_pos)
+                    child_positions.append(child_pos)
+
+            if parent_positions and child_positions:
+                all_parent_positions.extend(parent_positions)
+                all_child_positions.extend(child_positions)
+                all_res_locs.extend([res_loc] * len(parent_positions))
+
+        if all_parent_positions and all_child_positions:
+            all_parent_positions = np.array(all_parent_positions, dtype=int)
+            all_child_positions = np.array(all_child_positions, dtype=int)
+            all_res_locs = np.array(all_res_locs, dtype=int)
+
+            for res_loc in np.unique(all_res_locs):
+                indices = np.where(all_res_locs == res_loc)
+                residue_mut = np.zeros((20, 20), dtype=np.int64)
+                np.add.at(residue_mut, (all_parent_positions[indices], all_child_positions[indices]), 1)
+                mut_matrices[res_loc] = residue_mut
+
     except BrokenPipeError:
         error_msg = "Broken pipe error while processing file."
         print(error_msg)
@@ -553,7 +667,6 @@ def WorkerProcessAndCount(file: str,
         production_logger.error(error_msg)
     finally:
         return mut_matrices if mut_matrices else None, error_msg if error_msg else None
-    
 
 def process_mcs_files_in_chunks(mcs_alnDir: str, 
                                 parent_child_set: Set[Tuple[str, str]], 
@@ -564,15 +677,16 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                                 res_loc_set: Set[int],
                                 production_logger: logging.Logger,
                                 terminate_flag: threading.Event,
-                                batch_size: Optional[int] = None) -> List[Dict[int, np.typing.NDArray[np.int64]]]:
+                                mcs_batch_size: Optional[int] = None) -> List[Dict[int, np.typing.NDArray[np.int64]]]:
 
     mcs_files = os.listdir(mcs_alnDir)
-    total_files_count = len(mcs_files)
-    total_memory = psutil.virtual_memory().total
+    # total_files_count = len(mcs_files)
+    # total_memory = psutil.virtual_memory().total
 
-    if batch_size is None:
-        sample_file = os.path.join(mcs_alnDir, mcs_files[0])
-        batch_size = util.determine_optimal_batch_size(sample_file, 'file_processing', total_memory)
+    # if mcs_batch_size is None:
+    #     sample_file = os.path.join(mcs_alnDir, mcs_files[0])
+    #     mcs_batch_size = util.determine_optimal_batch_size(sample_file, 'file_processing', total_memory)
+    
     results = []
     worker = partial(WorkerProcessAndCount, 
                      mcs_alnDir=mcs_alnDir,
@@ -584,11 +698,9 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                      production_logger=production_logger,
                      terminate_flag=terminate_flag)
     
-    batches = [mcs_files[i:i + batch_size] for i in range(0, total_files_count, batch_size)]
-
     try:
         with ProcessPoolExecutor(max_workers=nthreads) as executor:
-            futures = [executor.submit(worker, file_data) for batch in batches for file_data in batch]
+            futures = [executor.submit(worker, file_data) for file_data in mcs_files]
             
             for future in as_completed(futures):
                 if terminate_flag.is_set():
@@ -614,12 +726,60 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                     break
 
     except Exception as e:
-        error_msg = f"ERROR during processing files in chunks: {e}"
+        error_msg = f"ERROR during processing files: {e}"
         print(error_msg)
         print(traceback.format_exc())
         production_logger.error(error_msg)
 
     return results
+
+    # results = []
+    # worker = partial(WorkerProcessAndCount, 
+    #                  mcs_alnDir=mcs_alnDir,
+    #                  parent_child_set=parent_child_set,
+    #                  isnuc_fasta=isnuc_fasta,
+    #                  sequence_type=sequence_type,
+    #                  residue_dict=residue_dict, 
+    #                  res_loc_set=res_loc_set,
+    #                  production_logger=production_logger,
+    #                  terminate_flag=terminate_flag)
+    
+    # batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_files_count, mcs_batch_size)]
+
+    # try:
+    #     with ProcessPoolExecutor(max_workers=nthreads) as executor:
+    #         futures = [executor.submit(worker, file_data) for batch in batches for file_data in batch]
+            
+    #         for future in as_completed(futures):
+    #             if terminate_flag.is_set():
+    #                 print("Terminating processing due to termination signal")
+    #                 break
+    #             try:
+    #                 result, error_msg = future.result()
+    #                 if error_msg:
+    #                     print(error_msg)
+    #                     production_logger.error(error_msg)
+    #                     terminate_flag.set()
+    #                     break
+
+    #                 if result:
+    #                     results.append(result)
+
+    #             except Exception as e:
+    #                 error_msg = f"ERROR during processing: {e}"
+    #                 print(error_msg)
+    #                 print(traceback.format_exc())
+    #                 production_logger.error(error_msg)
+    #                 terminate_flag.set()
+    #                 break
+
+    # except Exception as e:
+    #     error_msg = f"ERROR during processing files in chunks: {e}"
+    #     print(error_msg)
+    #     print(traceback.format_exc())
+    #     production_logger.error(error_msg)
+
+    # return results
 
 def compute_p_value_for_rec_list(rec_list: List[Union[str, int, float]], 
                                  mcs_results: Dict[int, List[np.typing.NDArray[np.int64]]], 
@@ -965,7 +1125,7 @@ def main(args: Optional[List[str]] = None):
                                                     options.nthreads,
                                                     production_logger,
                                                     terminate_flag,
-                                                    batch_size=options.batch_size)
+                                                    protein_batch_size=options.protein_batch_size)
                 finally:
                     reset_terminate_flag(terminate_flag)
 
@@ -1090,7 +1250,7 @@ def main(args: Optional[List[str]] = None):
                                                         res_loc_set, 
                                                         production_logger,
                                                         terminate_flag,
-                                                        batch_size=options.batch_size)
+                                                        mcs_batch_size=options.mcs_batch_size)
                 finally:
                     reset_terminate_flag(terminate_flag)
 
