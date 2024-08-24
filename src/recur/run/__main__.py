@@ -286,7 +286,7 @@ def ParentChildRelation(treefile: str,
 
         if root_of_interest is None:
  
-            return None, outgroup_species, "No root of interest found; tree structure might be incorrect."
+            return None, outgroup_species, set(), "No root of interest found; tree structure might be incorrect."
 
         root_node = root_of_interest.label
         root_node = root_node if "/" not in root_node else root_node.split("/")[0]
@@ -294,7 +294,7 @@ def ParentChildRelation(treefile: str,
         outgroup_subtree_species = get_subtree_species(outgroup_mrca)
 
         taxon_count = 0
-        parent_child_set = set()
+        parent_child_set: Set[Tuple[str, str]] = set()
         for nd in root_of_interest.postorder_iter():
             if terminate_flag.is_set():
                 return root_node, outgroup_species, parent_child_set, "Terminated"
@@ -334,42 +334,11 @@ def ParentChildRelation(treefile: str,
         print(traceback.format_exc())
         return root_node, outgroup_species, parent_child_set, error_msg 
 
-# def CountMutations(treefile: str,
-#                    outgroup_species: List[str],
-#                    sequence_dict: Dict[str, str], 
-#                    residue_dict: Dict[str, int], 
-#                    n_species: int,
-#                    res_loc: int,
-#                    terminate_flag: threading.Event) -> Tuple[Optional[str], List[str], str]:
-#     try:
-#         with open(treefile, 'r') as f:
-#             t = dendropy.Tree.get(file=f, schema="newick")
-
-#         taxon_count, root_node, outgroup_subtree_species, residue_mut, error_msg = ParentChildRelation(t, outgroup_species, sequence_dict, residue_dict, res_loc, terminate_flag)
-        
-#         if error_msg:
-#             return res_loc, root_node, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
-        
-#         if len(outgroup_subtree_species) != len(outgroup_species):
-#             outgroup_species = outgroup_subtree_species
-
-#         expected_relationships = 2 * (n_species - len(outgroup_species)) - 2
-#         if taxon_count != expected_relationships:
-#             return res_loc, root_node, outgroup_species, residue_mut, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}"
-        
-#         return res_loc, root_node, outgroup_species, residue_mut, ""
-#     except Exception as e:
-#         error_msg = f"ERROR in CountMutations for treefile {treefile}, res_loc {res_loc}: {e}"
-#         print(error_msg)
-#         print(traceback.format_exc())
-#         return res_loc, None, outgroup_species, np.zeros((20, 20), dtype=np.int64), error_msg
-    
-
 def CountMutations(res_loc: int,
                    parent_child_set: Set[Tuple[str, str]],
                     sequence_dict: Dict[str, str], 
                     residue_dict: Dict[str, int],
-                    terminate_flag: logging.Logger) -> Tuple[int, np.typing.NDArray[np.int64], str]:
+                    terminate_flag: threading.Event) -> Tuple[int, np.typing.NDArray[np.int64], str]:
     residue_mut = np.zeros((20, 20), dtype=np.int64)
     try: 
         for parent, child in parent_child_set:
@@ -651,7 +620,6 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
         production_logger.error(error_msg)
 
     return results
-
 
 def compute_p_value_for_rec_list(rec_list: List[Union[str, int, float]], 
                                  mcs_results: Dict[int, List[np.typing.NDArray[np.int64]]], 
