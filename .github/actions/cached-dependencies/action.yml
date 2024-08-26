@@ -28,4 +28,4 @@ runs:
         python -m pip install mypy pytest pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         echo "cache='${{ inputs.caching }}'">>$GITHUB_OUTPUT
-      sehll: bash
+      shell: bash
