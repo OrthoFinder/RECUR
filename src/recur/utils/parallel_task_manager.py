@@ -56,7 +56,7 @@ def clean_up_files(fileDir: str,
             file_path = os.path.join(fileDir, file)
             if os.path.isfile(file_path) and os.path.exists(file_path):
                 if file_path in already_deleted_files:
-                    continue  # Skip files that are already deleted
+                    continue 
                 if files_to_keep:
                     if file_path in processed_files or \
                        file.rsplit(".", 1)[-1].lower() not in files_to_keep:

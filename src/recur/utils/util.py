@@ -4,18 +4,17 @@ import os
 import sys
 import datetime
 from recur.citation import citation, print_citation
-from recur.utils import files
-from typing import List, Dict, Tuple, Optional, Any, Callable
+from typing import List, Dict, Tuple, Optional
 from recur import genetic_codes
 from importlib import resources as impresources
 import psutil
 import logging
 import logging.config
 import yaml
-import tracemalloc
 import traceback
 
-residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
+residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
+            'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
 
 class ConsoleOnlyFilter(logging.Filter):
     def filter(self, record):
@@ -33,10 +32,10 @@ def setup_logging(log_folder: str,
         log_config_path = os.path.join(base_path, 'logging_config.yaml')
         
         if not os.path.exists(log_config_path):
-            print(f"Contents of the base path ({base_path}): {os.listdir(base_path)}")  # Debugging line
+            print(f"Contents of the base path ({base_path}): {os.listdir(base_path)}")
             raise FileNotFoundError(f"Log configuration file not found at {log_config_path}")
     except Exception as e:
-        print(f"Error resolving log config path manually: {str(e)}")  # Debugging line
+        print(f"Error resolving log config path manually: {str(e)}")
         log_config_path = None
 
     production_logger = logging.getLogger("production")
@@ -57,7 +56,6 @@ def setup_logging(log_folder: str,
             config['handlers']['file']['formatter'] = formatter
             config['handlers']['file']['mode'] = mode
 
-            # Dynamically replace the placeholder with the correct module path
             config_str = yaml.dump(config)
             config_str = config_str.replace('placeholder.ConsoleOnlyFilter', f'{__name__}.ConsoleOnlyFilter')
             config_str = config_str.replace('placeholder.FileOnlyFilter', f'{__name__}.FileOnlyFilter')
@@ -68,11 +66,11 @@ def setup_logging(log_folder: str,
 
         except Exception as e:
             print(f"Error loading logging configuration: {str(e)}")
-            logging.basicConfig(level=logging.DEBUG)  # Fallback to basic configuration
+            logging.basicConfig(level=logging.DEBUG)
             production_logger = logging.getLogger("production")
             production_logger.error("Logging configuration failed. Fallback to basic config.", exc_info=True)
     else:
-        print(f"Log configuration file does not exist at: {log_config_path}")  # Debugging line
+        print(f"Log configuration file does not exist at: {log_config_path}")
         logging.basicConfig(level=logging.DEBUG)
         production_logger = logging.getLogger("production")
         production_logger.error("Logging configuration file not found. Using basic config.")
@@ -96,41 +94,6 @@ def delete_files_in_directory(dirpath: str) -> None:
    except OSError:
      print("ERROR occurred while deleting files.")
      raise
-
-def measure_memory_usage(func: Callable[..., Any], 
-                         *args: Any, 
-                         **kwargs: Any) -> int:
-    tracemalloc.start()
-    func(*args, **kwargs)
-    current, peak = tracemalloc.get_traced_memory()
-    tracemalloc.stop()
-    return peak
-
-def adjust_batch_size(current_batch_size: int, 
-                      max_memory_usage: int, 
-                      total_memory: int) -> int:
-    target_memory_usage = total_memory * 0.75  # Target to use up to 75% of total memory
-    if max_memory_usage > target_memory_usage:
-        return max(1, current_batch_size // 2)
-    else:
-        return min(current_batch_size + 1, 1000)  # Ensure batch size doesn't grow indefinitely
-
-def determine_optimal_batch_size(data: Any, 
-                                 task_type: str, 
-                                 total_memory: int) -> int:
-
-    if task_type == 'file_processing':
-        memory_per_task = measure_memory_usage(files.FileReader.ReadAlignment, data)
-    elif task_type == 'mutation_count':
-        memory_per_task = measure_memory_usage(len, data) * 500  # Measure memory usage for mutation counting
-    else:
-        raise ValueError("Unknown task type")
-
-    memory_usage = memory_per_task if memory_per_task != 0 else 1
-
-    optimal_batch_size = max(1, (total_memory // 4) // memory_usage)
-    
-    return int(min(optimal_batch_size, 100))
 
 def print_centered_text(width: int, text: str) -> None:
     text_length = len(text)
