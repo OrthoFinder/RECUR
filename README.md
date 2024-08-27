@@ -123,10 +123,10 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
 
   Working in the conda environment may be easiest when you do not have access to a Linux machine. You can create and activate a new environment by running:
 
-    ```bash
-    conda create -n recur_env python=3.12
-    conda activate recur_env
-    ```
+  ```bash
+  conda create -n recur_env python=3.12
+  conda activate recur_env
+  ```
   Then install IQ-TREE2 package by running one of the following:
   ```bash
     conda install bioconda::iqtree
