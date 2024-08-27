@@ -463,18 +463,24 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         print(f"{mp.cpu_count()} threads is used instead of {options.nthreads}")
         options.nthreads = mp.cpu_count()
 
-    if not usr_recur_nthread and usr_iqtree_nthread and options.iqtree_nthreads <= mp.cpu_count():
-        options.recur_nthreads = mp.cpu_count() // options.iqtree_nthreads
+    if not usr_recur_nthread and usr_iqtree_nthread:
+        if options.iqtree_nthreads < mp.cpu_count():
+            options.recur_nthreads = mp.cpu_count() // options.iqtree_nthreads
+        else:
+            print("\nWARNNING: IQ-TREE2 threads exceeds the threadshold accepted by RECUR.")
+            print("Adjusting the threads as follows: ")
+            options.recur_nthreads, options.iqtree_nthreads = 1, mp.cpu_count()
+            print(f"IQ-TREE2 threads: {options.iqtree_nthreads}")
 
     if usr_iqtree_nthread and usr_recur_nthread:
         if options.recur_nthreads * options.iqtree_nthreads > mp.cpu_count():
             print("\nWARNING: The combination of the number of RECUR threads and IQ-TREE2 threads exceeds the threadshold accepted by RECUR.")
         
-        if options.iqtree_nthreads <= mp.cpu_count() and options.recur_nthreads > mp.cpu_count():
+        if options.iqtree_nthreads <= mp.cpu_count():
             options.recur_nthreads = mp.cpu_count() // options.iqtree_nthreads
         
         elif options.iqtree_nthreads > mp.cpu_count():
-            options.recur_nthreads, options.iqtree_nthreads = recur_iqtree_nthreads, iqtree_nthreads
+            options.recur_nthreads, options.iqtree_nthreads = 1, mp.cpu_count()
         
         print("Adjusting the threads as follows: ")
         print(f"RECUR threads: {options.recur_nthreads}, IQ-TREE2 threads: {options.iqtree_nthreads}")

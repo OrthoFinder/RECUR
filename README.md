@@ -1,6 +1,6 @@
 # RECUR ![Tested](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OrthoFinder/RECUR/main/badge-status.json)
 
-Finding Recurrent Substitutions in Multiple Sequence Alignments
+Finding Recurrent Substitutions from Multiple Sequence Alignments
 
 ## Introduction
 ![RECUR method workflow](./docs/images/RECUR_workflow_figure.png)
@@ -188,15 +188,12 @@ In this section, we will dive deep into the options you can have to run RECUR. T
   -te <dir/file>               Complete constraint tree [Default: Estimated from alignment]
   -m <str>                     Model of sequence evolution [Default: estimated from alignment]
   -nt <int>                    Number of threads provided to IQ-TREE2
-  -rt <int>                    Number of threads used for RECUR run on IQ-TREE2 
   -t <int>                     Number of threads used for RECUR internal processing 
   --seed <int>                 Random starting see number [Default: 8]
   -o <txt>                     Results directory [Default: same directory as MSA files]
-  -pbs <int>                   Batch size for substituion analysis on protein alignments of real phylogeny [Default: None]
-  -mbs <int>                   Batch size for substituion analysis on the Monte Carlo Simulated alignments [Default: None]
   -iv <str>                    IQ-TREE2 path [Default: local]
 ```
-Please note that the default values for `-nt`, `-rt`, `-t` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
+Please note that the default values for `-t`, `-nt` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
 ```bash
 recur 
 python3 recur.py
@@ -260,32 +257,19 @@ If your genes share the same outgroups and tree, you only need to create a singl
 
 To speed up the analysis, RECUR has introduced both multiprocessing and multithreading in the package. By default, the number of threads will be automatically calculated based the configuration of your machine. Alternatively, they can be user specified using the following three options. 
 
-- `-rt`: Number of threads run on the IQ-TREE2 commands
+- `-t`: Number of threads used for the RECUR algorithms
 - `-nt`: Number of threads for IQ-TREE2 to run in parallel
-- `t`: Number of threads used for the RECUR algorithms
 
 Note, the number of threads cannot exceed the computer allowance. 
 
 > * `-t` <= maximum_num_logical_threads
-> * `-rt` <= maximum_num_logical_threads
 > * `-nt` <= maximum_num_logical_threads
-> * `-rt` * `-nt` <= maximum_num_logical_threads
 
 For instance, if your computer has 8 logical threads, you can have the following setup,
 
 ```bash
-recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -rt 1 -nt 8
+recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -nt 8
 ```
-or 
-
-```bash
-recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -rt 2 -nt 4
-```
-- Running RECUR with batch processing
-
-Batch processing is introduced in RECUR in places where memory consumptions could be the bottleneck of the program. However, batch processing is deactivated to avoid uneven workload distribution. 
-
-Two options are provided for batch processing, i.e., `-pbs` and `-mbs`. The former one controls the number batches in the protien alignments 
 
 ### Output Structure
 
