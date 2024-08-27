@@ -287,7 +287,7 @@ class FileWriter(object):
 
         # fn_path = os.path.join(mut_matrix_dir, "mutation_matrices.tsv")
         mut_matricex_tuple = sorted([(pos, mut) for pos, mut in mut_matrices.items()])
-        colname = ["Site", "Parent>Child:MutCount", "RowIndex", "ColIndex"]
+        colname = ["Site", "Parent>Child:SubCount", "RowIndex", "ColIndex"]
         accum_mutation_matrix = np.zeros((20, 20), dtype=np.int64)
         with open(mut_matrix_path, "w") as writer:
             writer.write("\t".join(colname) + "\n")
