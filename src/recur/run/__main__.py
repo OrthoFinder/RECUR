@@ -374,36 +374,6 @@ def CountMutations(res_loc: int,
         print(traceback.format_exc())
         return res_loc, residue_mut, error_msg
 
-
-# def CountMutations(res_loc: int,
-#                    parent_child_set: Set[Tuple[str, str]],
-#                     sequence_dict: Dict[str, str], 
-#                     residue_dict: Dict[str, int],
-#                     terminate_flag: threading.Event) -> Tuple[int, np.typing.NDArray[np.int64], str]:
-#     residue_mut = np.zeros((20, 20), dtype=np.int64)
-#     try: 
-#         for parent, child in parent_child_set:
-#             if terminate_flag.is_set():
-#                 return res_loc, residue_mut, "Terminated"
-            
-#             child_ident = sequence_dict[child][res_loc]
-#             parent_ident = sequence_dict[parent][res_loc]
-
-#             child_pos = residue_dict.get(child_ident)  # implicitly avoiding -, *, ., etc.
-#             parent_pos = residue_dict.get(parent_ident)
-
-#             if (child_pos is not None and parent_pos is not None) and (child_pos != parent_pos):
-#                 residue_mut[parent_pos, child_pos] += 1
-
-#         return res_loc, residue_mut, ""
-    
-#     except Exception as e:
-#         error_msg = f"ERROR in CountMutations for res_loc {res_loc}: {e}"
-#         print(error_msg)
-#         print(traceback.format_exc())
-#         return res_loc, residue_mut, error_msg
-
-
 def count_mutations(parent_child_set: Set[Tuple[str, str]], 
                     sequence_dict: Dict[str, str], 
                     residue_dict: Dict[str, int], 
