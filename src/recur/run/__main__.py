@@ -30,7 +30,7 @@ import logging
 import warnings
 # warnings.filterwarnings("ignore", module='dendropy')
 
-def setup_environment():
+def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
     max_int = sys.maxsize
     while True:
         try:
@@ -68,9 +68,9 @@ def setup_environment():
     
     return my_env, local_iqtree2_path, bin_dir, conda_prefix 
 
-def CanRunCommand(command: str) -> bool:
+def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None) -> bool:
     try:
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        process = subprocess.Popen(command, env=env, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
         stdout, stderr = process.communicate()
 
@@ -93,7 +93,7 @@ def CanRunCommand(command: str) -> bool:
         return False
 
 
-def initialise_recur(iqtree_version: Optional[str] = None):
+def initialise_recur(iqtree_version: Optional[str] = None) -> Dict[str, str]:
     my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
     system = platform.system()
 
@@ -110,30 +110,30 @@ def initialise_recur(iqtree_version: Optional[str] = None):
 
     if system == "Linux" and iqtree_version == 'local':
         my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
-        if CanRunCommand(f"{local_iqtree2_path} --version"):
-            return
+        if CanRunCommand(f"{local_iqtree2_path} --version", env=my_env):
+            return my_env
 
     if iqtree_version == "conda" and conda_prefix:
         iqtree_path = shutil.which("iqtree2")
         if iqtree_path:
             print("\nConda version of IQ-TREE2 found.")
             print(f"IQ-TREE2 path: {iqtree_path}")
-            return
+            return my_env
 
     if iqtree_version == "system" and not conda_prefix:
         iqtree_path = shutil.which("iqtree2")
         if iqtree_path:
             print("\nSystem-wide version of IQ-TREE2 found.")
             print(f"IQ-TREE2 path: {iqtree_path}")
-            return
+            return my_env
 
-    if conda_prefix and CanRunCommand("iqtree2 --version"):
+    if conda_prefix and CanRunCommand("iqtree2 --version", env=my_env):
         print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
-        return
+        return my_env
 
-    if CanRunCommand("iqtree2 --version"):
+    if CanRunCommand("iqtree2 --version", env=my_env):
         print("Local IQ-TREE2 binary failed to run, falling back to system-wide binary.")
-        return
+        return my_env
 
     print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
     print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
@@ -795,9 +795,7 @@ def main(args: Optional[List[str]] = None):
         
         options, alnDir, alnPath, resultsDir_nonDefault = process_args.ProcessArgs(args)
         iqtree_version = options.iqtree_version if options.iqtree_version else "system"
-        if not os.getenv('ENV_SETUP_DONE'):
-            initialise_recur(iqtree_version)
-            os.environ['ENV_SETUP_DONE'] = '1'
+        my_env = initialise_recur(iqtree_version)
 
         aln_path_dict = files.FileHandler.ProcessesNewAln(alnDir, alnPath)
 
@@ -929,7 +927,8 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
                     run_commands.RunCommand(commands, 
-                                            real_phyDir, 
+                                            real_phyDir,
+                                            env=my_env, 
                                             nthreads=options.recur_nthreads,
                                             delete_files=True,
                                             files_to_keep=["state", "treefile", "iqtree"],
@@ -976,6 +975,7 @@ def main(args: Optional[List[str]] = None):
     
                     run_commands.RunCommand(commands, 
                                             real_phyDir,
+                                            env=my_env,
                                             nthreads=options.recur_nthreads, 
                                             delete_files=True,
                                             files_to_keep=["state", "treefile", "iqtree"],
@@ -1101,7 +1101,8 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(f"{mcs_commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
                     run_commands.RunCommand(mcs_commands, 
-                                            mcs_faDir, 
+                                            mcs_faDir,
+                                            env=my_env, 
                                             nthreads=options.recur_nthreads,
                                             delete_files=True,
                                             files_to_keep=["fasta", "fa"],

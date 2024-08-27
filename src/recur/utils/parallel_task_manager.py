@@ -7,7 +7,7 @@ import contextlib
 import warnings
 import threading
 import concurrent.futures
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Dict
 
 
 # uncomment to get round problem with python multiprocessing library that can set all cpu affinities to a single cpu
@@ -19,9 +19,12 @@ from typing import Optional, List, Set
 
 lock = threading.RLock()
 
-def RunCommand(command: str, qPrintOnError: bool = False, qPrintStderr: bool = True) -> int:
+def RunCommand(command: str, 
+               env: Optional[Dict[str, str]] = None,
+               qPrintOnError: bool = False, 
+               qPrintStderr: bool = True) -> int:
     try:
-        popen = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        popen = subprocess.Popen(command, env=env, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = popen.communicate()
 
         if qPrintOnError and popen.returncode != 0:
@@ -94,6 +97,7 @@ def set_file_descriptor_limit(new_limit: int) -> None:
 def RunParallelCommands(nProcesses: int, 
                         commands: List[str], 
                         fileDir: str, 
+                        env: Optional[Dict[str, str]] = None, 
                         delete_files: bool = False, 
                         files_to_keep: Optional[List[str]] = None, 
                         files_to_remove: Optional[List[str]] = None, 
@@ -114,6 +118,7 @@ def RunParallelCommands(nProcesses: int,
         with concurrent.futures.ThreadPoolExecutor(max_workers=nProcesses) as executor:
             futures = [executor.submit(RunCommand,
                                        cmd,
+                                       env,
                                        q_print_on_error,
                                        q_always_print_stderr) 
                        for cmd in commands]
