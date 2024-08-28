@@ -162,9 +162,7 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
     ```
   - **Server**
 
-    If you need to install the Docker Engine before you can run the RECUR container.
-
-    Please find the right docker engine to install on your server in [here](https://docs/images.docker.com/engine/install/).
+    If you need to install the Docker Engine before you can run the RECUR container, please find the right docker engine to install on your server in [here](https://docs/images.docker.com/engine/install/).
 
   With either Docker Desktop or Docker Engine installed on your machine, you can simply run the following command to test if you can run the RECUR container
   ```
