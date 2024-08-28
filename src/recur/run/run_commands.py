@@ -11,12 +11,13 @@ def GetGeneTreeBuildCommands(alignment_file_list: list[str],
                               evolution_model: str,
                               iqtree_nthreads: int,
                               phy_seed: int = 8, 
-                              asr: Optional[bool] = False,
+                              asr: bool = False,
                               output_prefix: Optional[str] = None,
                               sequence_type: Optional[str] = None,
                               gene_tree: Optional[str] = None,
                               bootstrap: Optional[int] = None, 
-                              sh_alrt: Optional[int] = None) -> list[str]:
+                              sh_alrt: Optional[int] = None,
+                              fix_branch_length: bool = False) -> list[str]:
     commands = []
     for alignment_file in alignment_file_list:
         identifier = os.path.basename(alignment_file).rsplit(".", 1)[0]
@@ -34,7 +35,8 @@ def GetGeneTreeBuildCommands(alignment_file_list: list[str],
                                         sequence_type=sequence_type,
                                         gene_tree=gene_tree,
                                         bootstrap=bootstrap,
-                                        sh_alrt=sh_alrt)
+                                        sh_alrt=sh_alrt,
+                                        fix_branch_length=fix_branch_length)
 
         commands.append(command)
     return commands
@@ -44,11 +46,12 @@ def GetGeneTreeBuildCommand(alignment_file: str,
                             evolution_model: str, 
                             path_to_output: str,
                             phy_seed: int,
-                            asr: Optional[bool] = False,
+                            asr: bool = False,
                             sequence_type: Optional[str] = None,
                             gene_tree: Optional[str] = None, 
                             bootstrap: Optional[int] = None,
-                            sh_alrt: Optional[int] = None) -> str:
+                            sh_alrt: Optional[int] = None,
+                            fix_branch_length: bool = False) -> str:
 
     command = asr_command_str.\
                         replace("alignment_file", alignment_file).\
@@ -77,6 +80,9 @@ def GetGeneTreeBuildCommand(alignment_file: str,
             command.extend(["-bb", str(bootstrap)])
         if sh_alrt:
             command.extend(["-alrt", str(sh_alrt)])
+
+    if fix_branch_length:
+        command.append("-blfix")
 
     return " ".join(command)
 

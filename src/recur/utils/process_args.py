@@ -46,6 +46,7 @@ class Options(object):
         self.fd_limit = None
         self.seed = 8
         self.mcs_seed = self.seed
+        self.fix_branch_length = False
 
 
     def what(self) -> None:
@@ -119,6 +120,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-kp" or arg == "--keep-prev-results":
             options.keepprev = True
+
+        elif arg == "-blfix" or arg == "--fix-branch-length":
+            options.fix_branch_length = True
 
         elif arg == "-rs" or arg == "--restart":
             options.restart_from = int(args.pop(0))

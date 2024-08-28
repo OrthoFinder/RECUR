@@ -780,6 +780,7 @@ def main(args: Optional[List[str]] = None):
 
         count = 0
         asr = True
+        fix_branch_length = False
 
         for gene, aln_path in aln_path_dict.items():
 
@@ -877,6 +878,9 @@ def main(args: Optional[List[str]] = None):
                     if not gene_tree:
                         asr = False
 
+                    if gene_tree is not None:
+                        fix_branch_length = options.fix_branch_length
+
                     commands = run_commands.GetGeneTreeBuildCommands([aln_path], 
                                                         real_phyDir, 
                                                         options.evolution_model,
@@ -886,7 +890,9 @@ def main(args: Optional[List[str]] = None):
                                                         sequence_type=options.sequence_type,
                                                         gene_tree=gene_tree,
                                                         bootstrap=options.bootstrap,
-                                                        sh_alrt=options.bootstrap)
+                                                        sh_alrt=options.bootstrap,
+                                                        fix_branch_length=fix_branch_length
+                                                        )
                     
                     if not gene_tree:
                         production_logger.info(f"step1 iqtree2 gene tree building command: ", extra={'to_file': True, 'to_console': False})
@@ -938,7 +944,8 @@ def main(args: Optional[List[str]] = None):
                                                         phy_seed=options.seed,
                                                         sequence_type=options.sequence_type,
                                                         gene_tree=treefile,
-                                                        asr=True)
+                                                        asr=True,
+                                                        fix_branch_length=options.fix_branch_length)
                     
                     production_logger.info(f"step2 iqtree2 ancestral state reconstruction command: ",  extra={'to_file': True, 'to_console': False})
                     production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
