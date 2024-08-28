@@ -5,7 +5,9 @@ Finding Recurrent Substitutions from Multiple Sequence Alignments
 ## Introduction
 ![RECUR method workflow](./docs/images/RECUR_workflow_figure.png)
 
-<p style="text-align: center;">Figure 1: The RECUR workflow. </p>
+<div align="center">
+  Figure 1: The RECUR workflow
+</div>
 
 The required input is either a protein or codon multiple sequence alignment (in FASTA format) and a defined outgroup species or clade. The output of RECUR is a list of recurrent amino acid substitutions, that have occurred in the inferred phylogeny (file suffix: `.recur.tsv`). Outputs of intermediate steps, i.e. model selection, tree inference, ancestral state reconstruction and site substitution matrices, can be found in the .recur output directory.
 
@@ -129,8 +131,8 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   ```
   Then install IQ-TREE2 package by running one of the following:
   ```bash
-    conda install bioconda::iqtree
-    conda install bioconda/label/cf201901::iqtree
+  conda install bioconda::iqtree
+  conda install bioconda/label/cf201901::iqtree
   ```
   Now that you have a suitable environment with IQ-TREE2 installed, you can follow the previous steps to install RECUR directly or the relevant dependencies.
   * With RECUR installed 
