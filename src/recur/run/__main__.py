@@ -589,6 +589,8 @@ def WorkerProcessAndCount(file: str,
     finally:
         return mut_matrices, error_msg
 
+from tqdm import tqdm
+
 def process_mcs_files_in_chunks(mcs_alnDir: str, 
                                 parent_child_set: Set[Tuple[str, str]], 
                                 residue_dict: Dict[str, int], 
@@ -598,9 +600,11 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                                 res_loc_set: Set[int],
                                 production_logger: logging.Logger,
                                 terminate_flag: threading.Event,
+                                update_cycle: Optional[int] = None, 
                                 mcs_batch_size: Optional[int] = None) -> List[Dict[int, np.typing.NDArray[np.int64]]]:
 
     mcs_files = os.listdir(mcs_alnDir)
+    total_file_count = len(mcs_files)
 
     results = []
     worker = partial(WorkerProcessAndCount, 
@@ -613,7 +617,10 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                      production_logger=production_logger,
                      terminate_flag=terminate_flag)
     if mcs_batch_size is not None:    
-        batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, len(mcs_files), mcs_batch_size)]
+        batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
+    
+    if update_cycle is not None:
+        pbar = tqdm(total=total_file_count)
 
     try:
         with ProcessPoolExecutor(max_workers=nthreads) as executor:
@@ -622,8 +629,8 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                 futures = [executor.submit(worker, file_data) for batch in batches for file_data in batch]
             else:
                 futures = [executor.submit(worker, file_data) for file_data in mcs_files]
-
-            for future in as_completed(futures):
+            
+            for i, future in enumerate(as_completed(futures)):
                 if terminate_flag.is_set():
                     print("Terminating processing due to termination signal")
                     break
@@ -637,7 +644,9 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
 
                     if result:
                         results.append(result)
-
+                        if update_cycle is not None and i % update_cycle == 0:
+                            pbar.update(update_cycle)
+                            
                 except Exception as e:
                     error_msg = f"ERROR during processing: {e}"
                     print(error_msg)
@@ -645,6 +654,8 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                     production_logger.error(error_msg)
                     terminate_flag.set()
                     break
+            if update_cycle is not None:
+                pbar.close()
 
     except Exception as e:
         error_msg = f"ERROR during processing files: {e}"
@@ -1131,6 +1142,7 @@ def main(args: Optional[List[str]] = None):
                                                         res_loc_set, 
                                                         production_logger,
                                                         terminate_flag,
+                                                        update_cycle=options.update_cycle,
                                                         mcs_batch_size=options.mcs_batch_size)
                 finally:
                     reset_terminate_flag(terminate_flag)

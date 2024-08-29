@@ -47,7 +47,7 @@ class Options(object):
         self.seed = 8
         self.mcs_seed = self.seed
         self.fix_branch_length = False
-
+        self.update_cycle = None
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -126,6 +126,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-rs" or arg == "--restart":
             options.restart_from = int(args.pop(0))
+        
+        elif arg == "-uc" or arg == "--update-cycle":
+            options.update_cycle = int(args.pop(0))
 
         elif arg == "--seed":
             options.seed = int(args.pop(0))
