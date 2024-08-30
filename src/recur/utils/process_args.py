@@ -42,7 +42,7 @@ class Options(object):
         self.usr_mcs_alnDir = None
         self.keepprev = False
         self.recDir = None
-        self.restart_from = 1
+        self.restart_from = 0
         self.fd_limit = None
         self.seed = 8
         self.mcs_seed = self.seed

@@ -5,3 +5,4 @@ pyyaml
 types-PyYAML
 resource
 psutil
+rich

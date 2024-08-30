@@ -4,7 +4,7 @@ import os
 import sys
 import datetime
 from recur.citation import citation, print_citation
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Iterator
 from recur import genetic_codes
 from importlib import resources as impresources
 import psutil
@@ -250,3 +250,11 @@ def PrintCitation(d: Optional[str] = None) -> None:
         WriteCitation(d)
     print()
     print(print_citation)  
+
+def iter_dir(d: Optional[str] = None) -> Iterator[str]:
+    if d is None: 
+        Fail()
+    with os.scandir(d) as entries:
+        for entry in entries:
+            if entry.is_file():
+                yield entry.name

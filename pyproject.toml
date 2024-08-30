@@ -46,8 +46,8 @@ dependencies = [
     "pyyaml",
     "types-PyYAML",
     "resource",
-    "psutil"
-
+    "psutil",
+    "rich"
 ]
 
 [project.urls]

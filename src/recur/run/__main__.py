@@ -12,6 +12,7 @@ import threading
 import gc
 import time
 import datetime
+from rich import progress
 import numpy as np
 from collections import Counter
 import scipy as spy
@@ -589,8 +590,6 @@ def WorkerProcessAndCount(file: str,
     finally:
         return mut_matrices, error_msg
 
-from tqdm import tqdm
-
 def process_mcs_files_in_chunks(mcs_alnDir: str, 
                                 parent_child_set: Set[Tuple[str, str]], 
                                 residue_dict: Dict[str, int], 
@@ -600,6 +599,7 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                                 res_loc_set: Set[int],
                                 production_logger: logging.Logger,
                                 terminate_flag: threading.Event,
+                                window_width: int,
                                 update_cycle: Optional[int] = None, 
                                 mcs_batch_size: Optional[int] = None) -> List[Dict[int, np.typing.NDArray[np.int64]]]:
 
@@ -620,8 +620,18 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
         batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
     
     if update_cycle is not None:
-        pbar = tqdm(total=total_file_count)
+        mcs_progress = progress.Progress(
+        progress.TextColumn("[progress.description]{task.description}"),
+        progress.BarColumn(bar_width=window_width // 2),
+        progress.SpinnerColumn(),
+        progress.MofNCompleteColumn(),
+        progress.TimeElapsedColumn(),
+        transient=False,
+        # progress.TextColumn("{task.completed}/{task.total}")
+        )
+        task = mcs_progress.add_task("[magenta]Processing...", total=total_file_count)
 
+        mcs_progress.start()
     try:
         with ProcessPoolExecutor(max_workers=nthreads) as executor:
             
@@ -630,6 +640,7 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
             else:
                 futures = [executor.submit(worker, file_data) for file_data in mcs_files]
             
+                
             for i, future in enumerate(as_completed(futures)):
                 if terminate_flag.is_set():
                     print("Terminating processing due to termination signal")
@@ -644,8 +655,6 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
 
                     if result:
                         results.append(result)
-                        if update_cycle is not None and i % update_cycle == 0:
-                            pbar.update(update_cycle)
                             
                 except Exception as e:
                     error_msg = f"ERROR during processing: {e}"
@@ -654,8 +663,14 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                     production_logger.error(error_msg)
                     terminate_flag.set()
                     break
+
+                finally:
+                    if update_cycle is not None:
+                        if (i + 1) % update_cycle == 0:
+                            mcs_progress.update(task, advance=update_cycle)
+            
             if update_cycle is not None:
-                pbar.close()
+                mcs_progress.stop()
 
     except Exception as e:
         error_msg = f"ERROR during processing files: {e}"
@@ -768,7 +783,7 @@ def main(args: Optional[List[str]] = None):
         print(f"RECUR:v{__version__}")
         sys.exit()
  
-    # util.get_system_info()
+    util.get_system_info()
     start_main = time.perf_counter()
 
     try:
@@ -790,10 +805,11 @@ def main(args: Optional[List[str]] = None):
                 options.outgroups = {gene: [*options.outgroups.values()][0] for gene in aln_path_dict}
 
         count = 0
-        asr = True
-        fix_branch_length = False
 
         for gene, aln_path in aln_path_dict.items():
+
+            asr = True
+            fix_branch_length = True
 
             if terminate_flag.is_set():
                 break
@@ -801,11 +817,12 @@ def main(args: Optional[List[str]] = None):
             try:    
                 start = time.perf_counter()
 
+                try:
+                    width = os.get_terminal_size().columns
+                except OSError as e:
+                    width = 80
+
                 if count > 0:
-                    try:
-                        width = os.get_terminal_size().columns
-                    except OSError as e:
-                        width = 80
                     util.print_centered_text(width, f"Processing gene {gene}")
                 count += 1
 
@@ -851,16 +868,54 @@ def main(args: Optional[List[str]] = None):
 
                 check_exist = 0
                 real_phyDir = filehandler.GetRealPhylogenyDir()
-                for file in os.listdir(real_phyDir):
-                    if file.rsplit(".", 1)[1] in ["state", "treefile", "iqtree"]:
+                exist_treefile = False 
+                exist_iqtree = False
+                exist_state = False
+
+                for file in util.iter_dir(real_phyDir):
+                    file_extension = file.rsplit(".", 1)[1]
+                    if file_extension == "state":
+                        exist_state = True
                         check_exist += 1
-                
+
+                    elif file_extension == "treefile":
+                        exist_treefile = True
+                        check_exist += 1
+                    
+                    elif file_extension == "iqtree":
+                        exist_iqtree = True
+                        check_exist += 1
+
                 restart_step1 = False
+                restart_step2 = False
+                restart_step3 = False 
+                override = True
+
                 gene_tree = options.gene_tree[gene] if isinstance(options.gene_tree, dict) else None
-                if not gene_tree:
+                if gene_tree is not None:
                     step1_info = "Step1: Inferring phylogenetic tree and model of evolution"
+                    if options.restart_from == 1:
+                        restart_step1 = True 
+                        restart_step3 = True
+                        override = False
+                    elif options.restart_from == 2:
+                        restart_step3 = True
+                        override = False
                 else:
                     step1_info = "Step1: Inferring ancestral sequences, phylogenetic tree and model of evolution"
+                    if options.restart_from == 1:
+                        restart_step1 = True 
+                        restart_step2 = True
+                        restart_step3 = True
+                        override = False
+                    elif options.restart_from == 2:
+                        restart_step2 = True
+                        restart_step3 = True
+                        override = False
+                    elif options.restart_from == 3:
+                        restart_step3 = True
+                        override = False
+
                 production_logger.info(step1_info, extra={'to_file': True, 'to_console': True})
                 production_logger.info("="*len(step1_info), extra={'to_file': True, 'to_console': True})
                 production_logger.info(f"Results Directory: {real_phyDir}\n", extra={'to_file': True, 'to_console': True})
@@ -869,29 +924,62 @@ def main(args: Optional[List[str]] = None):
                     statefile = options.usr_state
                     treefile = options.usr_tree
                     iqtreefile = options.usr_iqtree
-                    production_logger.info("NOTE: with the provided statefile and treefile, RECUR will skip step1.\n", extra={'to_file': True, 'to_console': False})
-                elif check_exist == 3 and options.restart_from != 1:
-                    production_logger.info("NOTE: with the existing statefile and treefile, RECUR will skip step1.\n", extra={'to_file': True, 'to_console': False})
-                    statefile = filehandler.GetStateFileFN() 
-                    treefile = filehandler.GetTreeFileFN() 
-                    iqtreefile = filehandler.GetIQTreeFileFN()
-                else:
-                    if options.restart_from == 1:
-                        production_logger.info("Restart RECUR from step1\n", extra={'to_file': True, 'to_console': False})
-                    
-                    if check_exist > 0 and check_exist < 3:
-                        production_logger.info("NOTE: RECUR is forced to restart from step1 due some missing files\n", extra={'to_file': True, 'to_console': False})
-                    restart_step1 = True
-                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + "Ran IQ-TREE to build the gene trees for the real phylogeny", extra={'to_file': True, 'to_console': True})
-                    production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
-
-                    if not gene_tree:
-                        asr = False
-
+                    if gene_tree is None:
+                        production_logger.info("NOTE: with the provided treefile, RECUR will skip Step1.\n", extra={'to_file': True, 'to_console': True})
+                    else:
+                        production_logger.info("NOTE: with the provided statefile and treefile, RECUR will skip Step1.\n", extra={'to_file': True, 'to_console': True})
+                
+                elif (check_exist == 3 and not override) and not restart_step1:
                     if gene_tree is not None:
-                        fix_branch_length = options.fix_branch_length
+                        statefile = filehandler.GetStateFileFN() 
+                        treefile = filehandler.GetTreeFileFN() 
+                        iqtreefile = filehandler.GetIQTreeFileFN()
+                        production_logger.info("NOTE: with the existing statefile, treefile and iqtreefile, RECUR will skip Step1.\n", extra={'to_file': True, 'to_console': True})
+                    else:
+                        treefile = filehandler.GetTreeFileFN() 
+                        iqtreefile = filehandler.GetIQTreeFileFN()
+                        production_logger.info("NOTE: with the existing treefile and iqtreefile, RECUR will skip Step1.\n", extra={'to_file': True, 'to_console': True})
+                else:
+                    if check_exist == 2:
+                        if exist_iqtree and exist_treefile and not exist_state:
+                            if gene_tree is not None:
+                                production_logger.info("NOTE: RECUR is forced to restart from Step1 due to the missing statefile\n", extra={'to_file': True, 'to_console': True})
+                            else:
+                                restart_step2 = True
 
+                        elif exist_iqtree and not exist_treefile and exist_state:
+                            production_logger.info("NOTE: RECUR is forced to restart from Step1 due to the missing treefile\n", extra={'to_file': True, 'to_console': True})
+                            if gene_tree is None:
+                                restart_step2 = True
+
+                        elif not exist_iqtree and exist_treefile and exist_state:
+                            production_logger.info("NOTE: RECUR is forced to restart from Step1 due to the missing iqtreefile\n", extra={'to_file': True, 'to_console': True})
+                            if gene_tree is None:
+                                restart_step2 = True
+
+                    elif check_exist > 0 and check_exist < 2:
+                        production_logger.info("NOTE: RECUR is forced to restart from Step1 due to some missing files\n", extra={'to_file': True, 'to_console': False})
+                        if gene_tree is None:
+                            restart_step2 = True
+                    
+                    if restart_step1 or not override:
+                        production_logger.info("### Restart RECUR from Step1 ###\n", extra={'to_file': True, 'to_console': True})
+                    
+                    if override or restart_step1:
+                        prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                        production_logger.info(prepend + "Ran IQ-TREE to build the gene trees for the real phylogeny", extra={'to_file': True, 'to_console': True})
+                        production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
+                    
+                    # elif restart_step2 or restart_step3 or override:
+                    #     production_logger.info("Ran IQ-TREE to build the gene trees for the real phylogeny", extra={'to_file': True, 'to_console': True})
+                    #     production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
+                    
+                    if gene_tree is None:
+                        asr = False
+                        fix_branch_length = False
+                    else:
+                        fix_branch_length = options.fix_branch_length
+                    
                     commands = run_commands.GetGeneTreeBuildCommands([aln_path], 
                                                         real_phyDir, 
                                                         options.evolution_model,
@@ -902,10 +990,10 @@ def main(args: Optional[List[str]] = None):
                                                         gene_tree=gene_tree,
                                                         bootstrap=options.bootstrap,
                                                         sh_alrt=options.bootstrap,
-                                                        fix_branch_length=fix_branch_length
+                                                        fix_branch_length=fix_branch_length,
                                                         )
                     
-                    if not gene_tree:
+                    if gene_tree is None:
                         production_logger.info(f"step1 iqtree2 gene tree building command: ", extra={'to_file': True, 'to_console': False})
                         production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
@@ -926,52 +1014,69 @@ def main(args: Optional[List[str]] = None):
                     
                 best_evolution_model = filereader.ReadIQTreeFile(iqtreefile)
 
-                if not gene_tree:
-                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + f"Tree inference complete, best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file':True, 'to_console': True})
-            
-                else:
-                    statefile = filehandler.GetStateFileFN()
-                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + f"Ancestral state reconstruction complete, best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file': True, 'to_console': True})
-
-                if not gene_tree and restart_step1:
-
+                if gene_tree is None:
+                    if override or restart_step1:
+                        prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                        production_logger.info(prepend + f"Tree inference complete, best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file':True, 'to_console': True})
+                    else:
+                        production_logger.info(f"Best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file':True, 'to_console': True})
+                    
                     step2_info = f"Step2: Inferring ancestral sequences"
                     production_logger.info(step2_info, extra={'to_file': True, 'to_console': True})
                     production_logger.info("="*len(step2_info), extra={'to_file': True, 'to_console': True})
                     step2_results_info = f"Results Directory: {filehandler.GetRealPhylogenyDir()}\n"
                     production_logger.info(step2_results_info, extra={'to_file': True, 'to_console': True})
-                
-                    filehandler.UpdateTreeFile(treefile)
 
-                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + f"Starting ancestral state reconstruction.", extra={'to_file': True, 'to_console': True})
-
-                    commands = run_commands.GetGeneTreeBuildCommands([aln_path], 
-                                                        real_phyDir, 
-                                                        best_evolution_model,
-                                                        options.iqtree_nthreads,
-                                                        phy_seed=options.seed,
-                                                        sequence_type=options.sequence_type,
-                                                        gene_tree=treefile,
-                                                        asr=True,
-                                                        fix_branch_length=options.fix_branch_length)
+                    if not restart_step2 and exist_state and not override:
+                        statefile = filehandler.GetStateFileFN()
+                        production_logger.info("NOTE: with the existing statefile, RECUR will skip Step2.\n", extra={'to_file': True, 'to_console': True})
                     
-                    production_logger.info(f"step2 iqtree2 ancestral state reconstruction command: ",  extra={'to_file': True, 'to_console': False})
-                    production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
-    
-                    run_commands.RunCommand(commands, 
-                                            real_phyDir,
-                                            env=my_env,
-                                            nthreads=options.recur_nthreads, 
-                                            delete_files=True,
-                                            files_to_keep=["state", "treefile", "iqtree"],
-                                            fd_limit=options.fd_limit)
+                    else:
+                        if not restart_step2 and not exist_state:             
+                            production_logger.info("NOTE: RECUR is forced to restart from Step2 due to the missing statefile\n", extra={'to_file': True, 'to_console': True})
+                        
+                        elif not restart_step1 and restart_step2:
+                            production_logger.info("### Restart RECUR from Step2 ###\n", extra={'to_file': True, 'to_console': True})
+                            
+                        filehandler.UpdateTreeFile(treefile)
 
+                        prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                        production_logger.info(prepend + f"Starting ancestral state reconstruction.", extra={'to_file': True, 'to_console': True})
+                        
+                        commands = run_commands.GetGeneTreeBuildCommands([aln_path], 
+                                                            real_phyDir, 
+                                                            best_evolution_model,
+                                                            options.iqtree_nthreads,
+                                                            phy_seed=options.seed,
+                                                            sequence_type=options.sequence_type,
+                                                            gene_tree=treefile,
+                                                            asr=True,
+                                                            fix_branch_length=options.fix_branch_length)
+                        
+                        production_logger.info(f"step2 iqtree2 ancestral state reconstruction command: ",  extra={'to_file': True, 'to_console': False})
+                        production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
+        
+                        run_commands.RunCommand(commands, 
+                                                real_phyDir,
+                                                env=my_env,
+                                                nthreads=options.recur_nthreads, 
+                                                delete_files=True,
+                                                files_to_keep=["state", "treefile", "iqtree"],
+                                                fd_limit=options.fd_limit)
+
+                        statefile = filehandler.GetStateFileFN()
+                        if not restart_step2 and restart_step3:
+                            production_logger.info(f"Ancestral state reconstruction complete\n", extra={'to_file': True, 'to_console': True})
+                        else:
+                            prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                            production_logger.info(prepend + f"Ancestral state reconstruction complete\n", extra={'to_file': True, 'to_console': True})
+                else:
                     statefile = filehandler.GetStateFileFN()
-                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + f"Ancestral state reconstruction complete\n", extra={'to_file': True, 'to_console': True})
+                    if not restart_step1 and restart_step3:
+                        production_logger.info(f"Best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file': True, 'to_console': True})     
+                    else:
+                        prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                        production_logger.info(prepend + f"Ancestral state reconstruction complete, best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file': True, 'to_console': True})     
 
                 filehandler.CheckFileCorrespondance(gene, statefile, treefile)
                 residue_dict, residue_dict_flip = util.residue_table()
@@ -1046,7 +1151,7 @@ def main(args: Optional[List[str]] = None):
 
                 res_loc_set = set(int(res_list[0]) for res_list in recurrence_list)
 
-                if not gene_tree:
+                if gene_tree is None:
                     step2_info = f"Step3: Simulating Sequence Evolution with {options.nalign} replicates"
                 else: 
                     step2_info = f"Step2: Simulating Sequence Evolution with {options.nalign} replicates"
@@ -1058,7 +1163,7 @@ def main(args: Optional[List[str]] = None):
 
                 mcs_faDir = filehandler.GetMCSimulationDir()
                 if len(os.listdir(mcs_faDir)) != options.nalign or \
-                    (options.restart_from == 2 or options.restart_from == 1):
+                    (restart_step1 or restart_step2 or restart_step3) or override:
 
                     if len(os.listdir(mcs_faDir)) != options.nalign and len(os.listdir(mcs_faDir)) > 0:
                         util.delete_files_in_directory(mcs_faDir)
@@ -1080,7 +1185,12 @@ def main(args: Optional[List[str]] = None):
                                                                     treefile, 
                                                                     fn_root_node,
                                                                     options.nalign)
-                    
+                    if restart_step3:
+                        if gene_tree is None and not restart_step2:
+                            production_logger.info("### Restart RECUR from Step3 ###\n", extra={'to_file': True, 'to_console': True})
+                        elif gene_tree is not None and not restart_step1:
+                            production_logger.info("### Restart RECUR from Step2 ###\n", extra={'to_file': True, 'to_console': True})
+
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Starting Monte-Carlo Simulation.", extra={'to_file': True, 'to_console': True})
                     production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), 
@@ -1098,10 +1208,14 @@ def main(args: Optional[List[str]] = None):
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Monte-Carlo Simulation complete.\n", extra={'to_file': True, 'to_console': True})
                 else:
-                    production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip step2.\n", 
-                                        extra={'to_file': True, 'to_console': True})
+                    if gene_tree is None:
+                        production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip Step3.\n", 
+                                            extra={'to_file': True, 'to_console': True})
+                    else:
+                        production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip Step2.\n", 
+                                            extra={'to_file': True, 'to_console': True})
                     
-                for file in os.listdir(real_phyDir):
+                for file in util.iter_dir(real_phyDir):
                     file_path = os.path.join(real_phyDir, file)
                     if os.path.exists(file_path):
                         if file.endswith(".treefile.txt") or file.endswith(".treefile.log"):
@@ -1142,6 +1256,7 @@ def main(args: Optional[List[str]] = None):
                                                         res_loc_set, 
                                                         production_logger,
                                                         terminate_flag,
+                                                        width, 
                                                         update_cycle=options.update_cycle,
                                                         mcs_batch_size=options.mcs_batch_size)
                 finally:
