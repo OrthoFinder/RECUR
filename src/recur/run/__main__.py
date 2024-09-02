@@ -223,7 +223,6 @@ def get_subtree_species(node):
         species.append(leaf.taxon.label)
     return species
 
-
 def ParentChildRelation(treefile: str, 
                         outgroup_species: List[str],
                         n_species: int,
@@ -586,7 +585,7 @@ def main(args: Optional[List[str]] = None):
         print(f"RECUR:v{__version__}")
         sys.exit()
  
-    util.get_system_info()
+    
     start_main = time.perf_counter()
 
     try:
@@ -595,6 +594,9 @@ def main(args: Optional[List[str]] = None):
         options, alnDir, alnPath, resultsDir_nonDefault = process_args.ProcessArgs(args)
         iqtree_version = options.iqtree_version if options.iqtree_version else "system"
         my_env = initialise_recur(iqtree_version)
+
+        if options.system_info:
+            util.get_system_info()
 
         aln_path_dict = files.FileHandler.ProcessesNewAln(alnDir, alnPath)
 

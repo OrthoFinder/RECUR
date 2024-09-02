@@ -110,7 +110,7 @@ def print_centered_text(width: int, text: str) -> None:
 def get_system_info() -> None:
     num_cpus = psutil.cpu_count(logical=False) 
     num_logical_cpus = psutil.cpu_count(logical=True)
-    print("Machine Information:")
+    print("\nMachine Information:")
     print(f"Number of Physical CPUs: {num_cpus}, Number of Logical CPUs: {num_logical_cpus}")
     print()
     print("RECUR Start with Running Processes:")
