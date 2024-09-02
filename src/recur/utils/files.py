@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-import scipy as spy 
 import numpy as np
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Tuple
 from recur.utils import util, process_args
 from recur import __version__
 import dendropy
@@ -13,7 +12,6 @@ import dendropy
 class FileHandler(object):  
 
     def __init__(self):
-        # self.base_matrix_format = "MUT%07d"
         self.wd_base = []               # Base: blast, species & sequence IDs, species fasta files - should not request this and then write here
         self.wd_current = ""          # Location to write out any new files
         self.rd1 = "" 
@@ -242,30 +240,6 @@ class FileReader(object):
                     node_seq_dict[node] += state
 
         return node_seq_dict
-    
-    @staticmethod
-    def ReadMutMatrixFile(mut_matrix_path: str) -> Dict[int, np.typing.NDArray[np.int64]]:
-
-        matrix_dict ={}
-        mut_matrix = np.zeros((20, 20), dtype=np.int64)
-        with open(mut_matrix_path, 'r') as reader:
-            for i, line in enumerate(reader):
-                if "Site" in line:
-                    continue
-                line_list = line.replace("\n", "").strip().split()
-                data = line_list[2]
-                if data == "-":
-                    matrix_dict[i] = mut_matrix
-
-                else:
-                    data_arr = np.array([*map(np.int64, data.split(","))])
-                    row = np.array([*map(np.int64, line_list[3].split(","))])
-                    col = np.array([*map(np.int64, line_list[4].split(","))])#
-                    coo = spy.sparse.coo_matrix((data_arr, (row, col)), shape=(20, 20))
-                    matrix = coo.toarray()
-                    matrix_dict[i] = matrix
-
-        return matrix_dict
 
     @staticmethod
     def ReadIQTreeFile(iqtree_path: str) -> str:
@@ -278,36 +252,49 @@ class FileReader(object):
 
 
 class FileWriter(object):
-    
+
     @staticmethod
-    def WriteMutMatrix(mut_matrices: Dict[int, np.typing.NDArray[np.int64]], 
-                        residue_dict_flip: Dict[int, str], 
+    def WriteMutMatrix(res_loc_count_dict: Dict[Tuple[int, int, int], int], 
+                        residue_dict_flip: Dict[int, str],
+                        protein_len: int,
                         mut_matrix_path: str,
                         accum_matrix_path: str) -> None: 
 
-        # fn_path = os.path.join(mut_matrix_dir, "mutation_matrices.tsv")
-        mut_matricex_tuple = sorted([(pos, mut) for pos, mut in mut_matrices.items()])
+        res_loc_info_dict = util.get_sorted_res_loc_info(res_loc_count_dict, protein_len)
         colname = ["Site", "Parent>Child:SubCount", "RowIndex", "ColIndex"]
-        accum_mutation_matrix = np.zeros((20, 20), dtype=np.int64)
+        accum_mutation_matrix = np.zeros((20, 20), dtype=int)
+
         with open(mut_matrix_path, "w") as writer:
             writer.write("\t".join(colname) + "\n")
-            for pos, mut in mut_matricex_tuple:
-                accum_mutation_matrix += mut
-                coo = spy.sparse.coo_matrix(mut)
-                 
-                if len(coo.data) == 0:
+            
+            for pos, item in sorted(res_loc_info_dict.items()):
+                if len(item) == 0:
                     line = "\t".join((str(pos+1), "-", "-", "-"))
-                    
                 else:
+                    # parent_ids, child_ids, counts = zip(*item) 
+                    # parent_ids = np.array(parent_ids, dtype=int)
+                    # child_ids = np.array(child_ids, dtype=int)
+                    # counts = np.array(counts, dtype=int)
+
+                    parent_ids, child_ids, counts = map(np.array, zip(*item))
+
+                    np.add.at(accum_mutation_matrix, (parent_ids, child_ids), counts)
+
                     parent_child = []
-                    for row, col, data in zip(coo.row, coo.col, coo.data):
-                        parent = residue_dict_flip[row]
-                        child = residue_dict_flip[col]
+                    rows = []
+                    cols = []
+                    for parent_id, child_id, data in item:
+                        parent = residue_dict_flip[parent_id]
+                        child = residue_dict_flip[child_id]
                         parent_child.append(">".join((parent, child)) + ":" + str(data))
+                        rows.append(parent_id)
+                        cols.append(child_id)
+                        
                     parent_child_str = ",".join(parent_child)
-                    row_str = ",".join(map(str, coo.row + 1))
-                    col_str = ",".join(map(str, coo.col + 1))
+                    row_str = ",".join(map(str, np.array(rows) + 1))
+                    col_str = ",".join(map(str, np.array(cols) + 1))
                     line = "\t".join((str(pos+1), parent_child_str, row_str, col_str))
+                
                 line += "\n"
                 writer.write(line)
 

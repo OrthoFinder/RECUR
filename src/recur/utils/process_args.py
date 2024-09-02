@@ -28,7 +28,6 @@ class Options(object):
         self.gene_tree = None
         self.root_node = None
         self.nalign = 1000
-        self.protein_batch_size = None
         self.mcs_batch_size = None
         self.outgroups = None 
         self.bootstrap = 1000
@@ -270,13 +269,6 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 print("Valid options are for instance 'CODON[1-11]' or 'AA'\n")
                 print("For more information please refer to http://www.iqtree.org/doc/Substitution-Models#codon-models")
                 util.Fail()
-        
-        elif arg == "-pbs" or arg == "--protein-batch-size":
-            if len(args) == 0:
-                print("Missing option for command line argument %s\n" % arg)
-                util.Fail()            
-
-            options.protein_batch_size = int(args.pop(0))
 
         elif arg == "-mbs" or arg == "--mcs-batch-size":
             if len(args) == 0:

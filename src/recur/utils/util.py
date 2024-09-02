@@ -12,6 +12,7 @@ import logging
 import logging.config
 import yaml
 import traceback
+import numpy as np
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
             'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
@@ -181,11 +182,8 @@ def GetSeqsDict(dna_seq_dict: Dict[str, str],
 
     codon_table = ImportCodon(sequence_type)     #NCBI's genetic code 11 (for plant plastids)
 
-    prot_sequence_dict = {}
-    for node, seq in dna_seq_dict.items():
-        prot_seq = Translate(seq, codon_table)
-        prot_sequence_dict[node] = prot_seq
-    protein_len = len(prot_seq)
+    prot_sequence_dict = {node: Translate(seq, codon_table) for node, seq in dna_seq_dict.items()}
+    protein_len = len(next(iter(prot_sequence_dict.values())))
 
     return prot_sequence_dict, protein_len
 
@@ -258,3 +256,41 @@ def iter_dir(d: Optional[str] = None) -> Iterator[str]:
         for entry in entries:
             if entry.is_file():
                 yield entry.name
+
+# def transform_dict(res_loc_count_dict, protein_len):
+
+#     mut_matrices = {res_loc: np.zeros((20, 20), dtype=np.int64) for res_loc in range(protein_len)}
+#     res_locs, parent_ids, child_ids, values = zip(*[(res_loc, parent_id, child_id, val) 
+#                                                     for (res_loc, parent_id, child_id), val in res_loc_count_dict.items()])
+
+#     res_locs = np.array(res_locs)
+#     parent_ids = np.array(parent_ids)
+#     child_ids = np.array(child_ids)
+#     values = np.array(values)
+
+#     for res_loc in np.unique(res_locs):
+#         indices = np.where(res_locs == res_loc)
+#         np.add.at(mut_matrices[res_loc], (parent_ids[indices], child_ids[indices]), values[indices])
+
+#     return mut_matrices
+
+def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int], 
+                            protein_len: int) -> Dict[int, List[Tuple[int, int, int]]]:
+    res_loc_info_dict: Dict[int, List[Tuple[int, int, int]]] = {res_loc: [] for res_loc in range(protein_len)}
+
+    for (res_loc, parent_id, child_id), recurrence in res_loc_count_dict.items():
+        res_loc_info_dict[res_loc].append((parent_id, child_id, recurrence))
+
+    res_loc_info_dict_sorted: Dict[int, List[Tuple[int, int, int]]] = {
+        res_loc: sorted(val, key=lambda x: x[-1], reverse=True) if val else []
+        for res_loc, val in res_loc_info_dict.items()
+    }
+    
+    return res_loc_info_dict_sorted
+
+
+
+
+
+
+

@@ -15,7 +15,7 @@ import datetime
 from rich import progress
 import numpy as np
 from collections import Counter
-import scipy as spy
+import copy
 import warnings
 import psutil
 import signal
@@ -24,7 +24,6 @@ import random
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import dendropy
 from functools import partial
-from collections import defaultdict
 from recur.run import run_commands
 from recur.utils import files, util, process_args
 import logging
@@ -215,46 +214,7 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
                 print(f"ERROR force killing process {process.pid}: {e}")
                 break
 
-    os._exit(0) 
-
-def combine_mut_matrix_and_recurrence_list(mut_matrices: Dict[int, np.typing.NDArray[np.int64]],
-                                           recurrence_list: List[List[Union[str, int, float]]],
-                                           combined_prot_seqs_dict: Dict[str, str],
-                                           species_of_interest: List[str],
-                                           residue_dict_flip: Dict[int, str]) -> List[List[Union[str, int, float]]]:
-    
-    extant_seq = {species: seq for species, seq in combined_prot_seqs_dict.items() if species in species_of_interest}
-    ident_dict = {}
-
-    for rec_loc, res in enumerate(zip(*extant_seq.values())):
-        ident_dict[rec_loc] = res
-
-    for rec_list in recurrence_list:
-        res_loc = int(rec_list[0])
-        mut = mut_matrices[res_loc]
-        coo = spy.sparse.coo_matrix(mut)
-        data, row, col = coo.data, coo.row, coo.col
-        sorted_indices = np.argsort(data)[::-1]
-        data = data[sorted_indices]
-        row = row[sorted_indices]
-        col = col[sorted_indices]
-
-        data_str_list = [*(map(str, data))]
-        parent_child = []
-        for row, col in zip(row, col):
-            parent = residue_dict_flip[row]
-            child = residue_dict_flip[col]
-            parent_child.append(">".join((parent, child)))
-        parent_child_data = [*zip(parent_child, data_str_list)]
-        parent_child_data_str = ",".join([":".join(pcd) for pcd in parent_child_data])
-        rec_list.append(parent_child_data_str)
-
-        res_freq = [*Counter(ident_dict[res_loc]).items()]
-        res_freq = sorted(res_freq, reverse=True, key=lambda x: x[1])
-        res_freq_str = ",".join([":".join((res, str(freq))) for res, freq in res_freq])
-        rec_list.append(res_freq_str)
-
-    return recurrence_list
+    os._exit(0)
 
 def get_subtree_species(node):
 
@@ -335,186 +295,57 @@ def ParentChildRelation(treefile: str,
         print(traceback.format_exc())
         return root_node, outgroup_species, parent_child_set, error_msg 
 
-def CountMutations(res_loc: int,
-                   parent_child_set: Set[Tuple[str, str]],
-                   sequence_dict: Dict[str, str], 
-                   residue_dict: Dict[str, int],
-                   terminate_flag: threading.Event) -> Tuple[int, np.typing.NDArray[np.int64], str]:
-    
-    residue_mut = np.zeros((20, 20), dtype=np.int64)
-    
-    parent_positions: List[int] = []
-    child_positions: List[int] = []
-    
-    try: 
-        for parent, child in parent_child_set:
-            if terminate_flag.is_set():
-                return res_loc, residue_mut, "Terminated"
-            
-            child_ident = sequence_dict[child][res_loc]
-            parent_ident = sequence_dict[parent][res_loc]
-
-            child_pos = residue_dict.get(child_ident)  # implicitly avoiding -, *, ., etc.
-            parent_pos = residue_dict.get(parent_ident)
-
-            if (child_pos is not None and parent_pos is not None) and (child_pos != parent_pos):
-                parent_positions.append(parent_pos)
-                child_positions.append(child_pos)
-
-        if parent_positions and child_positions:
-            parent_positions_array = np.array(parent_positions, dtype=int)
-            child_positions_array = np.array(child_positions, dtype=int)
-
-            np.add.at(residue_mut, (parent_positions_array, child_positions_array), 1)
-
-        return res_loc, residue_mut, ""
-    
-    except Exception as e:
-        error_msg = f"ERROR in CountMutations for res_loc {res_loc}: {e}"
-        print(error_msg)
-        print(traceback.format_exc())
-        return res_loc, residue_mut, error_msg
-
 def count_mutations(parent_child_set: Set[Tuple[str, str]], 
                     sequence_dict: Dict[str, str], 
                     residue_dict: Dict[str, int], 
-                    protein_len: int,
-                    nthreads: int, 
-                    production_logger: logging.Logger,
-                    terminate_flag: threading.Event,
-                    protein_batch_size: Optional[int] = None) -> Dict[int, np.typing.NDArray[np.int64]]:
+                    protein_len: int) -> Counter[Tuple[int, int, int]]:
+
+    parent_child_num_list = [
+        [residue_dict[res] for res in sequence_dict[parent] + sequence_dict[child]]
+        for parent, child in parent_child_set
+    ]
+
+    parent_child_array = np.array(parent_child_num_list)
+    parent_array = parent_child_array[:, :protein_len]
+    child_array = parent_child_array[:, protein_len:]
+
+    parent_child_diff = parent_array != child_array
+    row_indices, col_indices = np.where(parent_child_diff)
+
+    parent_res_id = parent_array[row_indices, col_indices]
+    child_res_id = child_array[row_indices, col_indices]
     
-    all_res_locs = range(protein_len)
-    mut_results_dict = {}
+    parent_child_tuples = [*zip(col_indices, parent_res_id, child_res_id)]
+    rec_loc_count_dict = Counter(parent_child_tuples)
 
-    countmut_worker = partial(CountMutations,
-                              parent_child_set=parent_child_set,
-                              sequence_dict=sequence_dict, 
-                              residue_dict=residue_dict,
-                              terminate_flag=terminate_flag)
-    if protein_batch_size is not None:
-        protein_batch_size = min((protein_batch_size, protein_len))
-        batches = [all_res_locs[i:i + protein_batch_size] for i in range(0, len(all_res_locs), protein_batch_size)]
+    return rec_loc_count_dict
 
-    try:
-        with ProcessPoolExecutor(max_workers=nthreads) as executor:
-            if protein_batch_size is not None:
-                futures = {executor.submit(countmut_worker, res_loc): res_loc for batch in batches for res_loc in batch}
-            else:
-                futures = {executor.submit(countmut_worker, res_loc): res_loc for res_loc in all_res_locs}
-
-            for future in as_completed(futures):
-                if terminate_flag.is_set():
-                    break
-                try:
-                    result = future.result()
-                    res_loc, residue_mut, error_msg = result
-                    if error_msg:
-                        print(error_msg)
-                        production_logger.error(error_msg)
-                        terminate_flag.set()
-                        break
-                    mut_results_dict[res_loc] = residue_mut
-
-                except BrokenPipeError:
-                    error_msg = "Broken pipe error during parallel processing."
-                    print(error_msg)
-                    production_logger.error(error_msg)
-                    terminate_flag.set()
-                    break
-                except Exception as e:
-                    error_msg = f"ERROR during parallel processing: {e}"
-                    print(error_msg)
-                    print(traceback.format_exc())
-                    production_logger.error(error_msg)
-                    terminate_flag.set()
-                    break
-
-    except Exception as e:
-        error_msg = f"ERROR during parallel processing: {e}"
-        print(error_msg)
-        print(traceback.format_exc())
-        production_logger.error(error_msg)
-    finally:
-        return mut_results_dict
-
-def GetRecurrenceList(rec_loc: int,
-                      mut_matrix: np.typing.NDArray[np.int64], 
-                      terminate_flag) -> Union[List[List[Union[int, str, float]]], str]:
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            recurrence_list: List[List[Union[int, str, float]]] = []
-            rows, cols = np.where(mut_matrix > 1)  # Changed condition from > 0 to > 1 as per original code
-            for i in range(len(rows)):
-                if terminate_flag.is_set():
-                    print(f"Terminating GetRecurrenceList for rec_loc {rec_loc} due to termination signal")
-                    return "Terminated"
-                r = rows[i]
-                c = cols[i]
-                recurrence = mut_matrix[r, c]
-                flipflop = mut_matrix[c, r]
-                parent = util.residues[r]
-                child = util.residues[c]
-                recurrence_list.append([rec_loc, parent, child, recurrence, flipflop])
-        
-        return recurrence_list
-    except Exception as e:
-        error_msg = f"ERROR in GetRecurrenceList for rec_loc {rec_loc}: {e}"
-        print(error_msg)
-        print(traceback.format_exc())
-        return error_msg
-
-def get_recurrence_list(mut_matrices: Dict[int, np.typing.NDArray[np.int64]], 
-                        extant_seq: Dict[str, str], 
-                        outgroups: List[str],
-                        nthreads: int,
-                        production_logger: logging.Logger,
-                        terminate_flag: threading.Event) -> List[List[Union[str, int, float]]]:
-
-    if len(extant_seq) == 0 or len(outgroups) == 0:
-        error_msg = "ERROR: extant_seq or outgroups is None. Cannot proceed with get_recurrence_list."
-        print(error_msg)
-        return []
+def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]], 
+                        residue_dict_flip: Dict[int, str],
+                        ) -> List[List[Union[int, str, float]]]:
     
-    tasks = [(rec_loc, mut_matrix, terminate_flag) for rec_loc, mut_matrix in mut_matrices.items()]
+    rec_loc_count_dict2 = copy.deepcopy(dict(rec_loc_count_dict))
+    flipflop_dict = {}
+    for key, _ in rec_loc_count_dict.most_common():
+        res_loc, parent_id, child_id = key
+        flipflop_key = (res_loc, child_id, parent_id)
+        flipflop = rec_loc_count_dict.get(flipflop_key)
 
-    recurrence_list = []
-    try:
-        with ProcessPoolExecutor(max_workers=nthreads, initializer=initialise_worker, initargs=(terminate_flag,)) as executor:
-            futures = {executor.submit(GetRecurrenceList, *task): task for task in tasks}
-            for future in as_completed(futures):
-                if terminate_flag.is_set():
-                    print("Terminating get_recurrence_list due to termination signal")
-                    break
-                try:
-                    result = future.result()
-                    if isinstance(result, str) and result.startswith("ERROR"):
-                        print(result)
-                        production_logger.error(result)
-                    elif isinstance(result, list) and len(result) > 0:
-                        recurrence_list.extend(result)
-                except BrokenPipeError:
-                    error_msg = "Broken pipe error during recurrence list processing."
-                    print(error_msg)
-                    terminate_flag.set()
-                    break
-                except Exception as e:
-                    error_msg = f"ERROR during recurrence list processing: {e}"
-                    print(error_msg)
-                    print(traceback.format_exc())
-                    production_logger.error(error_msg)
-                    terminate_flag.set()
-                    break 
+        if flipflop is not None:
+            rec_loc_count_dict2.pop(flipflop_key, None)
+            flipflop_dict[key] = flipflop
 
-    except Exception as e:
-        error_msg = f"ERROR during get_recurrence_list: {e}"
-        print(error_msg)
-        print(traceback.format_exc())
-        production_logger.error(error_msg)
-
-    finally:
-        return recurrence_list
+    recurrence_list: List[List[Union[int, str, float]]] = [
+        [
+            res_loc, 
+            residue_dict_flip[parent_id], 
+            residue_dict_flip[child_id], 
+            recurrence, 
+            flipflop_dict.get(key, 0)
+         ] 
+        for (res_loc, parent_id, child_id), recurrence in rec_loc_count_dict2.items() if recurrence > 1
+    ]
+    return recurrence_list
 
 def WorkerProcessAndCount(file: str, 
                           mcs_alnDir: str,
@@ -522,61 +353,45 @@ def WorkerProcessAndCount(file: str,
                           isnuc_fasta: bool,
                           sequence_type: str, 
                           residue_dict: Dict[str, int], 
-                          res_loc_set: Set[int],
+                          res_loc_list: List[int],
                           production_logger: logging.Logger,
-                          terminate_flag: threading.Event) -> Tuple[Dict[int, np.typing.NDArray[np.int64]], str]:
+                          terminate_flag: threading.Event
+                          ) -> Tuple[Dict[Tuple[int, int, int], int], str]:
     
-    mut_matrices: Dict[int, np.typing.NDArray[np.int64]] = {}
+    rec_loc_count_dict: Dict[Tuple[int, int, int], int] = {}
     error_msg = ""
+
     try:
         file_path = os.path.join(mcs_alnDir, file)
-        mcs_combined_prot_seqs_dict, _ = files.FileReader.ReadAlignment(file_path)
+        mcs_combined_prot_seqs_dict, protein_len = files.FileReader.ReadAlignment(file_path)
 
         if isnuc_fasta:
-            mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
+            mcs_combined_prot_seqs_dict, protein_len = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
 
         if terminate_flag.is_set():
-            msg = f"Terminating processing for file: {file} due to termination signal"
-            return mut_matrices, msg
+            return rec_loc_count_dict, f"Terminating processing for file: {file} due to termination signal"
 
-        all_parent_positions: List[int] = []
-        all_child_positions: List[int] = []
-        all_res_locs: List[int] = []
-        
-        for res_loc in res_loc_set:
-            if terminate_flag.is_set():
-                msg = f"Terminating processing for file: {file} at res_loc {res_loc} due to termination signal"
-                return mut_matrices, msg
+        parent_child_num_list = [
+            [residue_dict[res] for res in mcs_combined_prot_seqs_dict[parent] + mcs_combined_prot_seqs_dict[child]]
+            for parent, child in parent_child_set
+        ]
 
-            parent_positions: List[int] = []
-            child_positions: List[int] = []
+        parent_child_array = np.array(parent_child_num_list)
+        parent_array = parent_child_array[:, :protein_len]
+        child_array = parent_child_array[:, protein_len:]
 
-            for parent, child in parent_child_set:
-                child_ident = mcs_combined_prot_seqs_dict[child][res_loc]
-                parent_ident = mcs_combined_prot_seqs_dict[parent][res_loc]
+        parent_child_diff = parent_array != child_array
+        row_indices, col_indices = np.where(parent_child_diff)
 
-                child_pos = residue_dict.get(child_ident)
-                parent_pos = residue_dict.get(parent_ident)
+        mask = np.isin(col_indices, res_loc_list)
+        col_idx = col_indices[mask]
+        row_idx = row_indices[mask]
 
-                if isinstance(child_pos, int) and isinstance(parent_pos, int) and child_pos != parent_pos:
-                    parent_positions.append(parent_pos)
-                    child_positions.append(child_pos)
+        parent_res_id = parent_array[row_idx, col_idx]
+        child_res_id = child_array[row_idx, col_idx]
 
-            if parent_positions and child_positions:
-                all_parent_positions.extend(parent_positions)
-                all_child_positions.extend(child_positions)
-                all_res_locs.extend([res_loc] * len(parent_positions))
-
-        if all_parent_positions and all_child_positions:
-            all_parent_positions_array = np.array(all_parent_positions, dtype=int)
-            all_child_positions_array = np.array(all_child_positions, dtype=int)
-            all_res_locs_array = np.array(all_res_locs, dtype=int)
-
-            for res_loc in np.unique(all_res_locs_array):
-                indices = np.where(all_res_locs_array == res_loc)
-                residue_mut = np.zeros((20, 20), dtype=np.int64)
-                np.add.at(residue_mut, (all_parent_positions_array[indices], all_child_positions_array[indices]), 1)
-                mut_matrices[res_loc] = residue_mut
+        parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
+        rec_loc_count_dict = Counter(parent_child_tuples)
 
     except BrokenPipeError:
         error_msg = "Broken pipe error while processing file."
@@ -587,8 +402,9 @@ def WorkerProcessAndCount(file: str,
         print(error_msg)
         print(traceback.format_exc())
         production_logger.error(error_msg)
-    finally:
-        return mut_matrices, error_msg
+    
+    return rec_loc_count_dict, error_msg
+
 
 def process_mcs_files_in_chunks(mcs_alnDir: str, 
                                 parent_child_set: Set[Tuple[str, str]], 
@@ -596,12 +412,13 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                                 nthreads: int, 
                                 isnuc_fasta: bool, 
                                 sequence_type: str,
-                                res_loc_set: Set[int],
+                                res_loc_list: List[int],
                                 production_logger: logging.Logger,
                                 terminate_flag: threading.Event,
                                 window_width: int,
                                 update_cycle: Optional[int] = None, 
-                                mcs_batch_size: Optional[int] = None) -> List[Dict[int, np.typing.NDArray[np.int64]]]:
+                                mcs_batch_size: Optional[int] = None
+                                ) -> List[Dict[Tuple[int, int, int], int]]:
 
     mcs_files = os.listdir(mcs_alnDir)
     total_file_count = len(mcs_files)
@@ -612,8 +429,8 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                      parent_child_set=parent_child_set,
                      isnuc_fasta=isnuc_fasta,
                      sequence_type=sequence_type,
-                     residue_dict=residue_dict, 
-                     res_loc_set=res_loc_set,
+                     residue_dict=residue_dict,
+                     res_loc_list=res_loc_list,
                      production_logger=production_logger,
                      terminate_flag=terminate_flag)
     if mcs_batch_size is not None:    
@@ -680,90 +497,76 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
 
     return results
 
-def compute_p_value_for_rec_list(rec_list: List[Union[str, int, float]], 
-                                 mcs_results: Dict[int, List[np.typing.NDArray[np.int64]]], 
-                                 residue_dict: Dict[str, int], 
-                                 nalign: int,
-                                 terminate_flag: threading.Event) -> Union[List[Union[str, int, float]], None]:
-
-    try:
-        if terminate_flag.is_set():
-            print(f"Terminating p-value computation for rec_list: {rec_list} due to termination signal")
-            return None
-
-        rec_loc = int(rec_list[0])
-        parent = str(rec_list[1])
-        child = str(rec_list[2])
-        recurrence = int(rec_list[3])
-
-        r = residue_dict[parent]
-        c = residue_dict[child]
-        count_greater = 0
-        mcs_result = mcs_results.get(rec_loc)
-
-        if mcs_result is not None:
-            for m in mcs_result:
-                if np.all(m == 0):
-                    continue
-                mcs_rec = m[r, c]
-                if mcs_rec >= recurrence:
-                    count_greater += 1
-
-        p_value = (count_greater + 1) / (nalign + 1)
-        rec_list.append(np.round(p_value, len(str(nalign))))
-        # print(f"{rec_list} - {count_greater}")
-        return rec_list
-
-    except Exception as e:
-        error_msg = f"ERROR computing p-value for rec_list {rec_list}: {e}"
-        print(error_msg)
-        print(traceback.format_exc())
-        return None
-
-
-def compute_p_values(mcs_results: List[Dict[int, np.typing.NDArray[np.int64]]],
+def compute_p_values(mcs_results: List[Dict[Tuple[int, int, int], int]],
                      recurrence_list: List[List[Union[str, int, float]]],
                      residue_dict: Dict[str, int],
-                     nalign: int,
-                     terminate_flag: threading.Event) -> List[List[Union[str, int, float]]]:
-
-    recurrence_list_pvalue = []
-
-    mcs_results_dict = defaultdict(list)
-    
-    for mcs_result in mcs_results:
-        for res_loc, val in mcs_result.items():
-            mcs_results_dict[res_loc].append(val)
-
-    partial_compute = partial(compute_p_value_for_rec_list, 
-                            mcs_results=mcs_results_dict, 
-                            residue_dict=residue_dict, 
-                            nalign=nalign,
-                            terminate_flag=terminate_flag)
-
+                     nalign: int) -> List[List[Union[str, int, float]]]:
     try:
         for rec_list in recurrence_list:
-            if terminate_flag.is_set():
-                print(f"Terminating p-value computation due to termination signal")
-                break
-            try:
-                result = partial_compute(rec_list)
-                if result is not None:
-                    recurrence_list_pvalue.append(result)
-            except Exception as e:
-                error_msg = f"ERROR during p-value computation for rec_list {rec_list}: {e}"
-                print(error_msg)
-                print(traceback.format_exc())
-                terminate_flag.set()
-                break 
+            rec_loc = int(rec_list[0])
+            parent = str(rec_list[1])
+            child = str(rec_list[2])
+            recurrence = int(rec_list[3])
 
-        recurrence_list_pvalue.sort(key=lambda x: (float(x[-1]), -float(x[-3])))
+            count_greater = 0
+            for mcs_count_dict in mcs_results:
+                mcs_rec = mcs_count_dict.get((rec_loc, residue_dict[parent], residue_dict[child]))
+                if mcs_rec is not None:
+                    if mcs_rec >= recurrence:
+                        count_greater += 1
+        
+            p_value = (count_greater + 1) / (nalign + 1)
+            rec_list.append(np.round(p_value, len(str(nalign))))
+            # print(f"{rec_list} - {count_greater}")
+
     except Exception as e:
         error_msg = f"ERROR during compute_p_values: {e}"
         print(error_msg)
         print(traceback.format_exc())
+    finally:
+        return recurrence_list
 
-    return recurrence_list_pvalue
+def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
+                            recurrence_list: List[List[Union[str, int, float]]],
+                            combined_prot_seqs_dict: Dict[str, str],
+                            species_of_interest: List[str],
+                            residue_dict_flip: Dict[int, str],
+                            protein_len: int) -> List[List[Union[str, int, float]]]:
+    extant_seq = {species: seq for species, seq in combined_prot_seqs_dict.items() if species in species_of_interest}
+    ident_dict = {}
+
+    res_loc_info_dict= util.get_sorted_res_loc_info(res_loc_count_dict, protein_len)
+    for rec_loc, res in enumerate(zip(*extant_seq.values())):
+        ident_dict[rec_loc] = res
+
+    for rec_list in recurrence_list:
+        res_loc = rec_list[0]
+
+        if not isinstance(res_loc, int):
+            continue
+
+        parent_child = []
+        counts = []
+        for parent_id, child_id, recurrence in res_loc_info_dict[res_loc]:
+            parent = residue_dict_flip[parent_id]
+            child = residue_dict_flip[child_id]
+            parent_child.append(">".join((parent, child)))
+            counts.append(recurrence)
+        
+        data_str_list = [*(map(str, counts))]
+        parent_child_data = [*zip(parent_child, data_str_list)]
+        parent_child_data_str = ",".join([":".join(pcd) for pcd in parent_child_data])
+        rec_list.append(parent_child_data_str)
+
+        res_freq = [*Counter(ident_dict[res_loc]).items()]
+        res_freq = sorted(res_freq, reverse=True, key=lambda x: x[1])
+        res_freq_str = ",".join([":".join((res, str(freq))) for res, freq in res_freq])
+        rec_list.append(res_freq_str)
+
+        if isinstance(rec_list[0], int):
+            rec_list[0] += 1
+
+    return recurrence_list
 
 def main(args: Optional[List[str]] = None):
 
@@ -970,10 +773,6 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info(prepend + "Ran IQ-TREE to build the gene trees for the real phylogeny", extra={'to_file': True, 'to_console': True})
                         production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
                     
-                    # elif restart_step2 or restart_step3 or override:
-                    #     production_logger.info("Ran IQ-TREE to build the gene trees for the real phylogeny", extra={'to_file': True, 'to_console': True})
-                    #     production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
-                    
                     if gene_tree is None:
                         asr = False
                         fix_branch_length = False
@@ -1114,32 +913,25 @@ def main(args: Optional[List[str]] = None):
                     outgroup_mrca = outgroup_species
 
                 try:
-                    mut_matrices = count_mutations(parent_child_set,
+                    rec_loc_count_dict = count_mutations(parent_child_set,
                                                     combined_prot_seqs_dict,
-                                                    residue_dict, 
-                                                    protein_len, 
-                                                    options.nthreads,
-                                                    production_logger,
-                                                    terminate_flag,
-                                                    protein_batch_size=options.protein_batch_size)
+                                                    residue_dict,
+                                                    protein_len)
                 finally:
                     reset_terminate_flag(terminate_flag)
 
                 production_logger.info(f"Root of species of interest: {root_node}", extra={'to_file': True, 'to_console': True})
                 production_logger.info(f"Substitution matrix output: {filehandler.GetMutMatrixDir()}\n", extra={'to_file': True, 'to_console': True})
 
-                filewriter.WriteMutMatrix(mut_matrices, 
+                filewriter.WriteMutMatrix(rec_loc_count_dict,
                                           residue_dict_flip, 
+                                          protein_len,
                                           filehandler.GetMutCountMatricesFN(),
                                           filehandler.GetAccumMutCountMatricesFN())
                 
                 try:
-                    recurrence_list = get_recurrence_list(mut_matrices, 
-                                                        combined_prot_seqs_dict,
-                                                        outgroup_mrca, 
-                                                        options.nthreads,
-                                                        production_logger,
-                                                        terminate_flag)
+                    recurrence_list = get_recurrence_list(rec_loc_count_dict, residue_dict_flip)
+
                 finally:
                     reset_terminate_flag(terminate_flag)
 
@@ -1148,8 +940,7 @@ def main(args: Optional[List[str]] = None):
                                            extra={'to_file': True, 'to_console': True})
                     continue 
 
-
-                res_loc_set = set(int(res_list[0]) for res_list in recurrence_list)
+                res_loc_list = [int(res_list[0]) for res_list in recurrence_list]
 
                 if gene_tree is None:
                     step2_info = f"Step3: Simulating Sequence Evolution with {options.nalign} replicates"
@@ -1248,17 +1039,18 @@ def main(args: Optional[List[str]] = None):
                 
                 try:
                     mcs_results = process_mcs_files_in_chunks(mcs_alnDir, 
-                                                        parent_child_set, 
-                                                        residue_dict, 
-                                                        options.nthreads,
-                                                        isnuc_fasta,
-                                                        options.sequence_type,
-                                                        res_loc_set, 
-                                                        production_logger,
-                                                        terminate_flag,
-                                                        width, 
-                                                        update_cycle=options.update_cycle,
-                                                        mcs_batch_size=options.mcs_batch_size)
+                                                    parent_child_set, 
+                                                    residue_dict, 
+                                                    options.nthreads,
+                                                    isnuc_fasta,
+                                                    options.sequence_type,
+                                                    res_loc_list, 
+                                                    production_logger,
+                                                    terminate_flag,
+                                                    width, 
+                                                    update_cycle=options.update_cycle,
+                                                    mcs_batch_size=options.mcs_batch_size)
+
                 finally:
                     reset_terminate_flag(terminate_flag)
 
@@ -1271,18 +1063,18 @@ def main(args: Optional[List[str]] = None):
                 try:
                     recurrence_list_pvalue = compute_p_values(mcs_results, 
                                                             recurrence_list,
-                                                            residue_dict, 
-                                                            options.nalign,
-                                                            terminate_flag)
+                                                            residue_dict,
+                                                            options.nalign)
                 
                 finally:
                     reset_terminate_flag(terminate_flag)
 
-                recurrence_list_updated = combine_mut_matrix_and_recurrence_list(mut_matrices,
-                                                                                 recurrence_list_pvalue,
-                                                                                 combined_prot_seqs_dict,
-                                                                                 species_of_interest,
-                                                                                 residue_dict_flip)
+                recurrence_list_updated = update_recurrence_list(rec_loc_count_dict,
+                                                                recurrence_list_pvalue,
+                                                                combined_prot_seqs_dict,
+                                                                species_of_interest,
+                                                                residue_dict_flip,
+                                                                protein_len)
                 
                 filewriter.WriteRecurrenceList(recurrence_list_updated, filehandler.GetRecurrenceListFN(recurrenceDir))
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
@@ -1292,7 +1084,7 @@ def main(args: Optional[List[str]] = None):
                 rec_results = os.path.normpath(filehandler.GetRecurrenceListFN(recurrenceDir))
                 production_logger.info("\nResults:\n    %s\n" % rec_results, extra={'to_file': True, 'to_console': True})
                 
-                del combined_prot_seqs_dict, alignment_dict, mut_matrices, recurrence_list
+                del combined_prot_seqs_dict, alignment_dict, rec_loc_count_dict, recurrence_list
                 del recurrence_list_pvalue, recurrence_list_updated
                 gc.collect()
 
