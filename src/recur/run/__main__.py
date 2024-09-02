@@ -216,13 +216,6 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
 
     os._exit(0)
 
-def get_subtree_species(node):
-
-    species = []
-    for leaf in node.leaf_iter():
-        species.append(leaf.taxon.label)
-    return species
-
 def ParentChildRelation(treefile: str, 
                         outgroup_species: List[str],
                         n_species: int,
@@ -251,7 +244,7 @@ def ParentChildRelation(treefile: str,
         root_node = root_of_interest.label
         root_node = root_node if "/" not in root_node else root_node.split("/")[0]
 
-        outgroup_subtree_species = get_subtree_species(outgroup_mrca)
+        outgroup_subtree_species = [leaf.taxon.label for leaf in outgroup_mrca.leaf_iter()]
 
         taxon_count = 0
         parent_child_set: Set[Tuple[str, str]] = set()

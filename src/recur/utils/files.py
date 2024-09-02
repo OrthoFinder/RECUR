@@ -271,13 +271,7 @@ class FileWriter(object):
                 if len(item) == 0:
                     line = "\t".join((str(pos+1), "-", "-", "-"))
                 else:
-                    # parent_ids, child_ids, counts = zip(*item) 
-                    # parent_ids = np.array(parent_ids, dtype=int)
-                    # child_ids = np.array(child_ids, dtype=int)
-                    # counts = np.array(counts, dtype=int)
-
                     parent_ids, child_ids, counts = map(np.array, zip(*item))
-
                     np.add.at(accum_mutation_matrix, (parent_ids, child_ids), counts)
 
                     parent_child = []
