@@ -257,23 +257,6 @@ def iter_dir(d: Optional[str] = None) -> Iterator[str]:
             if entry.is_file():
                 yield entry.name
 
-# def transform_dict(res_loc_count_dict, protein_len):
-
-#     mut_matrices = {res_loc: np.zeros((20, 20), dtype=np.int64) for res_loc in range(protein_len)}
-#     res_locs, parent_ids, child_ids, values = zip(*[(res_loc, parent_id, child_id, val) 
-#                                                     for (res_loc, parent_id, child_id), val in res_loc_count_dict.items()])
-
-#     res_locs = np.array(res_locs)
-#     parent_ids = np.array(parent_ids)
-#     child_ids = np.array(child_ids)
-#     values = np.array(values)
-
-#     for res_loc in np.unique(res_locs):
-#         indices = np.where(res_locs == res_loc)
-#         np.add.at(mut_matrices[res_loc], (parent_ids[indices], child_ids[indices]), values[indices])
-
-#     return mut_matrices
-
 def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int], 
                             protein_len: int) -> Dict[int, List[Tuple[int, int, int]]]:
     res_loc_info_dict: Dict[int, List[Tuple[int, int, int]]] = {res_loc: [] for res_loc in range(protein_len)}
@@ -287,6 +270,7 @@ def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int],
     }
     
     return res_loc_info_dict_sorted
+
 
 
 

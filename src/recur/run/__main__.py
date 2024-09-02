@@ -219,7 +219,8 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
 def ParentChildRelation(treefile: str, 
                         outgroup_species: List[str],
                         n_species: int,
-                        terminate_flag: threading.Event) -> Tuple[Optional[str], List[str], Set[Tuple[str, str]], str]:
+                        terminate_flag: threading.Event
+                        ) -> Tuple[Optional[str], List[str], List[str], List[str], str]:
     try:
 
         with open(treefile, 'r') as f:
@@ -239,7 +240,7 @@ def ParentChildRelation(treefile: str,
 
         if root_of_interest is None:
  
-            return None, outgroup_species, set(), "No root of interest found; tree structure might be incorrect."
+            return None, outgroup_species, [], [], "No root of interest found; tree structure might be incorrect."
 
         root_node = root_of_interest.label
         root_node = root_node if "/" not in root_node else root_node.split("/")[0]
@@ -247,10 +248,11 @@ def ParentChildRelation(treefile: str,
         outgroup_subtree_species = [leaf.taxon.label for leaf in outgroup_mrca.leaf_iter()]
 
         taxon_count = 0
-        parent_child_set: Set[Tuple[str, str]] = set()
+        parent_list: List[str] = []
+        child_list: List[str] = []
         for nd in root_of_interest.postorder_iter():
             if terminate_flag.is_set():
-                return root_node, outgroup_species, parent_child_set, "Terminated"
+                return root_node, outgroup_species, parent_list, child_list, "Terminated"
 
             if nd.parent_node is None:
                 continue
@@ -265,7 +267,8 @@ def ParentChildRelation(treefile: str,
                 child = child if "/" not in child else child.split("/")[0]
                 parent = parent if "/" not in parent else parent.split("/")[0]
 
-                parent_child_set.add((parent, child))
+                parent_list.append(parent)
+                child_list.append(child)
 
                 taxon_count += 1
 
@@ -275,31 +278,35 @@ def ParentChildRelation(treefile: str,
         expected_relationships = 2 * (n_species - len(outgroup_species)) - 2
 
         if taxon_count != expected_relationships:
-            return root_node, outgroup_species, parent_child_set, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}."
+            return root_node, outgroup_species, parent_list, child_list, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}."
         
-        return root_node, outgroup_species, parent_child_set, ""
+        return root_node, outgroup_species, parent_list, child_list, ""
     except BrokenPipeError:
         print("Broken pipe error while checking termination flag.")
-        return root_node, outgroup_species, parent_child_set, "Broken pipe error"
+        return root_node, outgroup_species, parent_list, child_list, "Broken pipe error"
     except Exception as e:
         error_msg = f"ERROR in ParentChildRelation: {e}"
         print(error_msg)
         print(traceback.format_exc())
-        return root_node, outgroup_species, parent_child_set, error_msg 
+        return root_node, outgroup_species, parent_list, child_list, error_msg 
 
-def count_mutations(parent_child_set: Set[Tuple[str, str]], 
-                    sequence_dict: Dict[str, str], 
-                    residue_dict: Dict[str, int], 
-                    protein_len: int) -> Counter[Tuple[int, int, int]]:
+def count_mutations(parent_list: List[str],
+                    child_list: List[str],
+                    sequence_dict: Dict[str, str],
+                    residue_dict: Dict[str, int]
+                    ) -> Counter[Tuple[int, int, int]]:
 
-    parent_child_num_list = [
-        [residue_dict[res] for res in sequence_dict[parent] + sequence_dict[child]]
-        for parent, child in parent_child_set
+    parent_num_list = [
+        [residue_dict[res] for res in sequence_dict[parent]] 
+        for parent in parent_list
+    ]
+    child_num_list = [
+        [residue_dict[res] for res in sequence_dict[child]] 
+        for child in child_list
     ]
 
-    parent_child_array = np.array(parent_child_num_list)
-    parent_array = parent_child_array[:, :protein_len]
-    child_array = parent_child_array[:, protein_len:]
+    parent_array = np.array(parent_num_list)
+    child_array = np.array(child_num_list)
 
     parent_child_diff = parent_array != child_array
     row_indices, col_indices = np.where(parent_child_diff)
@@ -329,19 +336,20 @@ def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
 
     recurrence_list: List[List[Union[int, str, float]]] = [
         [
-            res_loc, 
-            residue_dict_flip[parent_id], 
-            residue_dict_flip[child_id], 
-            recurrence, 
-            flipflop_dict.get(key, 0)
+            int(res_loc), 
+            str(residue_dict_flip[parent_id]), 
+            str(residue_dict_flip[child_id]), 
+            int(recurrence), 
+            int(flipflop_dict.get(key, 0))
          ] 
-        for (res_loc, parent_id, child_id), recurrence in rec_loc_count_dict2.items() if recurrence > 1
+        for (res_loc, parent_id, child_id), recurrence in rec_loc_count_dict2.items() if int(recurrence) > 1
     ]
     return recurrence_list
 
 def WorkerProcessAndCount(file: str, 
                           mcs_alnDir: str,
-                          parent_child_set: Set[Tuple[str, str]],
+                          parent_list: List[str],
+                          child_list: List[str],
                           isnuc_fasta: bool,
                           sequence_type: str, 
                           residue_dict: Dict[str, int], 
@@ -355,22 +363,24 @@ def WorkerProcessAndCount(file: str,
 
     try:
         file_path = os.path.join(mcs_alnDir, file)
-        mcs_combined_prot_seqs_dict, protein_len = files.FileReader.ReadAlignment(file_path)
+        mcs_combined_prot_seqs_dict, _ = files.FileReader.ReadAlignment(file_path)
 
         if isnuc_fasta:
-            mcs_combined_prot_seqs_dict, protein_len = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
+            mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
 
         if terminate_flag.is_set():
             return rec_loc_count_dict, f"Terminating processing for file: {file} due to termination signal"
 
-        parent_child_num_list = [
-            [residue_dict[res] for res in mcs_combined_prot_seqs_dict[parent] + mcs_combined_prot_seqs_dict[child]]
-            for parent, child in parent_child_set
+        parent_num_list = [
+            [residue_dict[res] for res in mcs_combined_prot_seqs_dict[parent]] 
+            for parent in parent_list
         ]
-
-        parent_child_array = np.array(parent_child_num_list)
-        parent_array = parent_child_array[:, :protein_len]
-        child_array = parent_child_array[:, protein_len:]
+        child_num_list = [
+            [residue_dict[res] for res in mcs_combined_prot_seqs_dict[child]] 
+            for child in child_list
+        ]
+        parent_array = np.array(parent_num_list)
+        child_array = np.array(child_num_list)
 
         parent_child_diff = parent_array != child_array
         row_indices, col_indices = np.where(parent_child_diff)
@@ -399,7 +409,8 @@ def WorkerProcessAndCount(file: str,
 
 
 def process_mcs_files_in_chunks(mcs_alnDir: str, 
-                                parent_child_set: Set[Tuple[str, str]], 
+                                parent_list: List[str],
+                                child_list: List[str], 
                                 residue_dict: Dict[str, int], 
                                 nthreads: int, 
                                 isnuc_fasta: bool, 
@@ -418,7 +429,8 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
     results = []
     worker = partial(WorkerProcessAndCount, 
                      mcs_alnDir=mcs_alnDir,
-                     parent_child_set=parent_child_set,
+                     parent_list=parent_list,
+                     child_list=child_list,
                      isnuc_fasta=isnuc_fasta,
                      sequence_type=sequence_type,
                      residue_dict=residue_dict,
@@ -524,6 +536,7 @@ def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
                             species_of_interest: List[str],
                             residue_dict_flip: Dict[int, str],
                             protein_len: int) -> List[List[Union[str, int, float]]]:
+    
     extant_seq = {species: seq for species, seq in combined_prot_seqs_dict.items() if species in species_of_interest}
     ident_dict = {}
 
@@ -532,11 +545,7 @@ def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
         ident_dict[rec_loc] = res
 
     for rec_list in recurrence_list:
-        res_loc = rec_list[0]
-
-        if not isinstance(res_loc, int):
-            continue
-
+        res_loc = int(rec_list[0])
         parent_child = []
         counts = []
         for parent_id, child_id, recurrence in res_loc_info_dict[res_loc]:
@@ -554,9 +563,6 @@ def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
         res_freq = sorted(res_freq, reverse=True, key=lambda x: x[1])
         res_freq_str = ",".join([":".join((res, str(freq))) for res, freq in res_freq])
         rec_list.append(res_freq_str)
-
-        if isinstance(rec_list[0], int):
-            rec_list[0] += 1
 
     return recurrence_list
 
@@ -578,7 +584,6 @@ def main(args: Optional[List[str]] = None):
         print(f"RECUR:v{__version__}")
         sys.exit()
  
-    
     start_main = time.perf_counter()
 
     try:
@@ -896,7 +901,7 @@ def main(args: Optional[List[str]] = None):
                 node_seq_dict.clear()
                 combined_seq_dict.clear()
               
-                root_node, outgroup_species, parent_child_set, error_msg = ParentChildRelation(treefile, outgroup_mrca, n_species, terminate_flag)
+                root_node, outgroup_species, parent_list, child_list, error_msg = ParentChildRelation(treefile, outgroup_mrca, n_species, terminate_flag)
                 
                 if error_msg:
                     production_logger.error(error_msg)
@@ -907,14 +912,12 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(f"Updated outgroups: {outgroup_mrca}", extra={'to_file': True, 'to_console': False})
                     outgroup_mrca = outgroup_species
 
-                try:
-                    rec_loc_count_dict = count_mutations(parent_child_set,
-                                                    combined_prot_seqs_dict,
-                                                    residue_dict,
-                                                    protein_len)
-                finally:
-                    reset_terminate_flag(terminate_flag)
 
+                rec_loc_count_dict = count_mutations(parent_list, 
+                                                    child_list,
+                                                    combined_prot_seqs_dict,
+                                                    residue_dict)
+                    
                 production_logger.info(f"Root of species of interest: {root_node}", extra={'to_file': True, 'to_console': True})
                 production_logger.info(f"Substitution matrix output: {filehandler.GetMutMatrixDir()}\n", extra={'to_file': True, 'to_console': True})
 
@@ -924,11 +927,7 @@ def main(args: Optional[List[str]] = None):
                                           filehandler.GetMutCountMatricesFN(),
                                           filehandler.GetAccumMutCountMatricesFN())
                 
-                try:
-                    recurrence_list = get_recurrence_list(rec_loc_count_dict, residue_dict_flip)
-
-                finally:
-                    reset_terminate_flag(terminate_flag)
+                recurrence_list = get_recurrence_list(rec_loc_count_dict, residue_dict_flip)
 
                 if len(recurrence_list) == 0:
                     production_logger.info(f"ATTENTION: No recurrence has identified for gene {gene}! Monte-Carlo Simiatlion will be SKIPPED!\n", 
@@ -1034,7 +1033,8 @@ def main(args: Optional[List[str]] = None):
                 
                 try:
                     mcs_results = process_mcs_files_in_chunks(mcs_alnDir, 
-                                                    parent_child_set, 
+                                                    parent_list,
+                                                    child_list, 
                                                     residue_dict, 
                                                     options.nthreads,
                                                     isnuc_fasta,
@@ -1055,15 +1055,12 @@ def main(args: Optional[List[str]] = None):
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Starting compute p values.")
 
-                try:
-                    recurrence_list_pvalue = compute_p_values(mcs_results, 
-                                                            recurrence_list,
-                                                            residue_dict,
-                                                            options.nalign)
-                
-                finally:
-                    reset_terminate_flag(terminate_flag)
 
+                recurrence_list_pvalue = compute_p_values(mcs_results, 
+                                                        recurrence_list,
+                                                        residue_dict,
+                                                        options.nalign)
+                
                 recurrence_list_updated = update_recurrence_list(rec_loc_count_dict,
                                                                 recurrence_list_pvalue,
                                                                 combined_prot_seqs_dict,
