@@ -131,10 +131,8 @@ def get_system_info() -> None:
         print("If you are using WSL2, you can run `wsl --shutdown` to reboot the subsystem.")
 
 def residue_table() -> Tuple[Dict[str, int], Dict[int, str]]:
-    residue_pos = [*range(len(residues))]
-    residue_tuples = [*zip(residues, residue_pos)]
-    residue_dict = {k: int(v) for k, v in residue_tuples}
-    residue_dict_flip = {int(v): k for k, v in residue_tuples}
+    residue_dict = dict(zip(residues, range(len(residues))))
+    residue_dict_flip = dict(zip(range(len(residues)), residues))
     return residue_dict, residue_dict_flip
 
 def CheckSequenceType(alignments: List[str]) -> bool:
