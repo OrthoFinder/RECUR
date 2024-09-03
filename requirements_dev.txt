@@ -2,13 +2,7 @@ python-semantic-release
 mypy
 pytest
 pytest-cov
-tox
-delayed-assert
-seaborn
-pandas
-flake8
-pylint
-black
+memory_profiler
 build
 wheel
 setuptools>=64

@@ -11,7 +11,7 @@ authors = [
 description = "recurrant evolution"
 readme = "README.md"
 version= "1.0.0"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = [
     "Reccurant Evolution",
     "Monte-Carlo",  
@@ -33,7 +33,6 @@ classifiers = [
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
 
     # Specify the Python versions you support here.
-    'Programming Language :: Python :: 3.8', # 
     'Programming Language :: Python :: 3.9', # 
     "Programming Language :: Python :: 3.10", # base version
     "Programming Language :: Python :: 3.11", # 
@@ -41,7 +40,6 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "scipy",
     "dendropy",
     "pyyaml",
     "types-PyYAML",
@@ -60,13 +58,7 @@ dev = [
     "mypy",
     "pytest",
     "pytest-cov",
-    "tox",
-    "seaborn",
-    "delayed-assert",
     "memory_profiler",
-    "flake8",
-    "pylint",
-    "black",
     "build",
     "wheel",
     "setuptools>=64",
