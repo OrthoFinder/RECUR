@@ -180,7 +180,10 @@ def GetSeqsDict(dna_seq_dict: Dict[str, str],
 
     codon_table = ImportCodon(sequence_type)     #NCBI's genetic code 11 (for plant plastids)
 
-    prot_sequence_dict = {node: Translate(seq, codon_table) for node, seq in dna_seq_dict.items()}
+    prot_sequence_dict = {
+        node: Translate(seq, codon_table) 
+        for node, seq in dna_seq_dict.items()
+    }
     protein_len = len(next(iter(prot_sequence_dict.values())))
 
     return prot_sequence_dict, protein_len
@@ -257,7 +260,11 @@ def iter_dir(d: Optional[str] = None) -> Iterator[str]:
 
 def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int], 
                             protein_len: int) -> Dict[int, List[Tuple[int, int, int]]]:
-    res_loc_info_dict: Dict[int, List[Tuple[int, int, int]]] = {res_loc: [] for res_loc in range(protein_len)}
+    
+    
+    res_loc_info_dict: Dict[int, List[Tuple[int, int, int]]] = {
+        res_loc: [] for res_loc in range(protein_len)
+    }
 
     for (res_loc, parent_id, child_id), recurrence in res_loc_count_dict.items():
         res_loc_info_dict[res_loc].append((parent_id, child_id, recurrence))
