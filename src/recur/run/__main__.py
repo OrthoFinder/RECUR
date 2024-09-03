@@ -8,7 +8,6 @@ import os
 import csv
 import shutil
 from typing import Optional, Dict, List, Tuple, Union, Set
-import threading       
 import gc
 import time
 import datetime
@@ -139,35 +138,19 @@ def initialise_recur(iqtree_version: Optional[str] = None) -> Dict[str, str]:
     print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
     sys.exit(1)
 
-def initialise_terminate_flag() -> threading.Event:
-    manager = mp.Manager()
-    return manager.Event()
-
-def reset_terminate_flag(event: threading.Event) -> None:
-    event.clear()
-
-def initialise_worker(event: threading.Event) -> None:
-    setup_signal_handler(event)
-
-def signal_handler(sig: int, frame, event: threading.Event) -> None:
+def signal_handler(sig: int, frame) -> None:
     print(f"Received signal {sig}")
-    event.set()
     gc.collect()
     sys.exit(0)
 
-def setup_signal_handler(event: Optional[threading.Event] = None) -> threading.Event:
+def setup_signal_handler() -> None:
     if os.name != 'nt':
         signals = [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGUSR1, signal.SIGUSR2]
     else:
         signals = [signal.SIGTERM, signal.SIGINT]
 
-    if event is None:
-        event = initialise_terminate_flag()
-
     for sig in signals:
-        signal.signal(sig, lambda s, f: signal_handler(s, f, event))
-
-    return event
+        signal.signal(sig, signal_handler)
 
 def cleanup() -> None:
     try:
@@ -219,7 +202,6 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
 def ParentChildRelation(treefile: str, 
                         outgroup_species: List[str],
                         n_species: int,
-                        terminate_flag: threading.Event
                         ) -> Tuple[Optional[str], List[str], List[str], List[str], str]:
     try:
 
@@ -251,8 +233,6 @@ def ParentChildRelation(treefile: str,
         parent_list: List[str] = []
         child_list: List[str] = []
         for nd in root_of_interest.postorder_iter():
-            if terminate_flag.is_set():
-                return root_node, outgroup_species, parent_list, child_list, "Terminated"
 
             if nd.parent_node is None:
                 continue
@@ -282,7 +262,7 @@ def ParentChildRelation(treefile: str,
         
         return root_node, outgroup_species, parent_list, child_list, ""
     except BrokenPipeError:
-        print("Broken pipe error while checking termination flag.")
+        print("Broken pipe error.")
         return root_node, outgroup_species, parent_list, child_list, "Broken pipe error"
     except Exception as e:
         error_msg = f"ERROR in ParentChildRelation: {e}"
@@ -355,7 +335,6 @@ def WorkerProcessAndCount(file: str,
                           residue_dict: Dict[str, int], 
                           res_loc_list: List[int],
                           production_logger: logging.Logger,
-                          terminate_flag: threading.Event
                           ) -> Tuple[Dict[Tuple[int, int, int], int], str]:
     
     rec_loc_count_dict: Dict[Tuple[int, int, int], int] = {}
@@ -367,9 +346,6 @@ def WorkerProcessAndCount(file: str,
 
         if isnuc_fasta:
             mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
-
-        if terminate_flag.is_set():
-            return rec_loc_count_dict, f"Terminating processing for file: {file} due to termination signal"
 
         parent_num_list = [
             [residue_dict[res] for res in mcs_combined_prot_seqs_dict[parent]] 
@@ -417,7 +393,6 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                                 sequence_type: str,
                                 res_loc_list: List[int],
                                 production_logger: logging.Logger,
-                                terminate_flag: threading.Event,
                                 window_width: int,
                                 update_cycle: Optional[int] = None, 
                                 mcs_batch_size: Optional[int] = None
@@ -436,7 +411,7 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                      residue_dict=residue_dict,
                      res_loc_list=res_loc_list,
                      production_logger=production_logger,
-                     terminate_flag=terminate_flag)
+                     )
     if mcs_batch_size is not None:    
         batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
     
@@ -463,15 +438,11 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
             
                 
             for i, future in enumerate(as_completed(futures)):
-                if terminate_flag.is_set():
-                    print("Terminating processing due to termination signal")
-                    break
                 try:
                     result, error_msg = future.result()
                     if error_msg:
                         print(error_msg)
                         production_logger.error(error_msg)
-                        terminate_flag.set()
                         break
 
                     if result:
@@ -482,7 +453,6 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                     print(error_msg)
                     print(traceback.format_exc())
                     production_logger.error(error_msg)
-                    terminate_flag.set()
                     break
 
                 finally:
@@ -570,8 +540,7 @@ def main(args: Optional[List[str]] = None):
 
     d_results = None 
     production_logger = None
-    terminate_flag = initialise_terminate_flag()
-    setup_signal_handler(terminate_flag)
+    setup_signal_handler()
 
     if not args:
         args = sys.argv[1:]
@@ -607,15 +576,13 @@ def main(args: Optional[List[str]] = None):
             if len(options.outgroups) <= aln_len and len(options.outgroups) == 1:
                 options.outgroups = {gene: [*options.outgroups.values()][0] for gene in aln_path_dict}
 
-        count = 0
+        residue_dict, residue_dict_flip = util.residue_table()
 
+        count = 0
         for gene, aln_path in aln_path_dict.items():
 
             asr = True
             fix_branch_length = True
-
-            if terminate_flag.is_set():
-                break
             
             try:    
                 start = time.perf_counter()
@@ -878,8 +845,6 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info(prepend + f"Ancestral state reconstruction complete, best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file': True, 'to_console': True})     
 
                 filehandler.CheckFileCorrespondance(gene, statefile, treefile)
-                residue_dict, residue_dict_flip = util.residue_table()
-                
                 node_seq_dict = filereader.ReadStateFile(statefile)
 
                 combined_seq_dict = {k: v for d in (node_seq_dict, alignment_dict) for k, v in d.items()}
@@ -901,7 +866,10 @@ def main(args: Optional[List[str]] = None):
                 node_seq_dict.clear()
                 combined_seq_dict.clear()
               
-                root_node, outgroup_species, parent_list, child_list, error_msg = ParentChildRelation(treefile, outgroup_mrca, n_species, terminate_flag)
+                root_node, outgroup_species, parent_list, child_list, error_msg = ParentChildRelation(treefile, 
+                                                                                                      outgroup_mrca, 
+                                                                                                      n_species, 
+                                                                                                      )
                 
                 if error_msg:
                     production_logger.error(error_msg)
@@ -1031,23 +999,18 @@ def main(args: Optional[List[str]] = None):
                 production_logger.info(prepend + "Starting create substitution matrices for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
                 production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
                 
-                try:
-                    mcs_results = process_mcs_files_in_chunks(mcs_alnDir, 
-                                                    parent_list,
-                                                    child_list, 
-                                                    residue_dict, 
-                                                    options.nthreads,
-                                                    isnuc_fasta,
-                                                    options.sequence_type,
-                                                    res_loc_list, 
-                                                    production_logger,
-                                                    terminate_flag,
-                                                    width, 
-                                                    update_cycle=options.update_cycle,
-                                                    mcs_batch_size=options.mcs_batch_size)
-
-                finally:
-                    reset_terminate_flag(terminate_flag)
+                mcs_results = process_mcs_files_in_chunks(mcs_alnDir, 
+                                                parent_list,
+                                                child_list, 
+                                                residue_dict, 
+                                                options.nthreads,
+                                                isnuc_fasta,
+                                                options.sequence_type,
+                                                res_loc_list, 
+                                                production_logger,
+                                                width, 
+                                                update_cycle=options.update_cycle,
+                                                mcs_batch_size=options.mcs_batch_size)
 
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Substitution matrices creation complete.\n")
@@ -1076,7 +1039,7 @@ def main(args: Optional[List[str]] = None):
                 rec_results = os.path.normpath(filehandler.GetRecurrenceListFN(recurrenceDir))
                 production_logger.info("\nResults:\n    %s\n" % rec_results, extra={'to_file': True, 'to_console': True})
                 
-                del combined_prot_seqs_dict, alignment_dict, rec_loc_count_dict, recurrence_list
+                del parent_list, child_list, combined_prot_seqs_dict, alignment_dict, rec_loc_count_dict, recurrence_list
                 del recurrence_list_pvalue, recurrence_list_updated
                 gc.collect()
 
