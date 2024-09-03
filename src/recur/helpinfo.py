@@ -17,6 +17,7 @@ def PrintHelp():
     print("--num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]")
     print("-te <dir/file>               Complete constraint tree [Default: Estimated from alignment]")
     print("-m <str>                     Model of sequence evolution [Default: estimated from alignment]")
+    print("-blfix                       Fix branch lengths of tree. [Default: False]")
     print(f"-nt <int>                    Number of threads provided to IQ-TREE2 [Default: 1 (without alrt); {iqtree_nthreads} (with alrt)]")
     print(f"-t <int>                     Number of threads used for RECUR internal processing [Default: {recur_nthreads}]")
     print("--seed <int>                 Random starting see number [Default: 8]")
