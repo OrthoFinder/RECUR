@@ -5,7 +5,7 @@ import sys
 import datetime
 from recur.citation import citation, print_citation
 from typing import List, Dict, Tuple, Optional, Iterator
-from recur import genetic_codes
+from recur import genetic_codes, helpinfo
 from importlib import resources as impresources
 import psutil
 import logging
@@ -14,8 +14,13 @@ import yaml
 import traceback
 import numpy as np
 
+special_chars = ['-', ':', '*', '.']
+special_chars_index = [20, 21, 22, 23]
+
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
-            'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W', '-']
+            'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
+
+residues.extend(special_chars)
 
 class ConsoleOnlyFilter(logging.Filter):
     def filter(self, record):
@@ -136,11 +141,12 @@ def residue_table() -> Tuple[Dict[str, int], Dict[int, str]]:
     return residue_dict, residue_dict_flip
 
 def CheckSequenceType(alignments: List[str]) -> bool:
-    nuc = {"A", "C", "T", "G", "-"}
-    diff_aa_nuc = set(residues) - nuc
+    nuc = {"A", "C", "T", "G"}
+    diff_aa_nuc = set(residues[:20]) - nuc
     isnuc = True
     for aln in alignments:
         unique_res = set(aln)
+        unique_res.difference_update(set(special_chars))
         diff_aln = unique_res - nuc 
         if any(item in diff_aa_nuc for item in diff_aln):
             isnuc = False
@@ -195,6 +201,7 @@ def PrintTime(message: str) -> None:
 def Fail():
     sys.stderr.flush()
     print(traceback.format_exc())
+    helpinfo.PrintHelp()
     sys.exit(1)
                
 def GetDirectoryName(baseDirName: str, 

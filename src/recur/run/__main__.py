@@ -290,14 +290,21 @@ def count_mutations(parent_list: List[str],
 
     parent_child_diff = parent_array != child_array
     row_indices, col_indices = np.where(parent_child_diff)
-    mask = (col_indices != 21)
-    col_idx = col_indices[mask]
-    row_idx = row_indices[mask]
 
-    parent_res_id = parent_array[row_idx, col_idx]
-    child_res_id = child_array[row_idx, col_idx]
-    
-    parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
+    parent_res_id = parent_array[row_indices, col_indices]
+    child_res_id = child_array[row_indices, col_indices]
+
+    parent_mask = np.isin(parent_res_id, util.special_chars_index, invert=True)
+    parent_res_id = parent_res_id[parent_mask]
+    child_res_id = child_res_id[parent_mask]
+    col_indices = col_indices[parent_mask]
+
+    child_mask = np.isin(child_res_id, util.special_chars_index, invert=True)
+    parent_res_id = parent_res_id[child_mask]
+    child_res_id = child_res_id[child_mask]
+    col_indices = col_indices[child_mask]
+
+    parent_child_tuples = [*zip(col_indices, parent_res_id, child_res_id)]
     rec_loc_count_dict = Counter(parent_child_tuples)
 
     return rec_loc_count_dict
@@ -370,6 +377,16 @@ def WorkerProcessAndCount(file: str,
 
         parent_res_id = parent_array[row_idx, col_idx]
         child_res_id = child_array[row_idx, col_idx]
+
+        parent_mask = np.isin(parent_res_id, util.special_chars_index, invert=True)
+        parent_res_id = parent_res_id[parent_mask]
+        child_res_id = child_res_id[parent_mask]
+        col_idx = col_idx[parent_mask]
+
+        child_mask = np.isin(child_res_id, util.special_chars_index, invert=True)
+        parent_res_id = parent_res_id[child_mask]
+        child_res_id = child_res_id[child_mask]
+        col_idx = col_idx[child_mask]
 
         parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
         rec_loc_count_dict = Counter(parent_child_tuples)
@@ -801,7 +818,7 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info("NOTE: with the existing statefile, RECUR will skip Step2.\n", extra={'to_file': True, 'to_console': True})
                     
                     else:
-                        if not restart_step2 and not exist_state:             
+                        if not restart_step2 and (exist_iqtree and exist_treefile and not exist_state):             
                             production_logger.info("NOTE: RECUR is forced to restart from Step2 due to the missing statefile\n", extra={'to_file': True, 'to_console': True})
                         
                         elif not restart_step1 and restart_step2:

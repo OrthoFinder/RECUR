@@ -65,6 +65,10 @@ def GetDirectoryArgument(arg: str) -> str:
 
 def GetFileArgument(arg: str) -> str:
     file_path = os.path.abspath(arg)
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        print("Directory points to the file doesn't exist: %s" % directory)
+        util.Fail()
     if not os.path.isfile(file_path):
         print("Specified file doesn't exist: %s" % file_path)
         util.Fail()
@@ -117,6 +121,15 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
             elif os.path.isdir(arg):
                 isdir = True
                 alnDir = GetDirectoryArgument(arg)
+            else:
+                file_path = os.path.abspath(arg)
+                directory = os.path.dirname(file_path)
+                if not os.path.exists(directory):
+                    print("Directory points to the file doesn't exist: %s" % directory)
+                    util.Fail()
+                if not os.path.isfile(file_path):
+                    print("Specified file doesn't exist: %s" % file_path)
+                    util.Fail()
 
         elif arg == "-kp" or arg == "--keep-prev-results":
             options.keepprev = True
