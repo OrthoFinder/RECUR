@@ -290,11 +290,14 @@ def count_mutations(parent_list: List[str],
 
     parent_child_diff = parent_array != child_array
     row_indices, col_indices = np.where(parent_child_diff)
+    mask = (col_indices != 21)
+    col_idx = col_indices[mask]
+    row_idx = row_indices[mask]
 
-    parent_res_id = parent_array[row_indices, col_indices]
-    child_res_id = child_array[row_indices, col_indices]
+    parent_res_id = parent_array[row_idx, col_idx]
+    child_res_id = child_array[row_idx, col_idx]
     
-    parent_child_tuples = [*zip(col_indices, parent_res_id, child_res_id)]
+    parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
     rec_loc_count_dict = Counter(parent_child_tuples)
 
     return rec_loc_count_dict

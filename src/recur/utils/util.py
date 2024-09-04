@@ -15,7 +15,7 @@ import traceback
 import numpy as np
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
-            'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
+            'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W', '-']
 
 class ConsoleOnlyFilter(logging.Filter):
     def filter(self, record):
