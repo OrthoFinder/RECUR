@@ -287,6 +287,7 @@ def count_mutations(parent_list: List[str],
 
     parent_array = np.array(parent_num_list)
     child_array = np.array(child_num_list)
+    del sequence_dict, parent_num_list, child_num_list
 
     parent_child_diff = parent_array != child_array
     row_indices, col_indices = np.where(parent_child_diff)
@@ -306,6 +307,9 @@ def count_mutations(parent_list: List[str],
 
     parent_child_tuples = [*zip(col_indices, parent_res_id, child_res_id)]
     rec_loc_count_dict = Counter(parent_child_tuples)
+
+    del parent_child_diff, row_indices, col_indices, child_mask, \
+        parent_mask, parent_res_id, child_res_id, parent_child_tuples
 
     return rec_loc_count_dict
 
@@ -367,6 +371,7 @@ def WorkerProcessAndCount(file: str,
         ]
         parent_array = np.array(parent_num_list)
         child_array = np.array(child_num_list)
+        del mcs_combined_prot_seqs_dict, parent_num_list, child_num_list
 
         parent_child_diff = parent_array != child_array
         row_indices, col_indices = np.where(parent_child_diff)
@@ -390,6 +395,8 @@ def WorkerProcessAndCount(file: str,
 
         parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
         rec_loc_count_dict = Counter(parent_child_tuples)
+        del parent_child_diff, mask, row_idx, col_idx, row_indices, col_indices, \
+            parent_res_id, child_res_id, parent_child_tuples
 
     except BrokenPipeError:
         error_msg = "Broken pipe error while processing file."

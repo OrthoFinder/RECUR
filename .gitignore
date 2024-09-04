@@ -174,3 +174,5 @@ ExampleData/*.recur.tsv
 Species*/
 hooks/
 PEPC/
+TestData/
+benchmark/
