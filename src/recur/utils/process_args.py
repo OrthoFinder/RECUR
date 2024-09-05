@@ -48,6 +48,7 @@ class Options(object):
         self.fix_branch_length = False
         self.update_cycle = None
         self.system_info = False
+        self.override = True
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -139,6 +140,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-si" or arg == "--system-info":
             options.system_info = True
+        
+        elif arg == "--override":
+            options.override = False
 
         elif arg == "-rs" or arg == "--restart":
             options.restart_from = int(args.pop(0))

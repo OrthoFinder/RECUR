@@ -686,7 +686,7 @@ def main(args: Optional[List[str]] = None):
                 restart_step1 = False
                 restart_step2 = False
                 restart_step3 = False 
-                override = True
+                override = options.override
 
                 gene_tree = options.gene_tree[gene] if isinstance(options.gene_tree, dict) else None
                 if gene_tree is not None:
