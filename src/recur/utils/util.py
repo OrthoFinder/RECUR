@@ -14,8 +14,8 @@ import yaml
 import traceback
 import numpy as np
 
-special_chars = ['-', ':', '*', '.']
-special_chars_index = [20, 21, 22, 23]
+special_chars = ['-', ':', '*', '.', '+', 'B', 'O', 'J', 'Z', 'U'] # B O J X Z U
+special_chars_index = [*range(20, 20 + len(special_chars))]
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
             'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
