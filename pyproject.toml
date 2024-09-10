@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "wheel"]
+requires = ["setuptools>=64", "setuptools_scm>=8", "wheel", "packaging"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,7 +17,7 @@ keywords = [
     "Monte-Carlo",  
     "Phylogeneticrelationships"
 ]
-license = { file = "License" }
+license = { file = "LICENSE" }
 classifiers = [
     # How mature is this project? Common values are
     #   3 - Alpha
@@ -33,14 +33,13 @@ classifiers = [
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
 
     # Specify the Python versions you support here.
-    "Programming Language :: Python :: 3.9", # 
+    'Programming Language :: Python :: 3.9', # 
     "Programming Language :: Python :: 3.10", # base version
     "Programming Language :: Python :: 3.11", # 
     "Programming Language :: Python :: 3.12", # 
 ]
 dependencies = [
     "numpy",
-    "scipy",
     "dendropy",
     "pyyaml",
     "types-PyYAML",
@@ -59,17 +58,12 @@ dev = [
     "mypy",
     "pytest",
     "pytest-cov",
-    "tox",
-    "seaborn",
-    "delayed-assert",
     "memory_profiler",
-    "flake8",
-    "pylint",
-    "black",
     "build",
     "wheel",
     "setuptools>=64",
-    "setuptools_scm>=8"
+    "setuptools_scm>=8",
+    "packaging"
 ]
 
 [project.scripts]

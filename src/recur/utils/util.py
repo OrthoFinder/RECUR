@@ -5,16 +5,22 @@ import sys
 import datetime
 from recur.citation import citation, print_citation
 from typing import List, Dict, Tuple, Optional, Iterator
-from recur import genetic_codes
+from recur import genetic_codes, helpinfo
 from importlib import resources as impresources
 import psutil
 import logging
 import logging.config
 import yaml
 import traceback
+import numpy as np
+
+special_chars = ['-', ':', '*', '.', '+', 'B', 'O', 'J', 'Z', 'U'] # B O J X Z U
+special_chars_index = [*range(20, 20 + len(special_chars))]
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
             'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
+
+residues.extend(special_chars)
 
 class ConsoleOnlyFilter(logging.Filter):
     def filter(self, record):
@@ -109,7 +115,7 @@ def print_centered_text(width: int, text: str) -> None:
 def get_system_info() -> None:
     num_cpus = psutil.cpu_count(logical=False) 
     num_logical_cpus = psutil.cpu_count(logical=True)
-    print("Machine Information:")
+    print("\nMachine Information:")
     print(f"Number of Physical CPUs: {num_cpus}, Number of Logical CPUs: {num_logical_cpus}")
     print()
     print("RECUR Start with Running Processes:")
@@ -130,18 +136,17 @@ def get_system_info() -> None:
         print("If you are using WSL2, you can run `wsl --shutdown` to reboot the subsystem.")
 
 def residue_table() -> Tuple[Dict[str, int], Dict[int, str]]:
-    residue_pos = [*range(len(residues))]
-    residue_tuples = [*zip(residues, residue_pos)]
-    residue_dict = {k: int(v) for k, v in residue_tuples}
-    residue_dict_flip = {int(v): k for k, v in residue_tuples}
+    residue_dict = dict(zip(residues, range(len(residues))))
+    residue_dict_flip = dict(zip(range(len(residues)), residues))
     return residue_dict, residue_dict_flip
 
 def CheckSequenceType(alignments: List[str]) -> bool:
-    nuc = {"A", "C", "T", "G", "-"}
-    diff_aa_nuc = set(residues) - nuc
+    nuc = {"A", "C", "T", "G"}
+    diff_aa_nuc = set(residues[:20]) - nuc
     isnuc = True
     for aln in alignments:
         unique_res = set(aln)
+        unique_res.difference_update(set(special_chars))
         diff_aln = unique_res - nuc 
         if any(item in diff_aa_nuc for item in diff_aln):
             isnuc = False
@@ -181,11 +186,11 @@ def GetSeqsDict(dna_seq_dict: Dict[str, str],
 
     codon_table = ImportCodon(sequence_type)     #NCBI's genetic code 11 (for plant plastids)
 
-    prot_sequence_dict = {}
-    for node, seq in dna_seq_dict.items():
-        prot_seq = Translate(seq, codon_table)
-        prot_sequence_dict[node] = prot_seq
-    protein_len = len(prot_seq)
+    prot_sequence_dict = {
+        node: Translate(seq, codon_table) 
+        for node, seq in dna_seq_dict.items()
+    }
+    protein_len = len(next(iter(prot_sequence_dict.values())))
 
     return prot_sequence_dict, protein_len
 
@@ -196,6 +201,7 @@ def PrintTime(message: str) -> None:
 def Fail():
     sys.stderr.flush()
     print(traceback.format_exc())
+    helpinfo.PrintHelp()
     sys.exit(1)
                
 def GetDirectoryName(baseDirName: str, 
@@ -258,3 +264,29 @@ def iter_dir(d: Optional[str] = None) -> Iterator[str]:
         for entry in entries:
             if entry.is_file():
                 yield entry.name
+
+def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int], 
+                            protein_len: int) -> Dict[int, List[Tuple[int, int, int]]]:
+    
+    
+    res_loc_info_dict: Dict[int, List[Tuple[int, int, int]]] = {
+        res_loc: [] for res_loc in range(protein_len)
+    }
+
+    for (res_loc, parent_id, child_id), recurrence in res_loc_count_dict.items():
+        res_loc_info_dict[res_loc].append((parent_id, child_id, recurrence))
+
+    res_loc_info_dict_sorted: Dict[int, List[Tuple[int, int, int]]] = {
+        res_loc: sorted(val, key=lambda x: x[-1], reverse=True) if val else []
+        for res_loc, val in res_loc_info_dict.items()
+    }
+    
+    return res_loc_info_dict_sorted
+
+
+
+
+
+
+
+
