@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "wheel"]
+requires = ["setuptools>=64", "setuptools_scm>=8", "wheel", "packaging"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,7 +17,7 @@ keywords = [
     "Monte-Carlo",  
     "Phylogeneticrelationships"
 ]
-license = { file = "License" }
+license = { file = "LICENSE" }
 classifiers = [
     # How mature is this project? Common values are
     #   3 - Alpha
@@ -62,7 +62,8 @@ dev = [
     "build",
     "wheel",
     "setuptools>=64",
-    "setuptools_scm>=8"
+    "setuptools_scm>=8",
+    "packaging"
 ]
 
 [project.scripts]
