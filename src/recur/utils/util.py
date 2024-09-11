@@ -291,10 +291,10 @@ def CheckOutgroups(outgroups_mrca: List[str], alignment_dict: Dict[str, str]) ->
     for key in alignment_dict:
         if "_" in key:
             preserve_underscores = True
-        alignment_names[tuple(re.split('[^a-zA-Z0-9]+', key))] = key
+        alignment_names[tuple(re.split('[^a-zA-Z0-9]+', key.lower()))] = key
 
     for outgroup in outgroups_mrca:
-        outgroup_tuple = tuple(re.split('[^a-zA-Z0-9]+', outgroup.strip()))
+        outgroup_tuple = tuple(re.split('[^a-zA-Z0-9]+', outgroup.lower().strip()))
         if outgroup_tuple in alignment_names:
             outgroups.append(alignment_names[outgroup_tuple])
         else:
