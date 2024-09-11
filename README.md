@@ -41,10 +41,6 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   ```bash
   python3 -m venv .venv && . .venv/bin/activate
   ```
-  *To deactivate the virtual environment* run
-  ```bash
-  deactivate
-  ```
   1. Clone the repository
   ```bash
   git clone https://github.com/OrthoFinder/RECUR.git
@@ -74,9 +70,19 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
     ```bash
     python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
     ```
-  to test the installation and the environment. 
-  
-  > NOTE: if python3 does not work, please try python.
+    to test the installation and the environment. 
+
+  Once your RECUR job has done, you can run 
+  ```bash
+  deactivate
+  ```
+  to deactivate the virtual environment. The next time when you use RECUR, you can simply activate the virtual environment by running 
+  ```bash
+  . .venv/bin/activate
+  ```
+  There is no need to reinstall RECUR again, as it has been installed in your virtual environment if you followed the instruction.
+
+  > Note: If python3 doesn't work, try using python instead, or check your `/usr/bin` directory to determine which version of Python is installed on your system. Please note that the current version of RECUR requires Python version 3.9 or higher, but no greater than 3.13.
 
 ### Installing RECUR on Windows and MacOS 
 
@@ -104,11 +110,6 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   python3 -m venv mac_venv
   source mac_venv/bin/activate
   ```
-
-  *To deactivate the virtual enviroment* run
-  ```bash
-  deactivate
-  ```
   Now that you have successfully created and activated a new virtual environment, you can follow the three steps mentioned in [Installing RECUR on Linux](#installing-recur-on-linux) to install RECUR or just the python dependencies based on your needs. Then run one of the following commands (depending on whether you have installed RECUR or not) to test if RECUR runs on your machine.
 
   * With RECUR installed 
@@ -121,6 +122,10 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
     ```
   where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package. 
 
+  *To deactivate the virtual enviroment* run
+  ```bash
+  deactivate
+  ```
 ### Running RECUR in Conda
 
   Working in the conda environment may be easiest when you do not have access to a Linux machine. You can create and activate a new environment by running:
@@ -193,6 +198,8 @@ In this section, we will dive deep into the options you can have to run RECUR. T
   --seed <int>                 Random starting see number [Default: 8]
   -o <txt>                     Results directory [Default: same directory as MSA files]
   -iv <str>                    IQ-TREE2 path [Default: local]
+  -uc <int>                    Update cycle used in progress bar [Default: no progress bar]
+  -bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]
 ```
 Please note that the default values for `-t`, `-nt` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
 ```bash
@@ -250,7 +257,7 @@ If your genes share the same outgroups and tree, you only need to create a singl
 </p>
 
 > **Important Information when running RECUR on a directory**:
->  * `<alignment_file>`: can only have `.aln`, `fasta`, or `fa` as the file extensions. (When running RECUR directly on an alignment file, extension requirement does not apply.)
+>  * `<alignment_file>`: can only have `.aln`, `fasta`, `faa`, or `fa` as the file extensions. (When running RECUR directly on an alignment file, extension requirement does not apply.)
 >  * `<outgroups_file>`: needs to have `.outgroup` in the file name.
 >  * `<treefile>`: needs to have `.tree` in the file name.
 

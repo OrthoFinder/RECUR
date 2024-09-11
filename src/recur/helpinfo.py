@@ -15,7 +15,7 @@ def PrintHelp():
     print("-s <str>                     <AA|CODON> [Required][Default: CODON1]")
     print("--outgroups <dir/file/str>   List of outgroup species [Required]")
     print("--num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]")
-    print("-te <dir/file>               Complete constraint tree [Default: Estimated from alignment]")
+    print("-te <dir/file>               Complete constraint tree [Default: estimated from alignment]")
     print("-m <str>                     Model of sequence evolution [Default: estimated from alignment]")
     print("-blfix                       Fix branch lengths of tree. [Default: False]")
     print(f"-nt <int>                    Number of threads provided to IQ-TREE2 [Default: 1 (without alrt); {iqtree_nthreads} (with alrt)]")
@@ -23,6 +23,8 @@ def PrintHelp():
     print("--seed <int>                 Random starting see number [Default: 8]")
     print("-o <txt>                     Results directory [Default: same directory as MSA files]")
     print("-iv <str>                    IQ-TREE2 path [Default: local]")
+    print("-uc <int>                    Update cycle used in progress bar [Default: no progress bar]")
+    print("-bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]")
     
     
     print("")
