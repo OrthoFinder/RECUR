@@ -49,7 +49,7 @@ class FileHandler(object):
         originalALNFilenames = {}
         
         if alnPath is None:
-            alnExtensions = {"aln", "fasta", "fa"} # need to add more potential file extensions
+            alnExtensions = {"aln", "fasta", "fa", "faa"} # need to add more potential file extensions
             if not os.path.exists(alnDir):
                 print("\nDirectory does not exist: %s" % alnDir)
                 util.Fail()
@@ -214,7 +214,8 @@ class FileReader(object):
                 if line.startswith(">") or ">" in line:
                     if accession:
                         msa[accession] = seq
-                    accession = line[1:].replace('_', ' ')
+                    # accession = line[1:].replace('_', ' ')
+                    accession = line[1:]
                     if ">" in line:
                         accession = accession.replace('>', '')
                     seq = ""

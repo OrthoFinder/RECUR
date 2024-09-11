@@ -291,7 +291,7 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 print("For more information please refer to http://www.iqtree.org/doc/Substitution-Models#codon-models")
                 util.Fail()
 
-        elif arg == "-mbs" or arg == "--mcs-batch-size":
+        elif arg == "-bs" or arg == "--batch-size":
             if len(args) == 0:
                 print("Missing option for command line argument %s\n" % arg)
                 util.Fail()            

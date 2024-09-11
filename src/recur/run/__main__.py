@@ -202,11 +202,15 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
 def ParentChildRelation(treefile: str, 
                         outgroup_species: List[str],
                         n_species: int,
+                        preserve_underscores: bool
                         ) -> Tuple[Optional[str], List[str], List[str], List[str], str]:
     try:
-
+ 
         with open(treefile, 'r') as f:
-            t = dendropy.Tree.get(file=f, schema="newick")
+            t = dendropy.Tree.get(file=f, 
+                                  schema="newick", 
+                                  preserve_underscores=preserve_underscores,
+                                  case_sensitive_taxon_labels=False)
 
         t.is_rooted = True
         if len(outgroup_species) == 1:
@@ -875,6 +879,9 @@ def main(args: Optional[List[str]] = None):
                 node_seq_dict = filereader.ReadStateFile(statefile)
 
                 combined_seq_dict = {k: v for d in (node_seq_dict, alignment_dict) for k, v in d.items()}
+                
+                outgroup_mrca, preserve_underscores = util.CheckOutgroups(outgroup_mrca, alignment_dict)
+                
                 alignment_dict.clear()
 
                 if options.sequence_type == "AA":
@@ -895,7 +902,8 @@ def main(args: Optional[List[str]] = None):
               
                 root_node, outgroup_species, parent_list, child_list, error_msg = ParentChildRelation(treefile, 
                                                                                                       outgroup_mrca, 
-                                                                                                      n_species, 
+                                                                                                      n_species,
+                                                                                                      preserve_underscores, 
                                                                                                       )
                 
                 if error_msg:

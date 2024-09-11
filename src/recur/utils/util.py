@@ -12,9 +12,9 @@ import logging
 import logging.config
 import yaml
 import traceback
-import numpy as np
+import re
 
-special_chars = ['-', ':', '*', '.', '+', 'B', 'O', 'J', 'Z', 'U'] # B O J X Z U
+special_chars = ['-', ':', '*', '.', '+', ' ', 'B', 'O', 'J', 'Z', 'U', 'X'] # B O J X Z U
 special_chars_index = [*range(20, 20 + len(special_chars))]
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
@@ -282,6 +282,29 @@ def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int],
     }
     
     return res_loc_info_dict_sorted
+
+def CheckOutgroups(outgroups_mrca: List[str], alignment_dict: Dict[str, str]) -> Tuple[List[str], bool]:
+   
+    outgroups = []
+    preserve_underscores = False
+    alignment_names = {}
+    for key in alignment_dict:
+        if "_" in key:
+            preserve_underscores = True
+        alignment_names[tuple(re.split('[^a-zA-Z0-9]+', key))] = key
+
+    for outgroup in outgroups_mrca:
+        outgroup_tuple = tuple(re.split('[^a-zA-Z0-9]+', outgroup.strip()))
+        if outgroup_tuple in alignment_names:
+            outgroups.append(alignment_names[outgroup_tuple])
+        else:
+            print(f"Outgroup sequence {outgroup} is not found in the multiple sequence alignment.")
+            print(traceback.format_exc())
+            sys.exit(1)
+        
+    return outgroups, preserve_underscores
+        
+
 
 
 
