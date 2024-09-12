@@ -288,15 +288,17 @@ def CheckOutgroups(outgroups_mrca: List[str], alignment_dict: Dict[str, str]) ->
     outgroups = []
     preserve_underscores = False
     alignment_names = {}
+    COMPILE = re.compile(r"\s+")
     for key in alignment_dict:
         if "_" in key:
             preserve_underscores = True
-        alignment_names[tuple(re.split('[^a-zA-Z0-9]+', key.lower()))] = key
+        new_key = COMPILE.sub("_", key.strip().lower())
+        alignment_names[new_key] = key
 
     for outgroup in outgroups_mrca:
-        outgroup_tuple = tuple(re.split('[^a-zA-Z0-9]+', outgroup.lower().strip()))
-        if outgroup_tuple in alignment_names:
-            outgroups.append(alignment_names[outgroup_tuple])
+        new_outgroup = COMPILE.sub("_",  outgroup.lower().strip())
+        if new_outgroup in alignment_names:
+            outgroups.append(alignment_names[new_outgroup])
         else:
             print(f"Outgroup sequence {outgroup} is not found in the multiple sequence alignment.")
             print(traceback.format_exc())
