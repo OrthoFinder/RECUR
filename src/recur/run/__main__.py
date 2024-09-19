@@ -345,15 +345,16 @@ def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
                         residue_dict_flip: Dict[int, str],
                         ) -> List[List[Union[int, str, float]]]:
     
-    rec_loc_count_dict2 = copy.deepcopy(dict(rec_loc_count_dict))
+    rec_loc_count_dict2 = {}
     flipflop_dict = {}
-    for key, _ in rec_loc_count_dict.most_common():
+    for key, val in rec_loc_count_dict.most_common():
+        if val < 2:
+            break
+        rec_loc_count_dict2[key] = val
         res_loc, parent_id, child_id = key
         flipflop_key = (res_loc, child_id, parent_id)
         flipflop = rec_loc_count_dict.get(flipflop_key)
-
         if flipflop is not None:
-            rec_loc_count_dict2.pop(flipflop_key, None)
             flipflop_dict[key] = flipflop
 
     recurrence_list: List[List[Union[int, str, float]]] = [
@@ -362,10 +363,11 @@ def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
             str(residue_dict_flip[parent_id]), 
             str(residue_dict_flip[child_id]), 
             int(recurrence), 
-            int(flipflop_dict.get(key, 0))
+            int(flipflop_dict.get((res_loc, parent_id, child_id), 0))
          ] 
-        for (res_loc, parent_id, child_id), recurrence in rec_loc_count_dict2.items() if int(recurrence) > 1
+        for (res_loc, parent_id, child_id), recurrence in rec_loc_count_dict2.items()
     ]
+
     return recurrence_list
 
 def WorkerProcessAndCount(file: str, 
