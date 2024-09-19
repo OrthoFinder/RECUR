@@ -3,11 +3,12 @@
 
 import os
 import numpy as np
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Union, Tuple, Set
 from recur.utils import util, process_args
 from recur import __version__
 import dendropy
-
+import sys
+import traceback
 
 class FileHandler(object):  
 
@@ -38,8 +39,8 @@ class FileHandler(object):
 
 
     def CheckFileCorrespondance(self, gene: str, state_file: str, tree_file:str) -> None:
-        gene_statfile = os.path.basename(state_file).split(".", 1)[0]
-        gene_treefile = os.path.basename(tree_file).split(".", 1)[0]
+        gene_statfile = os.path.basename(state_file).rsplit(".", 1)[0]
+        gene_treefile = os.path.basename(tree_file).rsplit(".", 1)[0]
         if gene != gene_statfile and gene !=  gene_treefile:
             print('ERROR: Gene files have not been correctly processed')
             util.Fail()
@@ -57,9 +58,8 @@ class FileHandler(object):
             excludedFiles = []
             for f in files_in_directory:
                 if len(f.rsplit(".", 1)) == 2 and f.rsplit(".", 1)[1].lower() in alnExtensions and not f.startswith("._"):
-                    if len(f.split(".", 1)) == 2:
-                        gene_of_interest = f.split(".", 1)[0]
-                        originalALNFilenames[gene_of_interest] = os.path.join(alnDir, f)
+                    gene_of_interest = f.rsplit(".", 1)[0]
+                    originalALNFilenames[gene_of_interest] = os.path.join(alnDir, f)
                 else:
                     excludedFiles.append(os.path.join(alnDir, f))
 
@@ -77,12 +77,10 @@ class FileHandler(object):
             f = os.path.basename(alnPath)
             if "." in f:
                 if len(f.rsplit(".", 1)) == 2 and f.rsplit(".", 1)[1].lower():
-                    if len(f.split(".", 1)) == 2:
-                        gene_of_interest = f.split(".", 1)[0]
-                        originalALNFilenames[gene_of_interest] = alnPath
+                    gene_of_interest = f.rsplit(".", 1)[0]
+                    originalALNFilenames[gene_of_interest] = alnPath
             else:
-                gene_of_interest = f.split(".", 1)[0]
-                originalALNFilenames[gene_of_interest] = alnPath
+                originalALNFilenames[f] = alnPath
         
         return originalALNFilenames
 
@@ -104,6 +102,30 @@ class FileHandler(object):
 
         except Exception as e:
             print(f"ERROR in updating labels to the treefile {treefile}: {e}")
+
+    def GetBinaryStateFileFN(self) -> str:
+        if self.GetBinaryPhylogenyDir() is None: 
+            raise Exception("No Indel_Estimation directory.")
+        statefile = [os.path.join(self.GetBinaryPhylogenyDir(), file) for file in os.listdir(self.GetBinaryPhylogenyDir()) if file.endswith(".state")][0]
+        return statefile 
+    
+    def GetBinaryTreeFileFN(self) -> str:
+        if self.GetBinaryPhylogenyDir() is None: 
+            raise Exception("No Indel_Estimation directory.")
+        treefile = [os.path.join(self.GetBinaryPhylogenyDir(), file) for file in os.listdir(self.GetBinaryPhylogenyDir()) if file.endswith(".treefile")][0]
+        return treefile 
+    
+    def GetBinarySeqsFN(self) -> str:
+        if self.GetBinaryPhylogenyDir() is None: 
+            raise Exception("No Indel_Estimation directory.")
+        binary_seqs_file = os.path.join(self.GetBinaryPhylogenyDir(), f"{self.gene_of_interest}.binary_sequences.aln")
+        return binary_seqs_file 
+    
+    def GetBinaryNodeSeqsFN(self) -> str:
+        if self.GetBinaryPhylogenyDir() is None: 
+            raise Exception("No Indel_Estimation directory.")
+        node_seqs_file = os.path.join(self.GetBinaryPhylogenyDir(), f"{self.gene_of_interest}.inferred_binary_sequences.aln")
+        return node_seqs_file 
 
     def GetStateFileFN(self) -> str:
         if self.GetRealPhylogenyDir() is None: 
@@ -144,8 +166,8 @@ class FileHandler(object):
     def GetNodeDNASeqsFN(self) -> str:
         if self.GetInferredSeqsDir() is None: 
             raise Exception("No Inferred_Sequences directory.")
-        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.dna.aln")
-        return combined_seqs_file 
+        node_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.dna.aln")
+        return node_seqs_file 
 
     def GetCombinedProtSeqsFN(self) -> str:
         if self.GetInferredSeqsDir() is None: 
@@ -156,8 +178,8 @@ class FileHandler(object):
     def GetNodeProtSeqsFN(self) -> str:
         if self.GetInferredSeqsDir() is None: 
             raise Exception("No Inferred_Sequences directory.")
-        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.prot.aln")
-        return combined_seqs_file 
+        node_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.prot.aln")
+        return node_seqs_file 
 
     def GetRecurrenceListFN(self, recDir: Optional[str] = None) -> str:
         if recDir is None: 
@@ -190,6 +212,11 @@ class FileHandler(object):
         d = self.rd1 + "Monte_Carlo_Similation" + os.sep
         if not os.path.exists(d): os.mkdir(d)
         return d
+    
+    def GetBinaryPhylogenyDir(self) -> str:
+        d = self.rd1 + "Indel_Estimation" + os.sep
+        if not os.path.exists(d): os.mkdir(d)
+        return d
 
     def GetRealPhylogenyDir(self) -> str:
         d = self.rd1 + "Real_Phylogeny" + os.sep
@@ -204,26 +231,57 @@ class FileHandler(object):
 class FileReader(object):
 
     @staticmethod    
-    def ReadAlignment(fn: str):
+    def ReadAlignment(fn: str) -> Tuple[Dict[str, str], int, bool]:
         msa: Dict[str, str] = dict()
         accession = ""
         seq = ""
+        seq_len_set: Set[int] = set()
+        dash_exist = False
         with open(fn, 'r') as infile:
             for line_ in infile:
                 line = line_.replace("\n", "").strip()
                 if line.startswith(">") or ">" in line:
                     if accession:
                         msa[accession] = seq
+                        if len(seq_len_set) != 0:
+                            if seq_len_set.pop() != len(seq):
+
+                                print(f"The sequence length in {fn} is inconsistent.")
+                                sys.stderr.flush()
+                                print(traceback.format_exc())
+                                sys.exit(1)
+                            
+                        seq_len_set.add(len(seq))
+
                     # accession = line[1:].replace('_', ' ')
                     accession = line[1:]
                     if ">" in line:
                         accession = accession.replace('>', '')
                     seq = ""
                 else:
+                    if "-" in line:
+                        dash_exist = True
+
+                    if len(set(line) - set(util.legal_chars)):
+                        print(f"RECUR failed due to invalid line found in {fn}.")
+                        print(line)
+                        print("Please remove any special characters from the alignment file, if present, and try again.")
+                        sys.stderr.flush()
+                        print(traceback.format_exc())
+                        sys.exit(1)
+
                     seq += line
             if accession:
                 msa[accession] = seq
-        return msa, len(seq)
+                if "-" in seq:
+                    dash_exist = True
+                if seq_len_set.pop() != len(seq):
+                    print(f"The sequence length in {fn} is inconsistent.")
+                    sys.stderr.flush()
+                    print(traceback.format_exc())
+                    sys.exit(1)
+
+        return msa, len(seq), dash_exist
     
     @staticmethod
     def ReadStateFile(fn: str) -> Dict[str, str]:
@@ -250,7 +308,42 @@ class FileReader(object):
                     best_evolution_model = line.replace("\n", "").strip().split(": ")[-1]
                 
         return best_evolution_model
+    
+    @staticmethod
+    def ConverToBinary(fn: str) -> Dict[str, str]: 
+        msa_binary = {}
+        accession = ""
+        seq = ""
+        with open(fn, 'r') as infile:
+            for line_ in infile:
+                line = line_.replace("\n", "").strip()
+                if line.startswith(">") or ">" in line:
+                    if accession:
+                        msa_binary[accession] = seq
+                    # accession = line[1:].replace('_', ' ')
+                    accession = line[1:]
+                    if ">" in line:
+                        accession = accession.replace('>', '')
+                    seq = ""
+                else:
+                    
+                    binary_line = [
+                        1 if l in util.residues else 0 if l in util.reserved_chars else 2 for l in line
+                    ]
 
+                    if 2 in binary_line:
+                        print(f"RECUR failed due to invalid line found in {fn}.")
+                        print(line)
+                        print("Please remove any special characters from the alignment file, if present, and try again.")
+                        sys.stderr.flush()
+                        print(traceback.format_exc())
+                        sys.exit(1)
+                    seq += ''.join(map(str, binary_line))
+
+            if accession:
+                msa_binary[accession] = seq
+
+        return msa_binary
 
 class FileWriter(object):
 
@@ -273,7 +366,7 @@ class FileWriter(object):
                     line = "\t".join((str(pos+1), "-", "-", "-"))
                 else:
                     parent_ids, child_ids, counts = map(np.array, zip(*item))
-                    np.add.at(accum_mutation_matrix, (parent_ids, child_ids), counts)
+                    np.add.at(accum_mutation_matrix, (parent_ids - 1, child_ids - 1), counts)
 
                     parent_child = []
                     rows = []

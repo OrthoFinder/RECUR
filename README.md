@@ -187,8 +187,8 @@ In this section, we will dive deep into the options you can have to run RECUR. T
 
 ```bash
   -f <dir/file>                Protein or codon alignment in FASTA format [Required]
-  -s <str>                     <AA|CODON> [Required][Default: CODON1]
-  --outgroups <dir/file/str>   List of outgroup species [Required]
+  -st <str>                     <AA|CODON> [Required][Default: CODON1]
+  --outgroups <dir/file/str>   List of outgroup sequences [Required]
   --num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]
   -te <dir/file>               Complete constraint tree [Default: Estimated from alignment]
   -m <str>                     Model of sequence evolution [Default: estimated from alignment]

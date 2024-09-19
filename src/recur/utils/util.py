@@ -14,13 +14,14 @@ import yaml
 import traceback
 import re
 
-special_chars = ['-', ':', '*', '.', '+', ' ', 'B', 'O', 'J', 'Z', 'U', 'X'] # B O J X Z U
-special_chars_index = [*range(20, 20 + len(special_chars))]
+reserved_chars = ['-', 'B', 'O', 'J', 'Z', 'U', 'X'] # B O J X Z U ':', '*', '.', '+', ' ' 
+# reserved_chars_index = [*range(20, 20 + len(reserved_chars))]
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
             'H', 'R', 'K', 'M', 'I', 'L', 'V', 'F', 'Y', 'W']
 
-residues.extend(special_chars)
+special_chars = reserved_chars + [':', '*', '.', '+', ' ']
+legal_chars = residues + reserved_chars
 
 class ConsoleOnlyFilter(logging.Filter):
     def filter(self, record):
@@ -136,13 +137,13 @@ def get_system_info() -> None:
         print("If you are using WSL2, you can run `wsl --shutdown` to reboot the subsystem.")
 
 def residue_table() -> Tuple[Dict[str, int], Dict[int, str]]:
-    residue_dict = dict(zip(residues, range(len(residues))))
-    residue_dict_flip = dict(zip(range(len(residues)), residues))
+    residue_dict = dict(zip(residues, range(1, len(residues)+1)))
+    residue_dict_flip = dict(zip(range(1, len(residues)+1), residues))
     return residue_dict, residue_dict_flip
 
 def CheckSequenceType(alignments: List[str]) -> bool:
     nuc = {"A", "C", "T", "G"}
-    diff_aa_nuc = set(residues[:20]) - nuc
+    diff_aa_nuc = set(residues) - nuc
     isnuc = True
     for aln in alignments:
         unique_res = set(aln)

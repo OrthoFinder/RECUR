@@ -200,7 +200,7 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
     os._exit(0)
 
 def ParentChildRelation(treefile: str, 
-                        outgroup_species: List[str],
+                        outgroup_squences: List[str],
                         n_species: int,
                         preserve_underscores: bool
                         ) -> Tuple[Optional[str], List[str], List[str], List[str], str]:
@@ -213,10 +213,10 @@ def ParentChildRelation(treefile: str,
                                   case_sensitive_taxon_labels=False)
 
         t.is_rooted = True
-        if len(outgroup_species) == 1:
-            outgroup_mrca = t.find_node_with_taxon_label(outgroup_species[0])
+        if len(outgroup_squences) == 1:
+            outgroup_mrca = t.find_node_with_taxon_label(outgroup_squences[0])
         else:
-            outgroup_mrca = t.mrca(taxon_labels=outgroup_species)
+            outgroup_mrca = t.mrca(taxon_labels=outgroup_squences)
 
         t.reroot_at_edge(outgroup_mrca.edge, update_bipartitions=False)
         rt = t.seed_node
@@ -226,7 +226,7 @@ def ParentChildRelation(treefile: str,
 
         if root_of_interest is None:
  
-            return None, outgroup_species, [], [], "No root of interest found; tree structure might be incorrect."
+            return None, outgroup_squences, [], [], "No root of interest found; tree structure might be incorrect."
 
         root_node = root_of_interest.label
         root_node = root_node if "/" not in root_node else root_node.split("/")[0]
@@ -256,42 +256,63 @@ def ParentChildRelation(treefile: str,
 
                 taxon_count += 1
 
-        if len(outgroup_subtree_species) != len(outgroup_species):
-            outgroup_species = outgroup_subtree_species
+        if len(outgroup_subtree_species) != len(outgroup_squences):
+            outgroup_squences = outgroup_subtree_species
 
-        expected_relationships = 2 * (n_species - len(outgroup_species)) - 2
+        expected_relationships = 2 * (n_species - len(outgroup_squences)) - 2
 
         if taxon_count != expected_relationships:
-            return root_node, outgroup_species, parent_list, child_list, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}."
+            return root_node, outgroup_squences, parent_list, child_list, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}."
         
-        return root_node, outgroup_species, parent_list, child_list, ""
+        return root_node, outgroup_squences, parent_list, child_list, ""
     except BrokenPipeError:
         print("Broken pipe error.")
-        return root_node, outgroup_species, parent_list, child_list, "Broken pipe error"
+        return root_node, outgroup_squences, parent_list, child_list, "Broken pipe error"
     except Exception as e:
         error_msg = f"ERROR in ParentChildRelation: {e}"
         print(error_msg)
         print(traceback.format_exc())
-        return root_node, outgroup_species, parent_list, child_list, error_msg 
+        return root_node, outgroup_squences, parent_list, child_list, error_msg 
 
 def count_mutations(parent_list: List[str],
                     child_list: List[str],
                     sequence_dict: Dict[str, str],
-                    residue_dict: Dict[str, int]
+                    residue_dict: Dict[str, int],
+                    dash_exist: bool = False,
+                    binary_sequence_dict: Dict[str, str] = {}
                     ) -> Counter[Tuple[int, int, int]]:
 
     parent_num_list = [
-        [residue_dict[res] for res in sequence_dict[parent]] 
+        [residue_dict.get(res, 0) for res in sequence_dict[parent]] 
         for parent in parent_list
     ]
     child_num_list = [
-        [residue_dict[res] for res in sequence_dict[child]] 
+        [residue_dict.get(res, 0) for res in sequence_dict[child]] 
         for child in child_list
     ]
-
     parent_array = np.array(parent_num_list)
     child_array = np.array(child_num_list)
+
     del sequence_dict, parent_num_list, child_num_list
+    
+    if dash_exist:
+        binary_parent_num_list = [
+            [1 if res == "1" else 0 for res in binary_sequence_dict[parent]] 
+            for parent in parent_list
+        ]
+        binary_child_num_list = [
+            [1 if res == "1" else 0 for res in binary_sequence_dict[child]] 
+            for child in child_list
+        ]
+
+        binary_parent_array = np.array(binary_parent_num_list)
+        binary_child_array = np.array(binary_child_num_list)
+
+        parent_array = parent_array * binary_parent_array
+        child_array = child_array * binary_child_array 
+
+        del binary_parent_num_list, binary_child_num_list, \
+            binary_parent_array, binary_child_array
 
     parent_child_diff = parent_array != child_array
     row_indices, col_indices = np.where(parent_child_diff)
@@ -299,12 +320,15 @@ def count_mutations(parent_list: List[str],
     parent_res_id = parent_array[row_indices, col_indices]
     child_res_id = child_array[row_indices, col_indices]
 
-    parent_mask = np.isin(parent_res_id, util.special_chars_index, invert=True)
+    # parent_mask = np.isin(parent_res_id, util.reserved_chars_index, invert=True)
+    parent_mask = np.where(parent_res_id != 0)
     parent_res_id = parent_res_id[parent_mask]
     child_res_id = child_res_id[parent_mask]
     col_indices = col_indices[parent_mask]
 
-    child_mask = np.isin(child_res_id, util.special_chars_index, invert=True)
+    # child_mask = np.isin(child_res_id, util.reserved_chars_index, invert=True)
+    child_mask = np.where(child_res_id != 0)
+    
     parent_res_id = parent_res_id[child_mask]
     child_res_id = child_res_id[child_mask]
     col_indices = col_indices[child_mask]
@@ -353,6 +377,8 @@ def WorkerProcessAndCount(file: str,
                           residue_dict: Dict[str, int], 
                           res_loc_list: List[int],
                           production_logger: logging.Logger,
+                          dash_exist: bool = False,
+                          binary_sequence_dict: Dict[str, str] = {},
                           ) -> Tuple[Dict[Tuple[int, int, int], int], str]:
     
     rec_loc_count_dict: Dict[Tuple[int, int, int], int] = {}
@@ -360,22 +386,43 @@ def WorkerProcessAndCount(file: str,
 
     try:
         file_path = os.path.join(mcs_alnDir, file)
-        mcs_combined_prot_seqs_dict, _ = files.FileReader.ReadAlignment(file_path)
+        mcs_combined_prot_seqs_dict, _, _ = files.FileReader.ReadAlignment(file_path)
 
         if isnuc_fasta:
             mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
 
         parent_num_list = [
-            [residue_dict[res] for res in mcs_combined_prot_seqs_dict[parent]] 
+            [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[parent]] 
             for parent in parent_list
         ]
         child_num_list = [
-            [residue_dict[res] for res in mcs_combined_prot_seqs_dict[child]] 
+            [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[child]] 
             for child in child_list
         ]
+
         parent_array = np.array(parent_num_list)
         child_array = np.array(child_num_list)
+    
         del mcs_combined_prot_seqs_dict, parent_num_list, child_num_list
+
+        if dash_exist:
+            binary_parent_num_list = [
+                [1 if res == "1" else 0 for res in binary_sequence_dict[parent]] 
+                for parent in parent_list
+            ]
+            binary_child_num_list = [
+                [1 if res == "1" else 0 for res in binary_sequence_dict[child]] 
+                for child in child_list
+            ]
+
+            binary_parent_array = np.array(binary_parent_num_list)
+            binary_child_array = np.array(binary_child_num_list)
+
+            parent_array = parent_array * binary_parent_array
+            child_array = child_array * binary_child_array 
+        
+            del binary_parent_num_list, binary_child_num_list, \
+                binary_parent_array, binary_child_array
 
         parent_child_diff = parent_array != child_array
         row_indices, col_indices = np.where(parent_child_diff)
@@ -387,12 +434,14 @@ def WorkerProcessAndCount(file: str,
         parent_res_id = parent_array[row_idx, col_idx]
         child_res_id = child_array[row_idx, col_idx]
 
-        parent_mask = np.isin(parent_res_id, util.special_chars_index, invert=True)
+        # parent_mask = np.isin(parent_res_id, util.reserved_chars_index, invert=True)
+        parent_mask = np.where(parent_res_id != 0)
         parent_res_id = parent_res_id[parent_mask]
         child_res_id = child_res_id[parent_mask]
         col_idx = col_idx[parent_mask]
 
-        child_mask = np.isin(child_res_id, util.special_chars_index, invert=True)
+        # child_mask = np.isin(child_res_id, util.reserved_chars_index, invert=True)
+        child_mask = np.where(child_res_id != 0)
         parent_res_id = parent_res_id[child_mask]
         child_res_id = child_res_id[child_mask]
         col_idx = col_idx[child_mask]
@@ -425,6 +474,8 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                                 res_loc_list: List[int],
                                 production_logger: logging.Logger,
                                 window_width: int,
+                                dash_exist: bool = False,
+                                binary_sequence_dict: Dict[str, str] = {},
                                 update_cycle: Optional[int] = None, 
                                 mcs_batch_size: Optional[int] = None
                                 ) -> List[Dict[Tuple[int, int, int], int]]:
@@ -442,6 +493,8 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                      residue_dict=residue_dict,
                      res_loc_list=res_loc_list,
                      production_logger=production_logger,
+                     dash_exist=dash_exist,
+                     binary_sequence_dict=binary_sequence_dict,
                      )
     if mcs_batch_size is not None:    
         batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
@@ -565,6 +618,8 @@ def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
         res_freq_str = ",".join([":".join((res, str(freq))) for res, freq in res_freq])
         rec_list.append(res_freq_str)
 
+    recurrence_list.sort(key=lambda x: (-float(x[5]), float(x[3])), reverse=True)
+
     return recurrence_list
 
 def main(args: Optional[List[str]] = None):
@@ -652,7 +707,7 @@ def main(args: Optional[List[str]] = None):
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Starting RECUR v%s" % __version__, extra={'to_file': True, 'to_console': True})
 
-                alignment_dict, alignment_len = filereader.ReadAlignment(aln_path)
+                alignment_dict, alignment_len, dash_exist = filereader.ReadAlignment(aln_path)
                 n_species = len(alignment_dict)
 
                 production_logger.info(f"Analysing: {gene}", extra={'to_file': True, 'to_console': True})
@@ -877,6 +932,50 @@ def main(args: Optional[List[str]] = None):
 
                 filehandler.CheckFileCorrespondance(gene, statefile, treefile)
                 node_seq_dict = filereader.ReadStateFile(statefile)
+                
+                
+                # # ----------------- Binary phylogeny analysis --------------------------
+                if not dash_exist:
+                    binary_combined_seq_dict: Dict[str, str] = {}
+                else:
+                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                    production_logger.info(prepend + f"Starting ancestral indel estimation.", extra={'to_file': True, 'to_console': True})
+
+                    binary_alignment_dict = filereader.ConverToBinary(aln_path)
+                    binary_aln_path = filehandler.GetBinarySeqsFN()
+                    filewriter.WriteSeqsToAln(binary_alignment_dict, binary_aln_path) 
+
+                    binary_tree_commands = run_commands.GetGeneTreeBuildCommands([binary_aln_path], 
+                                                            filehandler.GetBinaryPhylogenyDir(), 
+                                                            "GTR2",
+                                                            options.iqtree_nthreads,
+                                                            phy_seed=options.seed,
+                                                            gene_tree=treefile,
+                                                            asr=True,
+                                                            fix_branch_length=options.binary_blfix)
+                        
+                    production_logger.info(f"iqtree2 ancestral indel estimation command: ",  extra={'to_file': True, 'to_console': False})
+                    production_logger.info(f"{binary_tree_commands[0]}\n", extra={'to_file': True, 'to_console': False})
+
+                    run_commands.RunCommand(binary_tree_commands, 
+                                            filehandler.GetBinaryPhylogenyDir(),
+                                            env=my_env,
+                                            nthreads=options.recur_nthreads, 
+                                            delete_files=True,
+                                            files_to_keep=["state", "treefile", "aln"],
+                                            fd_limit=options.fd_limit)
+
+                    binary_statefile = filehandler.GetBinaryStateFileFN()
+
+                    binary_node_seq_dict = filereader.ReadStateFile(binary_statefile)
+                    binary_combined_seq_dict = {k: v for d in (binary_node_seq_dict, binary_alignment_dict) for k, v in d.items()}
+                    
+                    binary_node_seqs_fn = filehandler.GetBinaryNodeSeqsFN()
+                    filewriter.WriteSeqsToAln(binary_node_seq_dict, binary_node_seqs_fn)
+
+                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                    production_logger.info(prepend + f"Ancestral indel estimation complete.\n", extra={'to_file': True, 'to_console': True})     
+                # # ------------------------------------------------------------
 
                 combined_seq_dict = {k: v for d in (node_seq_dict, alignment_dict) for k, v in d.items()}
                 
@@ -900,26 +999,28 @@ def main(args: Optional[List[str]] = None):
                 node_seq_dict.clear()
                 combined_seq_dict.clear()
               
-                root_node, outgroup_species, parent_list, child_list, error_msg = ParentChildRelation(treefile, 
+                root_node, outgroup_squences, parent_list, child_list, error_msg = ParentChildRelation(treefile, 
                                                                                                       outgroup_mrca, 
                                                                                                       n_species,
                                                                                                       preserve_underscores, 
                                                                                                       )
-                
+
                 if error_msg:
                     production_logger.error(error_msg)
                     continue
 
-                if outgroup_mrca and len(outgroup_mrca) != len(outgroup_species):
-                    warnings.warn(f"Outgroup species provided not monophyletic. Outgroups will be updated. Please find the updated outgroups in the log file.")
+                if outgroup_mrca and len(outgroup_mrca) != len(outgroup_squences):
+                    warnings.warn(f"Outgroup sequences provided not monophyletic. Outgroups will be updated. Please find the updated outgroups in the log file.")
                     production_logger.info(f"Updated outgroups: {outgroup_mrca}", extra={'to_file': True, 'to_console': False})
-                    outgroup_mrca = outgroup_species
-
+                    outgroup_mrca = outgroup_squences
 
                 rec_loc_count_dict = count_mutations(parent_list, 
                                                     child_list,
                                                     combined_prot_seqs_dict,
-                                                    residue_dict)
+                                                    residue_dict,
+                                                    dash_exist=dash_exist,
+                                                    binary_sequence_dict=binary_combined_seq_dict
+                                                    )
                     
                 production_logger.info(f"Root of species of interest: {root_node}", extra={'to_file': True, 'to_console': True})
                 production_logger.info(f"Substitution matrix output: {filehandler.GetMutMatrixDir()}\n", extra={'to_file': True, 'to_console': True})
@@ -1010,7 +1111,7 @@ def main(args: Optional[List[str]] = None):
                             os.remove(file_path)
 
                 afasta = random.choice(os.listdir(mcs_faDir))
-                fasta_dict, _ = filereader.ReadAlignment(os.path.join(mcs_faDir, afasta))
+                fasta_dict, _, _ = filereader.ReadAlignment(os.path.join(mcs_faDir, afasta))
                 isnuc_fasta = util.CheckSequenceType([*fasta_dict.values()])
 
                 if options.usr_mcs_alnDir:
@@ -1043,7 +1144,9 @@ def main(args: Optional[List[str]] = None):
                                                 options.sequence_type,
                                                 res_loc_list, 
                                                 production_logger,
-                                                width, 
+                                                width,
+                                                dash_exist=dash_exist,
+                                                binary_sequence_dict=binary_combined_seq_dict,  
                                                 update_cycle=options.update_cycle,
                                                 mcs_batch_size=options.mcs_batch_size)
 
