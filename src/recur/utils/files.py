@@ -172,7 +172,7 @@ class FileHandler(object):
     def GetCombinedProtSeqsFN(self) -> str:
         if self.GetInferredSeqsDir() is None: 
             raise Exception("No Inferred_Sequences directory.")
-        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.combined_protein_sequences.aln")
+        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.recur_combined_protein_sequences.aln")
         return combined_seqs_file 
 
     def GetNodeProtSeqsFN(self) -> str:

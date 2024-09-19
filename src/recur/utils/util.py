@@ -13,6 +13,7 @@ import logging.config
 import yaml
 import traceback
 import re
+import numpy as np
 
 reserved_chars = ['-', 'B', 'O', 'J', 'Z', 'U', 'X'] # B O J X Z U ':', '*', '.', '+', ' ' 
 # reserved_chars_index = [*range(20, 20 + len(reserved_chars))]
@@ -307,12 +308,30 @@ def CheckOutgroups(outgroups_mrca: List[str], alignment_dict: Dict[str, str]) ->
         
     return outgroups, preserve_underscores
         
+def ConvertToBinary(alignment_dict: Dict[str, str]) -> Dict[str, str]: 
+    msa_binary = {}
+    for label, seq in alignment_dict.items():
+        binary_seq = [
+            1 if res in residues else 0 if res in reserved_chars else 2 for res in seq
+        ]
+        msa_binary[label] = ''.join(map(str, binary_seq))
+
+    return msa_binary
 
 
+def ConvertToSequence(parent_list: List[str], 
+                      child_list: List[str], 
+                      parent_arr: np.ndarray,
+                      child_arr: np.ndarray,
+                      residue_dict_flip: Dict[int, str],
+                      ) -> Dict[str, str]:
+    
+    new_seq = {}
+    for i in range(len(parent_list)):
+        parent, child = parent_list[i], child_list[i]
 
+        new_seq[parent] = "".join([residue_dict_flip[num] if num != 0 else "-" for num in parent_arr[i, :]])
+        new_seq[child] = "".join([residue_dict_flip[num] if num != 0 else "-" for num in child_arr[i, :]])
 
-
-
-
-
+    return new_seq    
 

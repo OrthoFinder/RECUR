@@ -273,6 +273,7 @@ def ParentChildRelation(treefile: str,
         print(error_msg)
         print(traceback.format_exc())
         return root_node, outgroup_squences, parent_list, child_list, error_msg 
+    
 
 def count_mutations(parent_list: List[str],
                     child_list: List[str],
@@ -339,7 +340,7 @@ def count_mutations(parent_list: List[str],
     del parent_child_diff, row_indices, col_indices, child_mask, \
         parent_mask, parent_res_id, child_res_id, parent_child_tuples
 
-    return rec_loc_count_dict
+    return rec_loc_count_dict, parent_array, child_array
 
 def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]], 
                         residue_dict_flip: Dict[int, str],
@@ -451,7 +452,7 @@ def WorkerProcessAndCount(file: str,
         parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
         rec_loc_count_dict = Counter(parent_child_tuples)
         del parent_child_diff, mask, row_idx, col_idx, row_indices, col_indices, \
-            parent_res_id, child_res_id, parent_child_tuples
+            parent_res_id, child_res_id, parent_child_tuples, parent_array, child_array
 
     except BrokenPipeError:
         error_msg = "Broken pipe error while processing file."
@@ -934,8 +935,27 @@ def main(args: Optional[List[str]] = None):
 
                 filehandler.CheckFileCorrespondance(gene, statefile, treefile)
                 node_seq_dict = filereader.ReadStateFile(statefile)
+
+                combined_seq_dict = {k: v for d in (node_seq_dict, alignment_dict) for k, v in d.items()}
+                
+                outgroup_mrca, preserve_underscores = util.CheckOutgroups(outgroup_mrca, alignment_dict)
                 
                 
+
+                if options.sequence_type == "AA":
+                    node_prot_seqs_fn = filehandler.GetNodeProtSeqsFN()
+                    filewriter.WriteSeqsToAln(node_seq_dict, node_prot_seqs_fn)
+                    combined_prot_seqs_dict = combined_seq_dict.copy()
+                    protein_len = len([*node_seq_dict.values()][0])
+                else:
+                    node_dna_seqs_fn = filehandler.GetNodeDNASeqsFN()
+                    filewriter.WriteSeqsToAln(node_seq_dict, node_dna_seqs_fn)
+                    combined_prot_seqs_dict, protein_len = util.GetSeqsDict(combined_seq_dict, options.sequence_type)
+                    node_prot_seqs_dict, _ = util.GetSeqsDict(node_seq_dict, options.sequence_type)
+                    node_prot_seqs_fn = filehandler.GetNodeProtSeqsFN()
+                    filewriter.WriteSeqsToAln(node_prot_seqs_dict, node_prot_seqs_fn)
+                    alignment_dict, _ = util.GetSeqsDict(alignment_dict, options.sequence_type)
+
                 # # ----------------- Binary phylogeny analysis --------------------------
                 if not dash_exist:
                     binary_combined_seq_dict: Dict[str, str] = {}
@@ -943,7 +963,7 @@ def main(args: Optional[List[str]] = None):
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + f"Starting ancestral indel estimation.", extra={'to_file': True, 'to_console': True})
 
-                    binary_alignment_dict = filereader.ConverToBinary(aln_path)
+                    binary_alignment_dict = util.ConvertToBinary(alignment_dict)
                     binary_aln_path = filehandler.GetBinarySeqsFN()
                     filewriter.WriteSeqsToAln(binary_alignment_dict, binary_aln_path) 
 
@@ -978,26 +998,8 @@ def main(args: Optional[List[str]] = None):
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + f"Ancestral indel estimation complete.\n", extra={'to_file': True, 'to_console': True})     
                 # # ------------------------------------------------------------
-
-                combined_seq_dict = {k: v for d in (node_seq_dict, alignment_dict) for k, v in d.items()}
-                
-                outgroup_mrca, preserve_underscores = util.CheckOutgroups(outgroup_mrca, alignment_dict)
-                
+               
                 alignment_dict.clear()
-
-                if options.sequence_type == "AA":
-                    node_prot_seqs_fn = filehandler.GetNodeProtSeqsFN()
-                    filewriter.WriteSeqsToAln(node_seq_dict, node_prot_seqs_fn)
-                    combined_prot_seqs_dict = combined_seq_dict.copy()
-                    protein_len = len([*node_seq_dict.values()][0])
-                else:
-                    node_dna_seqs_fn = filehandler.GetNodeDNASeqsFN()
-                    filewriter.WriteSeqsToAln(node_seq_dict, node_dna_seqs_fn)
-                    combined_prot_seqs_dict, protein_len = util.GetSeqsDict(combined_seq_dict, options.sequence_type)
-                    node_prot_seqs_dict, _ = util.GetSeqsDict(node_seq_dict, options.sequence_type)
-                    node_prot_seqs_fn = filehandler.GetNodeProtSeqsFN()
-                    filewriter.WriteSeqsToAln(node_prot_seqs_dict, node_prot_seqs_fn)
-                
                 node_seq_dict.clear()
                 combined_seq_dict.clear()
               
@@ -1016,14 +1018,25 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(f"Updated outgroups: {outgroup_mrca}", extra={'to_file': True, 'to_console': False})
                     outgroup_mrca = outgroup_squences
 
-                rec_loc_count_dict = count_mutations(parent_list, 
-                                                    child_list,
-                                                    combined_prot_seqs_dict,
-                                                    residue_dict,
-                                                    dash_exist=dash_exist,
-                                                    binary_sequence_dict=binary_combined_seq_dict
-                                                    )
-                    
+                rec_loc_count_dict, parent_arr, child_arr = count_mutations(parent_list, 
+                                                                            child_list,
+                                                                            combined_prot_seqs_dict,
+                                                                            residue_dict,
+                                                                            dash_exist=dash_exist,
+                                                                            binary_sequence_dict=binary_combined_seq_dict,
+                                                                            )
+                
+                if dash_exist:
+                    binary_modified_seq = util.ConvertToSequence(parent_list, 
+                                                                child_list,
+                                                                parent_arr, 
+                                                                child_arr,
+                                                                residue_dict_flip
+                                                                )
+                    binary_modified_seq_fn = filehandler.GetCombinedProtSeqsFN()
+                    filewriter.WriteSeqsToAln(binary_modified_seq, binary_modified_seq_fn)
+
+                del parent_arr, child_arr   
                 production_logger.info(f"Root of species of interest: {root_node}", extra={'to_file': True, 'to_console': True})
                 production_logger.info(f"Substitution matrix output: {filehandler.GetMutMatrixDir()}\n", extra={'to_file': True, 'to_console': True})
 
