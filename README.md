@@ -300,7 +300,7 @@ For example, by running RECUR on the `example_alignments.aln` file, the `example
   <img src="./docs/images/RECUR_substitution_matrices.PNG" alt="RECUR substitution matrices" width="300"/>
 </p>
 
-`Site` represents the position in the protein alignment. The `Parent>Child:MutCount` column contains a list of amino acid substitutions that occurred at that site. For example, at site 2 a lysine (K) mutated to a serine (S) twice. A dash signifies no substitution was inferred at that site.
+`Site` represents the position in the protein alignment. Please note that the sites of an alignment **start from 1** in RECUR. The `Parent>Child:MutCount` column contains a list of amino acid substitutions that occurred at that site. For example, at site 2 a lysine (K) mutated to a serine (S) twice. A dash signifies no substitution was inferred at that site.
 
 As for the `RowIndex` and `ColIndex` columns, they index the substitution in a mutation matrix.  The arrangement of the mutation matrix is the same as that in the accumulated subsititon matrix. Here, the accumulated subsititon matrix is obtained by summing up all the mutation matrix at each site.
 
