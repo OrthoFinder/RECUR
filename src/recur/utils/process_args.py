@@ -46,7 +46,7 @@ class Options(object):
         self.seed = 8
         self.mcs_seed = self.seed
         self.fix_branch_length = False
-        self.binary_blfix = True
+        self.binary_blfix = False
         self.update_cycle = None
         self.system_info = False
         self.override = True
@@ -141,7 +141,7 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
             options.fix_branch_length = True
 
         elif arg == "-bblfix":
-            options.binary_blfix = False
+            options.binary_blfix = True
 
         elif arg == "-si" or arg == "--system-info":
             options.system_info = True
