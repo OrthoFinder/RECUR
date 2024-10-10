@@ -379,8 +379,8 @@ class FileWriter(object):
                         cols.append(child_id)
                         
                     parent_child_str = ",".join(parent_child)
-                    row_str = ",".join(map(str, np.array(rows) + 1))
-                    col_str = ",".join(map(str, np.array(cols) + 1))
+                    row_str = ",".join(map(str, np.array(rows)))
+                    col_str = ",".join(map(str, np.array(cols)))
                     line = "\t".join((str(pos+1), parent_child_str, row_str, col_str))
                 
                 line += "\n"
