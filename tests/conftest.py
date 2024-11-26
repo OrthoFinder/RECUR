@@ -1,4 +1,4 @@
-import os 
+import os
 import sys
 import pytest
 
@@ -24,11 +24,3 @@ def get_recurrence_list(test_data):
                 recurrance_list.append(" ".join(line))
                 print(" ".join(line))
     return recurrance_list
-
-
-
-
-
-
-
-

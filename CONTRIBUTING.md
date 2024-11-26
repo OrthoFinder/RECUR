@@ -15,12 +15,12 @@ If you are reporting a bug, please post an [Issue](https://github.com/OrthoFinde
 
 ### Fix Bugs
 
-Look through the [OrthoFinder Issues log](https://github.com/OrthoFinder/RECUR/issues) for bugs. Anything tagged with "bug" 
+Look through the [OrthoFinder Issues log](https://github.com/OrthoFinder/RECUR/issues) for bugs. Anything tagged with "bug"
 and "help wanted" is open to whoever wants to implement it.
 
 ### Implement Features
 
-Look through the [OrthoFinder Issues log](https://github.com/OrthoFinder/RECUR/issues) for features. Anything tagged with 
+Look through the [OrthoFinder Issues log](https://github.com/OrthoFinder/RECUR/issues) for features. Anything tagged with
 "enhancement" and "help wanted" is open to whoever wants to implement it.
 
 ### Write Documentation
@@ -44,7 +44,7 @@ If you are proposing a feature:
 Ready to contribute? Here's how to set up `RECUR` for local development.
 
 1. Clone [RECUR](https://github.com/OrthoFinder/RECUR) locally
-  
+
 2. Install `RECUR` in editable mode using `pip`:
 
     ```console
@@ -57,15 +57,15 @@ Ready to contribute? Here's how to set up `RECUR` for local development.
     $ git checkout -b name-of-your-bugfix-or-feature
     ```
 
-4. Push your branch and set up a new Pull Request: use `WIP` prefix to indicate 
-   this is a work in progress (this way other collaborators have visibility of 
+4. Push your branch and set up a new Pull Request: use `WIP` prefix to indicate
+   this is a work in progress (this way other collaborators have visibility of
    your work even when it is unfinished)
 
-5. Make commits and push them to the OrthoFinder GitHub repository when convenient. Please note each 
+5. Make commits and push them to the OrthoFinder GitHub repository when convenient. Please note each
    time a batch of commits is pushed, OrthoFinder Git Actions will run the test suite
 
-6. When you're done making changes, check that your changes conform to any code 
-   formatting requirements that the tests pass. You should then add `OrthoFinder` as Reviewer, to obtain 
+6. When you're done making changes, check that your changes conform to any code
+   formatting requirements that the tests pass. You should then add `OrthoFinder` as Reviewer, to obtain
    QA-review and approval of your work
 
 7. Once approval is provided, your branch will be merged
@@ -97,7 +97,7 @@ The idea of PSR is to use a standardized commit message format and syntax, which
 
 `<type>` refers to the kind of change made and is usually one of:
 
-+ **feat**: A new feature. 
++ **feat**: A new feature.
 + **fix**: A bug fix.
 + **docs**: Documentation changes.
 + **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc).
@@ -122,8 +122,6 @@ $ git commit -m "feat(package): add scoring matrix option to the package"
 + The text `BREAKING CHANGE:` in the footer will trigger a major release, e.g.:
 ```console
 $ git commit -m "build(package): reconfig the package using src layout
-$ 
+$
 $ BREAKING CHANGE: the scripts_of folder does not exit anymore."
 ```
-
-

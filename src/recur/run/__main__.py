@@ -1,76 +1,110 @@
 from __future__ import absolute_import
-from recur import  __version__, helpinfo
-import subprocess
-import multiprocessing as mp               
-import platform                                
-import sys
-import os
-import csv
-import shutil
-from typing import Optional, Dict, List, Tuple, Union, Set
-import gc
-import time
+
 import datetime
-from rich import progress
-import numpy as np
-from collections import Counter
-import copy
-import warnings
-import psutil
-import signal
-import traceback
-import random
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import dendropy
-from functools import partial
-from recur.run import run_commands
-from recur.utils import files, util, process_args
+import gc
 import logging
+import multiprocessing as mp
+import os
+import platform
+import random
+import shutil
+import signal
+import subprocess
+import sys
+import time
+import traceback
 import warnings
+from collections import Counter
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from functools import partial
+from typing import Dict, List, Optional, Tuple, Union
+
+import dendropy
+import numpy as np
+import psutil
+from rich import print, progress
+
+from recur import __version__, helpinfo
+from recur.run import run_commands
+from recur.utils import files, process_args, util
+
 # warnings.filterwarnings("ignore", module='dendropy')
 
+# def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
+#     max_int = sys.maxsize
+#     while True:
+#         try:
+#             csv.field_size_limit(max_int)
+#             break
+#         except OverflowError:
+#             max_int = int(max_int / 10)
+
+#     # Set maximum recursion limit and OpenBLAS thread limit
+#     sys.setrecursionlimit(10**6)
+#     os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
+#     my_env = os.environ.copy()
+
+#     if getattr(sys, 'frozen', False):  # For PyInstaller
+#         base_dir = os.path.dirname(sys.executable)
+#     else:
+#         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+
+#     local_iqtree2_path = os.path.join(base_dir, 'recur', 'bin', 'iqtree2')
+#     bin_dir = os.path.dirname(local_iqtree2_path)
+
+#     conda_prefix = my_env.get('CONDA_PREFIX')
+#     if conda_prefix:
+#         conda_bin = os.path.join(conda_prefix, 'Scripts') if os.name == 'nt' else os.path.join(conda_prefix, 'bin')
+#         my_env['PATH'] = conda_bin + os.pathsep + my_env['PATH']
+
+#     # Restore original paths if running from a frozen environment
+#     if getattr(sys, 'frozen', False):
+#         if os.name == 'nt':  # Windows-specific
+#             my_env['PATH'] = my_env.get('PATH_ORIG', '')
+#         else:  # Unix-like systems
+#             my_env['LD_LIBRARY_PATH'] = my_env.get('LD_LIBRARY_PATH_ORIG', '')
+#             my_env['DYLD_LIBRARY_PATH'] = my_env.get('DYLD_LIBRARY_PATH_ORIG', '')
+
+#     return my_env, local_iqtree2_path, bin_dir, conda_prefix
+
+
 def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
-    max_int = sys.maxsize
-    while True:
-        try:
-            csv.field_size_limit(max_int)
-            break
-        except OverflowError:
-            max_int = int(max_int / 10)
-    
-    # Set maximum recursion limit and OpenBLAS thread limit
+
     sys.setrecursionlimit(10**6)
     os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
     my_env = os.environ.copy()
 
-    if getattr(sys, 'frozen', False):  # For PyInstaller
+    if getattr(sys, 'frozen', False): 
         base_dir = os.path.dirname(sys.executable)
     else:
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 
-    local_iqtree2_path = os.path.join(base_dir, 'recur', 'bin', 'iqtree2')
-    bin_dir = os.path.dirname(local_iqtree2_path)
+    home_dir = os.path.expanduser("~")
+    iqtree_install_dir = os.path.join(home_dir, "bin")
+    local_iqtree2_path = os.path.join(iqtree_install_dir, "iqtree2")
+    bin_dir = iqtree_install_dir
 
-    conda_prefix = my_env.get('CONDA_PREFIX')
+    conda_prefix = my_env.get("CONDA_PREFIX")
     if conda_prefix:
-        conda_bin = os.path.join(conda_prefix, 'Scripts') if os.name == 'nt' else os.path.join(conda_prefix, 'bin')
-        my_env['PATH'] = conda_bin + os.pathsep + my_env['PATH']
-    
-    # Restore original paths if running from a frozen environment
-    if getattr(sys, 'frozen', False):
-        if os.name == 'nt':  # Windows-specific
-            my_env['PATH'] = my_env.get('PATH_ORIG', '')
+        conda_bin = os.path.join(conda_prefix, "Scripts") if os.name == "nt" else os.path.join(conda_prefix, "bin")
+        my_env["PATH"] = conda_bin + os.pathsep + my_env["PATH"]
+
+    my_env["PATH"] = bin_dir + os.pathsep + my_env["PATH"]
+
+    if getattr(sys, "frozen", False):
+        if os.name == "nt":  # Windows-specific
+            my_env["PATH"] = my_env.get("PATH_ORIG", "")
         else:  # Unix-like systems
-            my_env['LD_LIBRARY_PATH'] = my_env.get('LD_LIBRARY_PATH_ORIG', '')
-            my_env['DYLD_LIBRARY_PATH'] = my_env.get('DYLD_LIBRARY_PATH_ORIG', '')
-    
-    return my_env, local_iqtree2_path, bin_dir, conda_prefix 
+            my_env["LD_LIBRARY_PATH"] = my_env.get("LD_LIBRARY_PATH_ORIG", "")
+            my_env["DYLD_LIBRARY_PATH"] = my_env.get("DYLD_LIBRARY_PATH_ORIG", "")
+
+    return my_env, local_iqtree2_path, bin_dir, conda_prefix
 
 def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None) -> bool:
     try:
         process = subprocess.Popen(command, env=env, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
         stdout, stderr = process.communicate()
 
         # if stdout:
@@ -168,7 +202,7 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
 
     children = parent.children(recursive=True)
     for process in children:
-        for attempt in range(retries):
+        for _ in range(retries):
             try:
                 process.send_signal(sig)
                 process.wait(timeout=3)
@@ -199,16 +233,16 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
 
     os._exit(0)
 
-def ParentChildRelation(treefile: str, 
+def ParentChildRelation(treefile: str,
                         outgroup_squences: List[str],
                         n_species: int,
                         preserve_underscores: bool
                         ) -> Tuple[Optional[str], List[str], List[str], List[str], str]:
     try:
- 
+
         with open(treefile, 'r') as f:
-            t = dendropy.Tree.get(file=f, 
-                                  schema="newick", 
+            t = dendropy.Tree.get(file=f,
+                                  schema="newick",
                                   preserve_underscores=preserve_underscores,
                                   case_sensitive_taxon_labels=False)
 
@@ -221,11 +255,11 @@ def ParentChildRelation(treefile: str,
         t.reroot_at_edge(outgroup_mrca.edge, update_bipartitions=False)
         rt = t.seed_node
         rt_children = rt.child_nodes()
-        
+
         root_of_interest = next((child for child in rt_children if child != outgroup_mrca), None)
 
         if root_of_interest is None:
- 
+
             return None, outgroup_squences, [], [], "No root of interest found; tree structure might be incorrect."
 
         root_node = root_of_interest.label
@@ -263,7 +297,7 @@ def ParentChildRelation(treefile: str,
 
         if taxon_count != expected_relationships:
             return root_node, outgroup_squences, parent_list, child_list, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}."
-        
+
         return root_node, outgroup_squences, parent_list, child_list, ""
     except BrokenPipeError:
         print("Broken pipe error.")
@@ -272,37 +306,37 @@ def ParentChildRelation(treefile: str,
         error_msg = f"ERROR in ParentChildRelation: {e}"
         print(error_msg)
         print(traceback.format_exc())
-        return root_node, outgroup_squences, parent_list, child_list, error_msg 
-    
+        return root_node, outgroup_squences, parent_list, child_list, error_msg
+
 
 def count_mutations(parent_list: List[str],
                     child_list: List[str],
                     sequence_dict: Dict[str, str],
                     residue_dict: Dict[str, int],
                     dash_exist: bool = False,
-                    binary_sequence_dict: Dict[str, str] = {}
+                    binary_sequence_dict: Optional[Dict[str, str]] = None
                     ) -> Counter[Tuple[int, int, int]]:
 
     parent_num_list = [
-        [residue_dict.get(res, 0) for res in sequence_dict[parent]] 
+        [residue_dict.get(res, 0) for res in sequence_dict[parent]]
         for parent in parent_list
     ]
     child_num_list = [
-        [residue_dict.get(res, 0) for res in sequence_dict[child]] 
+        [residue_dict.get(res, 0) for res in sequence_dict[child]]
         for child in child_list
     ]
     parent_array = np.array(parent_num_list)
     child_array = np.array(child_num_list)
 
     del sequence_dict, parent_num_list, child_num_list
-    
+
     if dash_exist:
         binary_parent_num_list = [
-            [1 if res == "1" else 0 for res in binary_sequence_dict[parent]] 
+            [1 if res == "1" else 0 for res in binary_sequence_dict[parent]]
             for parent in parent_list
         ]
         binary_child_num_list = [
-            [1 if res == "1" else 0 for res in binary_sequence_dict[child]] 
+            [1 if res == "1" else 0 for res in binary_sequence_dict[child]]
             for child in child_list
         ]
 
@@ -310,7 +344,7 @@ def count_mutations(parent_list: List[str],
         binary_child_array = np.array(binary_child_num_list)
 
         parent_array = parent_array * binary_parent_array
-        child_array = child_array * binary_child_array 
+        child_array = child_array * binary_child_array
 
         del binary_parent_num_list, binary_child_num_list, \
             binary_parent_array, binary_child_array
@@ -329,7 +363,7 @@ def count_mutations(parent_list: List[str],
 
     # child_mask = np.isin(child_res_id, util.reserved_chars_index, invert=True)
     child_mask = np.where(child_res_id != 0)
-    
+
     parent_res_id = parent_res_id[child_mask]
     child_res_id = child_res_id[child_mask]
     col_indices = col_indices[child_mask]
@@ -342,10 +376,10 @@ def count_mutations(parent_list: List[str],
 
     return rec_loc_count_dict, parent_array, child_array
 
-def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]], 
+def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
                         residue_dict_flip: Dict[int, str],
                         ) -> List[List[Union[int, str, float]]]:
-    
+
     rec_loc_count_dict2 = {}
     flipflop_dict = {}
     for key, val in rec_loc_count_dict.most_common():
@@ -360,30 +394,30 @@ def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
 
     recurrence_list: List[List[Union[int, str, float]]] = [
         [
-            int(res_loc), 
-            str(residue_dict_flip[parent_id]), 
-            str(residue_dict_flip[child_id]), 
-            int(recurrence), 
+            int(res_loc),
+            str(residue_dict_flip[parent_id]),
+            str(residue_dict_flip[child_id]),
+            int(recurrence),
             int(flipflop_dict.get((res_loc, parent_id, child_id), 0))
-         ] 
+         ]
         for (res_loc, parent_id, child_id), recurrence in rec_loc_count_dict2.items()
     ]
 
     return recurrence_list
 
-def WorkerProcessAndCount(file: str, 
+def WorkerProcessAndCount(file: str,
                           mcs_alnDir: str,
                           parent_list: List[str],
                           child_list: List[str],
                           isnuc_fasta: bool,
-                          sequence_type: str, 
-                          residue_dict: Dict[str, int], 
+                          sequence_type: str,
+                          residue_dict: Dict[str, int],
                           res_loc_list: List[int],
                           production_logger: logging.Logger,
                           dash_exist: bool = False,
                           binary_sequence_dict: Dict[str, str] = {},
                           ) -> Tuple[Dict[Tuple[int, int, int], int], str]:
-    
+
     rec_loc_count_dict: Dict[Tuple[int, int, int], int] = {}
     error_msg = ""
 
@@ -395,26 +429,26 @@ def WorkerProcessAndCount(file: str,
             mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
 
         parent_num_list = [
-            [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[parent]] 
+            [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[parent]]
             for parent in parent_list
         ]
         child_num_list = [
-            [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[child]] 
+            [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[child]]
             for child in child_list
         ]
 
         parent_array = np.array(parent_num_list)
         child_array = np.array(child_num_list)
-    
+
         del mcs_combined_prot_seqs_dict, parent_num_list, child_num_list
 
         if dash_exist:
             binary_parent_num_list = [
-                [1 if res == "1" else 0 for res in binary_sequence_dict[parent]] 
+                [1 if res == "1" else 0 for res in binary_sequence_dict[parent]]
                 for parent in parent_list
             ]
             binary_child_num_list = [
-                [1 if res == "1" else 0 for res in binary_sequence_dict[child]] 
+                [1 if res == "1" else 0 for res in binary_sequence_dict[child]]
                 for child in child_list
             ]
 
@@ -422,8 +456,8 @@ def WorkerProcessAndCount(file: str,
             binary_child_array = np.array(binary_child_num_list)
 
             parent_array = parent_array * binary_parent_array
-            child_array = child_array * binary_child_array 
-        
+            child_array = child_array * binary_child_array
+
             del binary_parent_num_list, binary_child_num_list, \
                 binary_parent_array, binary_child_array
 
@@ -463,23 +497,23 @@ def WorkerProcessAndCount(file: str,
         print(error_msg)
         print(traceback.format_exc())
         production_logger.error(error_msg)
-    
+
     return rec_loc_count_dict, error_msg
 
 
-def process_mcs_files_in_chunks(mcs_alnDir: str, 
+def process_mcs_files_in_chunks(mcs_alnDir: str,
                                 parent_list: List[str],
-                                child_list: List[str], 
-                                residue_dict: Dict[str, int], 
-                                nthreads: int, 
-                                isnuc_fasta: bool, 
+                                child_list: List[str],
+                                residue_dict: Dict[str, int],
+                                nthreads: int,
+                                isnuc_fasta: bool,
                                 sequence_type: str,
                                 res_loc_list: List[int],
                                 production_logger: logging.Logger,
                                 window_width: int,
                                 dash_exist: bool = False,
-                                binary_sequence_dict: Dict[str, str] = {},
-                                update_cycle: Optional[int] = None, 
+                                binary_sequence_dict: Optional[Dict[str, str]] = None,
+                                update_cycle: Optional[int] = None,
                                 mcs_batch_size: Optional[int] = None
                                 ) -> List[Dict[Tuple[int, int, int], int]]:
 
@@ -487,7 +521,7 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
     total_file_count = len(mcs_files)
 
     results = []
-    worker = partial(WorkerProcessAndCount, 
+    worker = partial(WorkerProcessAndCount,
                      mcs_alnDir=mcs_alnDir,
                      parent_list=parent_list,
                      child_list=child_list,
@@ -499,9 +533,9 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                      dash_exist=dash_exist,
                      binary_sequence_dict=binary_sequence_dict,
                      )
-    if mcs_batch_size is not None:    
+    if mcs_batch_size is not None:
         batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
-    
+
     if update_cycle is not None:
         mcs_progress = progress.Progress(
         progress.TextColumn("[progress.description]{task.description}"),
@@ -517,13 +551,13 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
         mcs_progress.start()
     try:
         with ProcessPoolExecutor(max_workers=nthreads) as executor:
-            
-            if mcs_batch_size is not None:   
+
+            if mcs_batch_size is not None:
                 futures = [executor.submit(worker, file_data) for batch in batches for file_data in batch]
             else:
                 futures = [executor.submit(worker, file_data) for file_data in mcs_files]
-            
-                
+
+
             for i, future in enumerate(as_completed(futures)):
                 try:
                     result, error_msg = future.result()
@@ -534,7 +568,7 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
 
                     if result:
                         results.append(result)
-                            
+
                 except Exception as e:
                     error_msg = f"ERROR during processing: {e}"
                     print(error_msg)
@@ -546,7 +580,7 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                     if update_cycle is not None:
                         if (i + 1) % update_cycle == 0:
                             mcs_progress.update(task, advance=update_cycle)
-            
+
             if update_cycle is not None:
                 mcs_progress.stop()
 
@@ -575,7 +609,7 @@ def compute_p_values(mcs_results: List[Dict[Tuple[int, int, int], int]],
                 if mcs_rec is not None:
                     if mcs_rec >= recurrence:
                         count_greater += 1
-        
+
             p_value = (count_greater + 1) / (nalign + 1)
             rec_list.append(np.round(p_value, len(str(nalign))))
             # print(f"{rec_list} - {count_greater}")
@@ -593,7 +627,7 @@ def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
                             species_of_interest: List[str],
                             residue_dict_flip: Dict[int, str],
                             protein_len: int) -> List[List[Union[str, int, float]]]:
-    
+
     extant_seq = {species: seq for species, seq in combined_prot_seqs_dict.items() if species in species_of_interest}
     ident_dict = {}
 
@@ -610,7 +644,7 @@ def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
             child = residue_dict_flip[child_id]
             parent_child.append(">".join((parent, child)))
             counts.append(recurrence)
-        
+
         data_str_list = [*(map(str, counts))]
         parent_child_data = [*zip(parent_child, data_str_list)]
         parent_child_data_str = ",".join([":".join(pcd) for pcd in parent_child_data])
@@ -627,7 +661,7 @@ def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
 
 def main(args: Optional[List[str]] = None):
 
-    d_results = None 
+    d_results = None
     production_logger = None
     setup_signal_handler()
 
@@ -641,12 +675,12 @@ def main(args: Optional[List[str]] = None):
     elif args[0] == "-v" or args[0] == "--version":
         print(f"RECUR:v{__version__}")
         sys.exit()
- 
+
     start_main = time.perf_counter()
 
     try:
         input_command = "RECUR command: " + " ".join(sys.argv)  + "\n"
-        
+
         options, alnDir, alnPath, resultsDir_nonDefault = process_args.ProcessArgs(args)
         iqtree_version = options.iqtree_version if options.iqtree_version else "system"
         my_env = initialise_recur(iqtree_version)
@@ -660,7 +694,7 @@ def main(args: Optional[List[str]] = None):
         if isinstance(options.gene_tree, dict):
             if len(options.gene_tree) <= aln_len and len(options.gene_tree) == 1:
                 options.gene_tree = {gene: [*options.gene_tree.values()][0] for gene in aln_path_dict}
-        
+
         if isinstance(options.outgroups, dict):
             if len(options.outgroups) <= aln_len and len(options.outgroups) == 1:
                 options.outgroups = {gene: [*options.outgroups.values()][0] for gene in aln_path_dict}
@@ -672,8 +706,8 @@ def main(args: Optional[List[str]] = None):
 
             asr = True
             fix_branch_length = True
-            
-            try:    
+
+            try:
                 start = time.perf_counter()
 
                 try:
@@ -689,7 +723,7 @@ def main(args: Optional[List[str]] = None):
                     outgroup_mrca = options.outgroups[gene]
                 else:
                     outgroup_mrca = options.outgroups
-                
+
                 filehandler = files.FileHandler()
                 filereader = files.FileReader()
                 filewriter = files.FileWriter()
@@ -697,14 +731,14 @@ def main(args: Optional[List[str]] = None):
                 alnFN = os.path.basename(aln_path)
                 filehandler.gene_of_interest = alnFN
                 base_dir = os.path.join(resultsDir_nonDefault, f"{alnFN}.recur") if resultsDir_nonDefault else os.path.join(alnDir, f"{alnFN}.recur")
-                if not os.path.exists(base_dir): 
+                if not os.path.exists(base_dir):
                     os.mkdir(base_dir)
-            
+
                 filehandler.CreateOutputDirectories(options, base_dir)
 
                 results_dir = filehandler.GetResultsDirectory()
                 production_logger = util.setup_logging(results_dir, "w", "brief")
-                
+
                 production_logger.info(f"{input_command}", extra={'to_file': True, 'to_console': False})
                 print()
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
@@ -727,7 +761,7 @@ def main(args: Optional[List[str]] = None):
 
                 check_exist = 0
                 real_phyDir = filehandler.GetRealPhylogenyDir()
-                exist_treefile = False 
+                exist_treefile = False
                 exist_iqtree = False
                 exist_state = False
 
@@ -740,21 +774,21 @@ def main(args: Optional[List[str]] = None):
                     elif file_extension == "treefile":
                         exist_treefile = True
                         check_exist += 1
-                    
+
                     elif file_extension == "iqtree":
                         exist_iqtree = True
                         check_exist += 1
 
                 restart_step1 = False
                 restart_step2 = False
-                restart_step3 = False 
+                restart_step3 = False
                 override = options.override
 
                 gene_tree = options.gene_tree[gene] if isinstance(options.gene_tree, dict) else None
                 if gene_tree is not None:
                     step1_info = "Step1: Inferring phylogenetic tree and model of evolution"
                     if options.restart_from == 1:
-                        restart_step1 = True 
+                        restart_step1 = True
                         restart_step3 = True
                         override = False
                     elif options.restart_from == 2:
@@ -763,7 +797,7 @@ def main(args: Optional[List[str]] = None):
                 else:
                     step1_info = "Step1: Inferring ancestral sequences, phylogenetic tree and model of evolution"
                     if options.restart_from == 1:
-                        restart_step1 = True 
+                        restart_step1 = True
                         restart_step2 = True
                         restart_step3 = True
                         override = False
@@ -787,15 +821,15 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info("NOTE: with the provided treefile, RECUR will skip Step1.\n", extra={'to_file': True, 'to_console': True})
                     else:
                         production_logger.info("NOTE: with the provided statefile and treefile, RECUR will skip Step1.\n", extra={'to_file': True, 'to_console': True})
-                
+
                 elif (check_exist == 3 and not override) and not restart_step1:
                     if gene_tree is not None:
-                        statefile = filehandler.GetStateFileFN() 
-                        treefile = filehandler.GetTreeFileFN() 
+                        statefile = filehandler.GetStateFileFN()
+                        treefile = filehandler.GetTreeFileFN()
                         iqtreefile = filehandler.GetIQTreeFileFN()
                         production_logger.info("NOTE: with the existing statefile, treefile and iqtreefile, RECUR will skip Step1.\n", extra={'to_file': True, 'to_console': True})
                     else:
-                        treefile = filehandler.GetTreeFileFN() 
+                        treefile = filehandler.GetTreeFileFN()
                         iqtreefile = filehandler.GetIQTreeFileFN()
                         production_logger.info("NOTE: with the existing treefile and iqtreefile, RECUR will skip Step1.\n", extra={'to_file': True, 'to_console': True})
                 else:
@@ -820,23 +854,23 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info("NOTE: RECUR is forced to restart from Step1 due to some missing files\n", extra={'to_file': True, 'to_console': False})
                         if gene_tree is None:
                             restart_step2 = True
-                    
+
                     if restart_step1 or not override:
                         production_logger.info("### Restart RECUR from Step1 ###\n", extra={'to_file': True, 'to_console': True})
-                    
+
                     if override or restart_step1:
                         prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                         production_logger.info(prepend + "Ran IQ-TREE to build the gene trees for the real phylogeny", extra={'to_file': True, 'to_console': True})
                         production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
-                    
+
                     if gene_tree is None:
                         asr = False
                         fix_branch_length = False
                     else:
                         fix_branch_length = options.fix_branch_length
-                    
-                    commands = run_commands.GetGeneTreeBuildCommands([aln_path], 
-                                                        real_phyDir, 
+
+                    commands = run_commands.GetGeneTreeBuildCommands([aln_path],
+                                                        real_phyDir,
                                                         options.evolution_model,
                                                         options.iqtree_nthreads,
                                                         phy_seed=options.seed,
@@ -847,7 +881,7 @@ def main(args: Optional[List[str]] = None):
                                                         sh_alrt=options.bootstrap,
                                                         fix_branch_length=fix_branch_length,
                                                         )
-                    
+
                     if gene_tree is None:
                         production_logger.info(f"step1 iqtree2 gene tree building command: ", extra={'to_file': True, 'to_console': False})
                         production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
@@ -856,17 +890,17 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info(f"step1 iqtree2 ancestral state reconstruction command: ", extra={'to_file': True, 'to_console': False})
                         production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
-                    run_commands.RunCommand(commands, 
+                    run_commands.RunCommand(commands,
                                             real_phyDir,
-                                            env=my_env, 
+                                            env=my_env,
                                             nthreads=options.recur_nthreads,
                                             delete_files=True,
                                             files_to_keep=["state", "treefile", "iqtree"],
                                             fd_limit=options.fd_limit)
-                    
-                    treefile = filehandler.GetTreeFileFN() 
+
+                    treefile = filehandler.GetTreeFileFN()
                     iqtreefile = filehandler.GetIQTreeFileFN()
-                    
+
                 best_evolution_model = filereader.ReadIQTreeFile(iqtreefile)
 
                 if gene_tree is None:
@@ -875,7 +909,7 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info(prepend + f"Tree inference complete, best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file':True, 'to_console': True})
                     else:
                         production_logger.info(f"Best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file':True, 'to_console': True})
-                    
+
                     step2_info = f"Step2: Inferring ancestral sequences"
                     production_logger.info(step2_info, extra={'to_file': True, 'to_console': True})
                     production_logger.info("="*len(step2_info), extra={'to_file': True, 'to_console': True})
@@ -885,21 +919,21 @@ def main(args: Optional[List[str]] = None):
                     if not restart_step2 and exist_state and not override:
                         statefile = filehandler.GetStateFileFN()
                         production_logger.info("NOTE: with the existing statefile, RECUR will skip Step2.\n", extra={'to_file': True, 'to_console': True})
-                    
+
                     else:
-                        if not restart_step2 and (exist_iqtree and exist_treefile and not exist_state):             
+                        if not restart_step2 and (exist_iqtree and exist_treefile and not exist_state):
                             production_logger.info("NOTE: RECUR is forced to restart from Step2 due to the missing statefile\n", extra={'to_file': True, 'to_console': True})
-                        
+
                         elif not restart_step1 and restart_step2:
                             production_logger.info("### Restart RECUR from Step2 ###\n", extra={'to_file': True, 'to_console': True})
-                            
+
                         filehandler.UpdateTreeFile(treefile)
 
                         prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                         production_logger.info(prepend + f"Starting ancestral state reconstruction.", extra={'to_file': True, 'to_console': True})
-                        
-                        commands = run_commands.GetGeneTreeBuildCommands([aln_path], 
-                                                            real_phyDir, 
+
+                        commands = run_commands.GetGeneTreeBuildCommands([aln_path],
+                                                            real_phyDir,
                                                             best_evolution_model,
                                                             options.iqtree_nthreads,
                                                             phy_seed=options.seed,
@@ -907,40 +941,40 @@ def main(args: Optional[List[str]] = None):
                                                             gene_tree=treefile,
                                                             asr=True,
                                                             fix_branch_length=options.fix_branch_length)
-                        
+
                         production_logger.info(f"step2 iqtree2 ancestral state reconstruction command: ",  extra={'to_file': True, 'to_console': False})
                         production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
-        
-                        run_commands.RunCommand(commands, 
+
+                        run_commands.RunCommand(commands,
                                                 real_phyDir,
                                                 env=my_env,
-                                                nthreads=options.recur_nthreads, 
+                                                nthreads=options.recur_nthreads,
                                                 delete_files=True,
                                                 files_to_keep=["state", "treefile", "iqtree"],
                                                 fd_limit=options.fd_limit)
 
                         statefile = filehandler.GetStateFileFN()
                         if not restart_step2 and restart_step3:
-                            production_logger.info(f"Ancestral state reconstruction complete\n", extra={'to_file': True, 'to_console': True})
+                            production_logger.info("Ancestral state reconstruction complete\n", extra={'to_file': True, 'to_console': True})
                         else:
                             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                            production_logger.info(prepend + f"Ancestral state reconstruction complete\n", extra={'to_file': True, 'to_console': True})
+                            production_logger.info(prepend + "Ancestral state reconstruction complete\n", extra={'to_file': True, 'to_console': True})
                 else:
                     statefile = filehandler.GetStateFileFN()
                     if not restart_step1 and restart_step3:
-                        production_logger.info(f"Best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file': True, 'to_console': True})     
+                        production_logger.info(f"Best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file': True, 'to_console': True})
                     else:
                         prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                        production_logger.info(prepend + f"Ancestral state reconstruction complete, best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file': True, 'to_console': True})     
+                        production_logger.info(prepend + f"Ancestral state reconstruction complete, best fitting model of sequence evolution: {best_evolution_model}\n", extra={'to_file': True, 'to_console': True})
 
                 filehandler.CheckFileCorrespondance(gene, statefile, treefile)
                 node_seq_dict = filereader.ReadStateFile(statefile)
 
                 combined_seq_dict = {k: v for d in (node_seq_dict, alignment_dict) for k, v in d.items()}
-                
+
                 outgroup_mrca, preserve_underscores = util.CheckOutgroups(outgroup_mrca, alignment_dict)
-                
-                
+
+
 
                 if options.sequence_type == "AA":
                     node_prot_seqs_fn = filehandler.GetNodeProtSeqsFN()
@@ -961,28 +995,28 @@ def main(args: Optional[List[str]] = None):
                     binary_combined_seq_dict: Dict[str, str] = {}
                 else:
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + f"Starting ancestral indel estimation.", extra={'to_file': True, 'to_console': True})
+                    production_logger.info(prepend + "Starting ancestral indel estimation.", extra={'to_file': True, 'to_console': True})
 
                     binary_alignment_dict = util.ConvertToBinary(alignment_dict)
                     binary_aln_path = filehandler.GetBinarySeqsFN()
-                    filewriter.WriteSeqsToAln(binary_alignment_dict, binary_aln_path) 
+                    filewriter.WriteSeqsToAln(binary_alignment_dict, binary_aln_path)
 
-                    binary_tree_commands = run_commands.GetGeneTreeBuildCommands([binary_aln_path], 
-                                                            filehandler.GetBinaryPhylogenyDir(), 
+                    binary_tree_commands = run_commands.GetGeneTreeBuildCommands([binary_aln_path],
+                                                            filehandler.GetBinaryPhylogenyDir(),
                                                             "GTR2",
                                                             options.iqtree_nthreads,
                                                             phy_seed=options.seed,
                                                             gene_tree=treefile,
                                                             asr=True,
                                                             fix_branch_length=options.binary_blfix)
-                        
-                    production_logger.info(f"iqtree2 ancestral indel estimation command: ",  extra={'to_file': True, 'to_console': False})
+
+                    production_logger.info("iqtree2 ancestral indel estimation command: ",  extra={'to_file': True, 'to_console': False})
                     production_logger.info(f"{binary_tree_commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
-                    run_commands.RunCommand(binary_tree_commands, 
+                    run_commands.RunCommand(binary_tree_commands,
                                             filehandler.GetBinaryPhylogenyDir(),
                                             env=my_env,
-                                            nthreads=options.recur_nthreads, 
+                                            nthreads=options.recur_nthreads,
                                             delete_files=True,
                                             files_to_keep=["state", "treefile", "aln"],
                                             fd_limit=options.fd_limit)
@@ -991,22 +1025,22 @@ def main(args: Optional[List[str]] = None):
 
                     binary_node_seq_dict = filereader.ReadStateFile(binary_statefile)
                     binary_combined_seq_dict = {k: v for d in (binary_node_seq_dict, binary_alignment_dict) for k, v in d.items()}
-                    
+
                     binary_node_seqs_fn = filehandler.GetBinaryNodeSeqsFN()
                     filewriter.WriteSeqsToAln(binary_node_seq_dict, binary_node_seqs_fn)
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + f"Ancestral indel estimation complete.\n", extra={'to_file': True, 'to_console': True})     
+                    production_logger.info(prepend + "Ancestral indel estimation complete.\n", extra={'to_file': True, 'to_console': True})
                 # # ------------------------------------------------------------
-               
+
                 alignment_dict.clear()
                 node_seq_dict.clear()
                 combined_seq_dict.clear()
-              
-                root_node, outgroup_squences, parent_list, child_list, error_msg = ParentChildRelation(treefile, 
-                                                                                                      outgroup_mrca, 
+
+                root_node, outgroup_squences, parent_list, child_list, error_msg = ParentChildRelation(treefile,
+                                                                                                      outgroup_mrca,
                                                                                                       n_species,
-                                                                                                      preserve_underscores, 
+                                                                                                      preserve_underscores,
                                                                                                       )
 
                 if error_msg:
@@ -1015,51 +1049,51 @@ def main(args: Optional[List[str]] = None):
 
                 if outgroup_mrca and len(outgroup_mrca) != len(outgroup_squences):
                     warnings.warn(f"Outgroup sequences provided not monophyletic. Outgroups will be updated. Please find the updated outgroups in the log file.")
-                    production_logger.info(f"Updated outgroups: {outgroup_mrca}", extra={'to_file': True, 'to_console': False})
+                    production_logger.info("Updated outgroups: {outgroup_mrca}", extra={'to_file': True, 'to_console': False})
                     outgroup_mrca = outgroup_squences
 
-                rec_loc_count_dict, parent_arr, child_arr = count_mutations(parent_list, 
+                rec_loc_count_dict, parent_arr, child_arr = count_mutations(parent_list,
                                                                             child_list,
                                                                             combined_prot_seqs_dict,
                                                                             residue_dict,
                                                                             dash_exist=dash_exist,
                                                                             binary_sequence_dict=binary_combined_seq_dict,
                                                                             )
-                
+
                 if dash_exist:
-                    binary_modified_seq = util.ConvertToSequence(parent_list, 
+                    binary_modified_seq = util.ConvertToSequence(parent_list,
                                                                 child_list,
-                                                                parent_arr, 
+                                                                parent_arr,
                                                                 child_arr,
                                                                 residue_dict_flip
                                                                 )
                     binary_modified_seq_fn = filehandler.GetCombinedProtSeqsFN()
                     filewriter.WriteSeqsToAln(binary_modified_seq, binary_modified_seq_fn)
 
-                del parent_arr, child_arr   
+                del parent_arr, child_arr
                 production_logger.info(f"Root of species of interest: {root_node}", extra={'to_file': True, 'to_console': True})
                 production_logger.info(f"Substitution matrix output: {filehandler.GetMutMatrixDir()}\n", extra={'to_file': True, 'to_console': True})
 
                 filewriter.WriteMutMatrix(rec_loc_count_dict,
-                                          residue_dict_flip, 
+                                          residue_dict_flip,
                                           protein_len,
                                           filehandler.GetMutCountMatricesFN(),
                                           filehandler.GetAccumMutCountMatricesFN())
-                
+
                 recurrence_list = get_recurrence_list(rec_loc_count_dict, residue_dict_flip)
 
                 if len(recurrence_list) == 0:
-                    production_logger.info(f"ATTENTION: No recurrence has identified for gene {gene}! Monte-Carlo Simiatlion will be SKIPPED!\n", 
+                    production_logger.info(f"ATTENTION: No recurrence has identified for gene {gene}! Monte-Carlo Simiatlion will be SKIPPED!\n",
                                            extra={'to_file': True, 'to_console': True})
-                    continue 
+                    continue
 
                 res_loc_list = [int(res_list[0]) for res_list in recurrence_list]
 
                 if gene_tree is None:
                     step2_info = f"Step3: Simulating Sequence Evolution with {options.nalign} replicates"
-                else: 
+                else:
                     step2_info = f"Step2: Simulating Sequence Evolution with {options.nalign} replicates"
-                    
+
                 production_logger.info(step2_info, extra={'to_file': True, 'to_console': True})
                 production_logger.info("="*len(step2_info), extra={'to_file': True, 'to_console': True})
                 step2_results_info = f"Results Directory: {filehandler.GetMCSimulationDir()}\n"
@@ -1081,12 +1115,12 @@ def main(args: Optional[List[str]] = None):
                             fn_root_node = ",".join((node_dna_seqs_fn, root_node))
                     else:
                         raise ValueError("Root node of interest is None.")
-                    
+
                     mcs_commands = run_commands.GetMCsimulationCommand(output_prefix,
                                                                     options.iqtree_nthreads,
-                                                                    options.mcs_seed, 
+                                                                    options.mcs_seed,
                                                                     best_evolution_model,
-                                                                    treefile, 
+                                                                    treefile,
                                                                     fn_root_node,
                                                                     options.nalign)
                     if restart_step3:
@@ -1097,14 +1131,14 @@ def main(args: Optional[List[str]] = None):
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Starting Monte-Carlo Simulation.", extra={'to_file': True, 'to_console': True})
-                    production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), 
+                    production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads),
                                         extra={'to_file': True, 'to_console': False})
                     production_logger.info("step2 iqtrees command: ", extra={'to_file': True, 'to_console': False})
                     production_logger.info(f"{mcs_commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
-                    run_commands.RunCommand(mcs_commands, 
+                    run_commands.RunCommand(mcs_commands,
                                             mcs_faDir,
-                                            env=my_env, 
+                                            env=my_env,
                                             nthreads=options.recur_nthreads,
                                             delete_files=True,
                                             files_to_keep=["fasta", "fa"],
@@ -1113,12 +1147,12 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(prepend + "Monte-Carlo Simulation complete.\n", extra={'to_file': True, 'to_console': True})
                 else:
                     if gene_tree is None:
-                        production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip Step3.\n", 
+                        production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip Step3.\n",
                                             extra={'to_file': True, 'to_console': True})
                     else:
-                        production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip Step2.\n", 
+                        production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip Step2.\n",
                                             extra={'to_file': True, 'to_console': True})
-                    
+
                 for file in util.iter_dir(real_phyDir):
                     file_path = os.path.join(real_phyDir, file)
                     if os.path.exists(file_path):
@@ -1149,41 +1183,41 @@ def main(args: Optional[List[str]] = None):
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Starting create substitution matrices for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
                 production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
-                
-                mcs_results = process_mcs_files_in_chunks(mcs_alnDir, 
+
+                mcs_results = process_mcs_files_in_chunks(mcs_alnDir,
                                                 parent_list,
-                                                child_list, 
-                                                residue_dict, 
+                                                child_list,
+                                                residue_dict,
                                                 options.nthreads,
                                                 isnuc_fasta,
                                                 options.sequence_type,
-                                                res_loc_list, 
+                                                res_loc_list,
                                                 production_logger,
                                                 width,
                                                 dash_exist=dash_exist,
-                                                binary_sequence_dict=binary_combined_seq_dict,  
+                                                binary_sequence_dict=binary_combined_seq_dict,
                                                 update_cycle=options.update_cycle,
                                                 mcs_batch_size=options.mcs_batch_size)
 
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Substitution matrices creation complete.\n")
-                
+
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "Starting compute p values.")
 
 
-                recurrence_list_pvalue = compute_p_values(mcs_results, 
+                recurrence_list_pvalue = compute_p_values(mcs_results,
                                                         recurrence_list,
                                                         residue_dict,
                                                         options.nalign)
-                
+
                 recurrence_list_updated = update_recurrence_list(rec_loc_count_dict,
                                                                 recurrence_list_pvalue,
                                                                 combined_prot_seqs_dict,
                                                                 species_of_interest,
                                                                 residue_dict_flip,
                                                                 protein_len)
-                
+
                 filewriter.WriteRecurrenceList(recurrence_list_updated, filehandler.GetRecurrenceListFN(recurrenceDir))
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "p values computing complete.", extra={'to_file': True, 'to_console': True})
@@ -1191,7 +1225,7 @@ def main(args: Optional[List[str]] = None):
                 d_results = os.path.normpath(filehandler.GetResultsDirectory()) + os.path.sep
                 rec_results = os.path.normpath(filehandler.GetRecurrenceListFN(recurrenceDir))
                 production_logger.info("\nResults:\n    %s\n" % rec_results, extra={'to_file': True, 'to_console': True})
-                
+
                 del parent_list, child_list, combined_prot_seqs_dict, alignment_dict, rec_loc_count_dict, recurrence_list
                 del recurrence_list_pvalue, recurrence_list_updated
                 gc.collect()
@@ -1226,7 +1260,7 @@ def main(args: Optional[List[str]] = None):
 
         end_main = time.perf_counter()
         duration_main = end_main - start_main
-       
+
         if production_logger:
             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
             production_logger.info(prepend + "RECUR run completed\n", extra={'to_file': True, 'to_console': True})
@@ -1241,6 +1275,6 @@ def main(args: Optional[List[str]] = None):
 
         cleanup()
         kill_child_processes(os.getpid())
-        
+
 if __name__ == "__main__":
-    main() 
+    main()

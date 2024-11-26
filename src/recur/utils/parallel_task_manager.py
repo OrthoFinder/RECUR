@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import subprocess
-import contextlib
-import warnings
-import threading
 import concurrent.futures
-from typing import Optional, List, Set, Dict
-
+import contextlib
+import os
+import subprocess
+import sys
+import threading
+import warnings
+from typing import Dict, List, Optional, Set
 
 # uncomment to get round problem with python multiprocessing library that can set all cpu affinities to a single cpu
 # This can cause use of only a limited number of cpus in other cases so it has been commented out
@@ -19,9 +18,9 @@ from typing import Optional, List, Set, Dict
 
 lock = threading.RLock()
 
-def RunCommand(command: str, 
+def RunCommand(command: str,
                env: Optional[Dict[str, str]] = None,
-               qPrintOnError: bool = False, 
+               qPrintOnError: bool = False,
                qPrintStderr: bool = True) -> int:
     try:
         popen = subprocess.Popen(command, env=env, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -49,17 +48,17 @@ def RunCommand(command: str,
             print(f"Exception: {e}")
         return -1
 
-def clean_up_files(fileDir: str, 
-                   processed_files: Set[str], 
+def clean_up_files(fileDir: str,
+                   processed_files: Set[str],
                    already_deleted_files: Set[str],
-                   files_to_keep: Optional[List[str]] = None, 
+                   files_to_keep: Optional[List[str]] = None,
                    files_to_remove: Optional[List[str]] = None) -> None:
     with lock:
         for file in os.listdir(fileDir):
             file_path = os.path.join(fileDir, file)
             if os.path.isfile(file_path) and os.path.exists(file_path):
                 if file_path in already_deleted_files:
-                    continue 
+                    continue
                 if files_to_keep:
                     if file_path in processed_files or \
                        file.rsplit(".", 1)[-1].lower() not in files_to_keep:
@@ -94,17 +93,17 @@ def set_file_descriptor_limit(new_limit: int) -> None:
     except Exception as e:
         print(f"Unexpected error: {e}")
 
-def RunParallelCommands(nProcesses: int, 
-                        commands: List[str], 
-                        fileDir: str, 
-                        env: Optional[Dict[str, str]] = None, 
-                        delete_files: bool = False, 
-                        files_to_keep: Optional[List[str]] = None, 
-                        files_to_remove: Optional[List[str]] = None, 
-                        q_print_on_error: bool = False, 
+def RunParallelCommands(nProcesses: int,
+                        commands: List[str],
+                        fileDir: str,
+                        env: Optional[Dict[str, str]] = None,
+                        delete_files: bool = False,
+                        files_to_keep: Optional[List[str]] = None,
+                        files_to_remove: Optional[List[str]] = None,
+                        q_print_on_error: bool = False,
                         q_always_print_stderr: bool = False,
                         fd_limit: Optional[int] = None):
-    
+
     processed_files: Set[str] = set()
     already_deleted_files: Set[str] = set()
 
@@ -120,9 +119,18 @@ def RunParallelCommands(nProcesses: int,
                                        cmd,
                                        env,
                                        q_print_on_error,
-                                       q_always_print_stderr) 
+                                       q_always_print_stderr)
                        for cmd in commands]
-            concurrent.futures.wait(futures)
+            # concurrent.futures.wait(futures)
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    result = future.result()
+                    if result != 0:
+                        if q_print_on_error:
+                            print(f"ERROR occurred with command: {future}")
+                except Exception as exc:
+                    if q_print_on_error:
+                        print(f"Exception occurred with command: {future}, Error: {exc}")
 
         if delete_files:
             # util.PrintTime("Cleaning up the directory.")

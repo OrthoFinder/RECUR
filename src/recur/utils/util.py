@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 #
-import os
-import sys
 import datetime
-from recur.citation import citation, print_citation
-from typing import List, Dict, Tuple, Optional, Iterator
-from recur import genetic_codes, helpinfo
-from importlib import resources as impresources
-import psutil
 import logging
 import logging.config
-import yaml
-import traceback
+import os
 import re
-import numpy as np
+import sys
+import traceback
+from importlib import resources as impresources
+from typing import Dict, Iterator, List, Optional, Tuple
 
-reserved_chars = ['-', 'B', 'O', 'J', 'Z', 'U', 'X'] # B O J X Z U ':', '*', '.', '+', ' ' 
+import numpy as np
+import psutil
+import yaml
+
+from recur import genetic_codes, helpinfo
+from recur.citation import citation, print_citation
+
+reserved_chars = ['-', 'B', 'O', 'J', 'Z', 'U', 'X'] # B O J X Z U ':', '*', '.', '+', ' '
 # reserved_chars_index = [*range(20, 20 + len(reserved_chars))]
 
 residues = ['C', 'S', 'T', 'A', 'G', 'P', 'D', 'E', 'Q', 'N', \
@@ -31,14 +33,14 @@ class ConsoleOnlyFilter(logging.Filter):
 class FileOnlyFilter(logging.Filter):
     def filter(self, record):
         return getattr(record, 'to_file', True)
-    
-def setup_logging(log_folder: str, 
-                  mode: Optional[str] = "w", 
+
+def setup_logging(log_folder: str,
+                  mode: Optional[str] = "w",
                   formatter: Optional[str] = "brief") -> logging.Logger:
     try:
         base_path = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir))
         log_config_path = os.path.join(base_path, 'logging_config.yaml')
-        
+
         if not os.path.exists(log_config_path):
             print(f"Contents of the base path ({base_path}): {os.listdir(base_path)}")
             raise FileNotFoundError(f"Log configuration file not found at {log_config_path}")
@@ -85,7 +87,7 @@ def setup_logging(log_folder: str,
 
     return production_logger
 
-def log_memory_usage(tag="", production_logger=None):
+def log_memory_usage(tag: str = "", production_logger: Optional[logging.Logger] = None) -> None:
     process = psutil.Process(os.getpid())
     mem = process.memory_info().rss / (1024 ** 3)
     if production_logger:
@@ -115,7 +117,7 @@ def print_centered_text(width: int, text: str) -> None:
         print()
 
 def get_system_info() -> None:
-    num_cpus = psutil.cpu_count(logical=False) 
+    num_cpus = psutil.cpu_count(logical=False)
     num_logical_cpus = psutil.cpu_count(logical=True)
     print("\nMachine Information:")
     print(f"Number of Physical CPUs: {num_cpus}, Number of Logical CPUs: {num_logical_cpus}")
@@ -131,7 +133,7 @@ def get_system_info() -> None:
                       f"Parent Process ID: {proc.info['ppid']}")
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-    
+
     print(f"Total RECUR processes found: {recur_proc}")
     if recur_proc > 2:
         print("More than two processes found, please cleanup the RECUR processes and rerun RECUR!")
@@ -149,14 +151,14 @@ def CheckSequenceType(alignments: List[str]) -> bool:
     for aln in alignments:
         unique_res = set(aln)
         unique_res.difference_update(set(special_chars))
-        diff_aln = unique_res - nuc 
+        diff_aln = unique_res - nuc
         if any(item in diff_aa_nuc for item in diff_aln):
             isnuc = False
             break
     return isnuc
 
 def ImportCodon(code_name: str) -> Dict[str, str]:
-    
+
     code_fn = code_name.lower() + ".txt"
     codon_table = {}
     try:
@@ -164,10 +166,10 @@ def ImportCodon(code_name: str) -> Dict[str, str]:
             for line in reader:
                 codon, letter = line.strip().split()
                 codon_table[codon] = letter
-            
+
     except FileNotFoundError as e:
             print(f"File not found: {e.filename}")
-    
+
     return codon_table
 
 def Translate(seq: str, table: Dict[str, str]) -> str:
@@ -183,13 +185,13 @@ def Translate(seq: str, table: Dict[str, str]) -> str:
 
     return protein
 
-def GetSeqsDict(dna_seq_dict: Dict[str, str], 
+def GetSeqsDict(dna_seq_dict: Dict[str, str],
                 sequence_type: str) -> Tuple[Dict[str, str], int]:
 
     codon_table = ImportCodon(sequence_type)     #NCBI's genetic code 11 (for plant plastids)
 
     prot_sequence_dict = {
-        node: Translate(seq, codon_table) 
+        node: Translate(seq, codon_table)
         for node, seq in dna_seq_dict.items()
     }
     protein_len = len(next(iter(prot_sequence_dict.values())))
@@ -205,12 +207,12 @@ def Fail():
     print(traceback.format_exc())
     helpinfo.PrintHelp()
     sys.exit(1)
-               
-def GetDirectoryName(baseDirName: str, 
-                     i: int, 
-                     sequence_type: str, 
+
+def GetDirectoryName(baseDirName: str,
+                     i: int,
+                     sequence_type: str,
                      extended_filename: bool) -> str:
-    
+
     if not extended_filename:
         if i == 0:
             return baseDirName + os.sep
@@ -221,12 +223,12 @@ def GetDirectoryName(baseDirName: str,
         extension = sequence_type
 
         if i == 0:
-            return baseDirName + "_" + extension + os.sep 
+            return baseDirName + "_" + extension + os.sep
         else:
             return baseDirName + ("_%d" % i) + "_" + extension + os.sep
 
-def CreateNewWorkingDirectory(baseDirectoryName: str, 
-                              sequence_type: str, 
+def CreateNewWorkingDirectory(baseDirectoryName: str,
+                              sequence_type: str,
                               qDate: bool = True,
                               extended_filename: bool = False,
                               keepprev: bool = False) -> str:
@@ -240,37 +242,37 @@ def CreateNewWorkingDirectory(baseDirectoryName: str,
         baseDirectoryName = baseDirectoryName  + dateStr
         while os.path.exists(newDirectoryName):
             iAppend += 1
-            newDirectoryName = GetDirectoryName(baseDirectoryName, 
-                                                iAppend, 
+            newDirectoryName = GetDirectoryName(baseDirectoryName,
+                                                iAppend,
                                                 sequence_type,
                                                 extended_filename)
 
     os.makedirs(newDirectoryName, exist_ok=True)
 
     return newDirectoryName
-   
+
 def WriteCitation(d: str) -> None:
     with open(d + "Citation.txt", 'w') as outfile:
         outfile.write(citation)
 
 def PrintCitation(d: Optional[str] = None) -> None:
-    if d is not None: 
+    if d is not None:
         WriteCitation(d)
     print()
-    print(print_citation)  
+    print(print_citation)
 
 def iter_dir(d: Optional[str] = None) -> Iterator[str]:
-    if d is None: 
+    if d is None:
         Fail()
     with os.scandir(d) as entries:
         for entry in entries:
             if entry.is_file():
                 yield entry.name
 
-def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int], 
+def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int],
                             protein_len: int) -> Dict[int, List[Tuple[int, int, int]]]:
-    
-    
+
+
     res_loc_info_dict: Dict[int, List[Tuple[int, int, int]]] = {
         res_loc: [] for res_loc in range(protein_len)
     }
@@ -282,11 +284,11 @@ def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int],
         res_loc: sorted(val, key=lambda x: x[-1], reverse=True) if val else []
         for res_loc, val in res_loc_info_dict.items()
     }
-    
+
     return res_loc_info_dict_sorted
 
 def CheckOutgroups(outgroups_mrca: List[str], alignment_dict: Dict[str, str]) -> Tuple[List[str], bool]:
-   
+
     outgroups = []
     preserve_underscores = False
     alignment_names = {}
@@ -305,10 +307,10 @@ def CheckOutgroups(outgroups_mrca: List[str], alignment_dict: Dict[str, str]) ->
             print(f"Outgroup sequence {outgroup} is not found in the multiple sequence alignment.")
             print(traceback.format_exc())
             sys.exit(1)
-        
+
     return outgroups, preserve_underscores
-        
-def ConvertToBinary(alignment_dict: Dict[str, str]) -> Dict[str, str]: 
+
+def ConvertToBinary(alignment_dict: Dict[str, str]) -> Dict[str, str]:
     msa_binary = {}
     for label, seq in alignment_dict.items():
         binary_seq = [
@@ -319,13 +321,13 @@ def ConvertToBinary(alignment_dict: Dict[str, str]) -> Dict[str, str]:
     return msa_binary
 
 
-def ConvertToSequence(parent_list: List[str], 
-                      child_list: List[str], 
+def ConvertToSequence(parent_list: List[str],
+                      child_list: List[str],
                       parent_arr: np.ndarray,
                       child_arr: np.ndarray,
                       residue_dict_flip: Dict[int, str],
                       ) -> Dict[str, str]:
-    
+
     new_seq = {}
     for i in range(len(parent_list)):
         parent, child = parent_list[i], child_list[i]
@@ -333,5 +335,4 @@ def ConvertToSequence(parent_list: List[str],
         new_seq[parent] = "".join([residue_dict_flip[num] if num != 0 else "-" for num in parent_arr[i, :]])
         new_seq[child] = "".join([residue_dict_flip[num] if num != 0 else "-" for num in child_arr[i, :]])
 
-    return new_seq    
-
+    return new_seq

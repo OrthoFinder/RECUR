@@ -1,16 +1,16 @@
-name: ' Get and Cache dependencies'
-description: 'Get the dependencies and cache them'
+name: " Get and Cache dependencies"
+description: "Get the dependencies and cache them"
 inputs:
   caching:
-    description: 'whether to cache dependencies or not'
+    description: "whether to cache dependencies or not"
     required: false
-    default: 'true'
+    default: "true"
 outputs:
   used-cache:
-    description: 'Whether the cache was used'
+    description: "Whether the cache was used"
     value: ${{ steps.cache.outputs.cache-hit }}
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Set up Python ${{ matrix.python-version }}
       if: inputs.caching == 'true'
@@ -18,7 +18,7 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'pip'  # Use built-in pip cache
+        cache: "pip" # Use built-in pip cache
 
     - name: Install dependencies
       id: install

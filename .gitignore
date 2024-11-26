@@ -74,6 +74,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# Ruff stuff:
+.ruff_cache
+
 # Sphinx documentation
 docs/_build/
 
@@ -167,7 +170,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# Orthers 
+# Orthers
 myanalysis/
 ExampleData/*.recur
 ExampleData/*.recur.tsv
@@ -177,3 +180,9 @@ PEPC/
 TestData/
 benchmark/
 RCA/
+.pre-commit-config.yaml
+Makefile
+build-manylinuxwheel.sh
+build-package.sh
+build-wheels.sh
+dependency-graph.png

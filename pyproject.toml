@@ -5,18 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "recur"
 authors = [
-    {name = "Elizabeth Robbins", email = "lizzie.robbins1@gmail.com"},
-    {name = "Yi Liu", email = "caoxen7ys@yahoo.com"}
+    { name = "Elizabeth Robbins", email = "lizzie.robbins1@gmail.com" },
+    { name = "Yi Liu", email = "caoxen7ys@yahoo.com" },
 ]
 description = "recurrant evolution"
 readme = "README.md"
-version= "1.0.0"
+version = "1.0.0"
 requires-python = ">=3.9"
-keywords = [
-    "Reccurant Evolution",
-    "Monte-Carlo",  
-    "Phylogeneticrelationships"
-]
+keywords = ["Reccurant Evolution", "Monte-Carlo", "Phylogeneticrelationships"]
 license = { file = "LICENSE" }
 classifiers = [
     # How mature is this project? Common values are
@@ -33,10 +29,10 @@ classifiers = [
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
 
     # Specify the Python versions you support here.
-    'Programming Language :: Python :: 3.9', # 
+    'Programming Language :: Python :: 3.9',  #
     "Programming Language :: Python :: 3.10", # base version
-    "Programming Language :: Python :: 3.11", # 
-    "Programming Language :: Python :: 3.12", # 
+    "Programming Language :: Python :: 3.11", #
+    "Programming Language :: Python :: 3.12", #
 ]
 dependencies = [
     "numpy",
@@ -45,26 +41,35 @@ dependencies = [
     "types-PyYAML",
     "resource",
     "psutil",
-    "rich"
+    "rich",
 ]
 
 [project.urls]
 repository = "https://github.com/OrthoFinder/RECUR"
 
 [project.optional-dependencies]
-build = ["build", "twine"]
-dev = [
-    "python-semantic-release",
-    "mypy",
-    "pytest",
-    "pytest-cov",
-    "memory_profiler",
+all = ["recur[build,dev,test]"]
+build = [
     "build",
+    "twine",
     "wheel",
     "setuptools>=64",
     "setuptools_scm>=8",
-    "packaging"
+    "packaging",
 ]
+dev = [
+    "python-semantic-release",
+    "mypy",
+    "memory_profiler",
+    "ruff",
+    "black",
+    "pipdeptree",
+    "graphviz",                # `sudo apt-get install graphviz` need to install
+]
+test = ["pytest", "pytest-cov[all]"]
+
+# pip install '.[dev]'
+# pipdeptree -p recur --graph-output png > dependency-graph.png
 
 [project.scripts]
 recur = "recur.run.__main__:main"
@@ -72,14 +77,17 @@ recur = "recur.run.__main__:main"
 [tool.semantic_release]
 version_variable = "pyproject.toml:version"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = [
-    "recur",
-    "recur.bin",
-    "recur.genetic_codes",
-    "recur.run",
-    "recur.utils"
+    "recur*",
+    #    "recur.bin",
+    #    "recur.genetic_codes",
+    #    "recur.run",
+    #    "recur.utils"
 ]
 
 [tool.setuptools.package-data]
@@ -87,6 +95,9 @@ include = [
 "recur.genetic_codes" = ["*"]
 "recur" = ["logging_config.yaml"]
 "ExampleData" = ["*"]
+
+#[tool.setuptools.data-files]
+#"bin" = ["recur.bin.iqtree2"]
 
 [tool.setuptools.exclude-package-data]
 recur = ["**/__pycache__", "**/*.pyc", "tests"]
@@ -117,7 +128,54 @@ no_implicit_reexport = true
 [tool.setuptools_scm]
 version_file = "src/recur/_version.py"
 version_scheme = "no-guess-dev"
-root = "."  
+root = "."
 tag_regex = "^(?P<prefix>v)?(?P<version>[^\\+]+)(?P<suffix>.*)?$"
 fallback_version = "1.0.0"
 local_scheme = "dirty"
+
+[tool.black]
+line-length = 119
+exclude = "venv"
+
+[tool.flake8]
+docstring-convention = "all"
+ignore = ["D107", "D212", "E501", "W503", "W605", "D203", "D100"]
+exclude = ["venv"]
+max-line-length = 99
+
+# radon
+radon-max-cc = 10
+
+[tool.isort]
+profile = "black"
+multi_line_output = "VERTICAL_HANGING_INDENT"
+force_grid_wrap = 2
+line_length = 99
+
+[tool.pylint."message control"]
+disable = [
+    "line-too-long",
+    "trailing-whitespace",
+    "missing-function-docstring",
+    "consider-using-f-string",
+    "import-error",
+    "too-few-public-methods",
+    "redefined-outer-name",
+]
+
+[tool.ruff]
+# ruff check --config ./pyproject.toml src
+# Enable flake8-bugbear (`B`) rules.
+select = ["E", "F", "B", "ERA"]
+
+# Never enforce `E501` (line length violations).
+ignore = ["E501", "ERA001"]
+
+# Avoid trying to fix flake8-bugbear (`B`) violations.
+unfixable = ["B"]
+
+line-length = 99
+
+# Ignore `E402` (import violations) in all `__init__.py`
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["E402"]

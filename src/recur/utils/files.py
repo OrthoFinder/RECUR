@@ -2,32 +2,33 @@
 # -*- coding: utf-8 -*-
 
 import os
-import numpy as np
-from typing import Dict, List, Optional, Union, Tuple, Set
-from recur.utils import util, process_args
-from recur import __version__
-import dendropy
 import sys
 import traceback
+from typing import Dict, List, Optional, Set, Tuple, Union
 
-class FileHandler(object):  
+import dendropy
+import numpy as np
+
+from recur import __version__
+from recur.utils import process_args, util
+
+
+class FileHandler(object):
 
     def __init__(self):
-        self.wd_base = []               # Base: blast, species & sequence IDs, species fasta files - should not request this and then write here
-        self.wd_current = ""          # Location to write out any new files
-        self.rd1 = "" 
-        self.species_ids_corrected = None
+        self.wd_current = ""
+        self.rd1 = ""
         self.gene_of_interest = None
 
     def CreateOutputDirectories(self, options: process_args.Options, base_dir: str) -> None:
 
         if options.name == "":
-            self.rd1 = util.CreateNewWorkingDirectory(base_dir, 
+            self.rd1 = util.CreateNewWorkingDirectory(base_dir,
                                                       options.sequence_type,
                                                       extended_filename=options.extended_filename,
                                                       keepprev=options.keepprev)
         else:
-            self.rd1 = util.CreateNewWorkingDirectory(base_dir + "_" + options.name, 
+            self.rd1 = util.CreateNewWorkingDirectory(base_dir + "_" + options.name,
                                                       options.sequence_type,
                                                       qDate=False,
                                                       extended_filename=options.extended_filename,
@@ -35,7 +36,6 @@ class FileHandler(object):
         self.wd_current = self.rd1
         if not os.path.exists(self.wd_current):
             os.makedirs(self.wd_current, exist_ok=True)
-        self.wd_base = [self.wd_current]  
 
 
     def CheckFileCorrespondance(self, gene: str, state_file: str, tree_file:str) -> None:
@@ -44,11 +44,11 @@ class FileHandler(object):
         if gene != gene_statfile and gene !=  gene_treefile:
             print('ERROR: Gene files have not been correctly processed')
             util.Fail()
-    
+
     @staticmethod
     def ProcessesNewAln(alnDir: str, alnPath: Optional[str] = None) -> Dict[str, str]:
         originalALNFilenames = {}
-        
+
         if alnPath is None:
             alnExtensions = {"aln", "fasta", "fa", "faa"} # need to add more potential file extensions
             if not os.path.exists(alnDir):
@@ -68,7 +68,7 @@ class FileHandler(object):
                 for f in excludedFiles:
                     print(f"    {f}")
                 print("RECUR expects ALN files to have one of the following extensions: %s" % (", ".join(alnExtensions)))
-            
+
             if len(originalALNFilenames) == 0:
                 print("\nNo fasta files found in supplied directory: %s" % alnDir)
                 util.Fail()
@@ -81,7 +81,7 @@ class FileHandler(object):
                     originalALNFilenames[gene_of_interest] = alnPath
             else:
                 originalALNFilenames[f] = alnPath
-        
+
         return originalALNFilenames
 
     @staticmethod
@@ -104,133 +104,138 @@ class FileHandler(object):
             print(f"ERROR in updating labels to the treefile {treefile}: {e}")
 
     def GetBinaryStateFileFN(self) -> str:
-        if self.GetBinaryPhylogenyDir() is None: 
+        if self.GetBinaryPhylogenyDir() is None:
             raise Exception("No Indel_Estimation directory.")
         statefile = [os.path.join(self.GetBinaryPhylogenyDir(), file) for file in os.listdir(self.GetBinaryPhylogenyDir()) if file.endswith(".state")][0]
-        return statefile 
-    
+        return statefile
+
     def GetBinaryTreeFileFN(self) -> str:
-        if self.GetBinaryPhylogenyDir() is None: 
+        if self.GetBinaryPhylogenyDir() is None:
             raise Exception("No Indel_Estimation directory.")
         treefile = [os.path.join(self.GetBinaryPhylogenyDir(), file) for file in os.listdir(self.GetBinaryPhylogenyDir()) if file.endswith(".treefile")][0]
-        return treefile 
-    
+        return treefile
+
     def GetBinarySeqsFN(self) -> str:
-        if self.GetBinaryPhylogenyDir() is None: 
+        if self.GetBinaryPhylogenyDir() is None:
             raise Exception("No Indel_Estimation directory.")
         binary_seqs_file = os.path.join(self.GetBinaryPhylogenyDir(), f"{self.gene_of_interest}.binary_sequences.aln")
-        return binary_seqs_file 
-    
+        return binary_seqs_file
+
     def GetBinaryNodeSeqsFN(self) -> str:
-        if self.GetBinaryPhylogenyDir() is None: 
+        if self.GetBinaryPhylogenyDir() is None:
             raise Exception("No Indel_Estimation directory.")
         node_seqs_file = os.path.join(self.GetBinaryPhylogenyDir(), f"{self.gene_of_interest}.inferred_binary_sequences.aln")
-        return node_seqs_file 
+        return node_seqs_file
 
     def GetStateFileFN(self) -> str:
-        if self.GetRealPhylogenyDir() is None: 
+        if self.GetRealPhylogenyDir() is None:
             raise Exception("No Real_Phylogeny directory.")
         statefile = [os.path.join(self.GetRealPhylogenyDir(), file) for file in os.listdir(self.GetRealPhylogenyDir()) if file.endswith(".state")][0]
-        return statefile 
-    
+        return statefile
+
     def GetTreeFileFN(self) -> str:
-        if self.GetRealPhylogenyDir() is None: 
+        if self.GetRealPhylogenyDir() is None:
             raise Exception("No Real_Phylogeny directory.")
         treefile = [os.path.join(self.GetRealPhylogenyDir(), file) for file in os.listdir(self.GetRealPhylogenyDir()) if file.endswith(".treefile")][0]
-        return treefile 
+        return treefile
 
     def GetIQTreeFileFN(self) -> str:
-        if self.GetRealPhylogenyDir() is None: 
+        if self.GetRealPhylogenyDir() is None:
             raise Exception("No Real_Phylogeny directory.")
         iqtreefile = [os.path.join(self.GetRealPhylogenyDir(), file) for file in os.listdir(self.GetRealPhylogenyDir()) if file.endswith(".iqtree")][0]
-        return iqtreefile 
+        return iqtreefile
 
     def GetMutCountMatricesFN(self) -> str:
-        if self.GetMutMatrixDir() is None: 
+        if self.GetMutMatrixDir() is None:
             raise Exception("No Substitution_Matrices directory.")
         mut_matrix_file = os.path.join(self.GetMutMatrixDir(), f"{self.gene_of_interest}.substituion_matrix.tsv")
-        return mut_matrix_file 
+        return mut_matrix_file
 
     def GetAccumMutCountMatricesFN(self) -> str:
-        if self.GetMutMatrixDir() is None: 
+        if self.GetMutMatrixDir() is None:
             raise Exception("No Substitution_Matrices directory.")
         mut_matrix_file = os.path.join(self.GetMutMatrixDir(), f"{self.gene_of_interest}.accum_substituion_matrix.txt")
-        return mut_matrix_file 
+        return mut_matrix_file
 
     def GetCombinedDNASeqsFN(self) -> str:
-        if self.GetInferredSeqsDir() is None: 
+        if self.GetInferredSeqsDir() is None:
             raise Exception("No Inferred_Sequences directory.")
         combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.combined_dna_sequences.aln")
-        return combined_seqs_file 
-    
+        return combined_seqs_file
+
     def GetNodeDNASeqsFN(self) -> str:
-        if self.GetInferredSeqsDir() is None: 
+        if self.GetInferredSeqsDir() is None:
             raise Exception("No Inferred_Sequences directory.")
         node_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.dna.aln")
-        return node_seqs_file 
+        return node_seqs_file
 
     def GetCombinedProtSeqsFN(self) -> str:
-        if self.GetInferredSeqsDir() is None: 
+        if self.GetInferredSeqsDir() is None:
             raise Exception("No Inferred_Sequences directory.")
         combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.recur_combined_protein_sequences.aln")
-        return combined_seqs_file 
+        return combined_seqs_file
 
     def GetNodeProtSeqsFN(self) -> str:
-        if self.GetInferredSeqsDir() is None: 
+        if self.GetInferredSeqsDir() is None:
             raise Exception("No Inferred_Sequences directory.")
         node_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.prot.aln")
-        return node_seqs_file 
+        return node_seqs_file
 
     def GetRecurrenceListFN(self, recDir: Optional[str] = None) -> str:
-        if recDir is None: 
+        if recDir is None:
             raise Exception("No Results directory.")
-        
+
         recurrence_list_file = os.path.join(recDir, f"{self.gene_of_interest}.recur.tsv")
         return recurrence_list_file
 
     def GetMCSimulationTreeFN(self) -> str:
-        if self.GetMCSimulationDir() is None: 
+        if self.GetMCSimulationDir() is None:
             raise Exception("No Monte_Carlo_Simuation directory.")
         mcs_treefile = [os.path.join(self.GetMCSimulationDir(), file) for file in os.listdir(self.GetMCSimulationDir()) if file.endswith("alisim.full.treefile")]
-        
+
         if len(mcs_treefile) == 0:
             raise Exception("No Monte Carlo Simulated treefile.")
-        
+
         return mcs_treefile[0]
 
     def GetMutMatrixDir(self) -> str:
         d = self.rd1 + "Substitution_Matrices" + os.sep
-        if not os.path.exists(d): os.mkdir(d)
+        if not os.path.exists(d):
+            os.mkdir(d)
         return d
 
     def GetInferredSeqsDir(self) -> str:
         d = self.rd1 + "Inferred_Sequences" + os.sep
-        if not os.path.exists(d): os.mkdir(d)
+        if not os.path.exists(d):
+            os.mkdir(d)
         return d
 
     def GetMCSimulationDir(self) -> str:
         d = self.rd1 + "Monte_Carlo_Similation" + os.sep
-        if not os.path.exists(d): os.mkdir(d)
+        if not os.path.exists(d):
+            os.mkdir(d)
         return d
-    
+
     def GetBinaryPhylogenyDir(self) -> str:
         d = self.rd1 + "Indel_Estimation" + os.sep
-        if not os.path.exists(d): os.mkdir(d)
+        if not os.path.exists(d):
+            os.mkdir(d)
         return d
 
     def GetRealPhylogenyDir(self) -> str:
         d = self.rd1 + "Real_Phylogeny" + os.sep
-        if not os.path.exists(d): os.mkdir(d)
+        if not os.path.exists(d):
+            os.mkdir(d)
         return d
-        
+
     def GetResultsDirectory(self) -> str:
         if self.rd1 is None: raise Exception("No rd1")
         return self.rd1
-        
+
 
 class FileReader(object):
 
-    @staticmethod    
+    @staticmethod
     def ReadAlignment(fn: str) -> Tuple[Dict[str, str], int, bool]:
         msa: Dict[str, str] = dict()
         accession = ""
@@ -250,7 +255,7 @@ class FileReader(object):
                                 sys.stderr.flush()
                                 print(traceback.format_exc())
                                 sys.exit(1)
-                            
+
                         seq_len_set.add(len(seq))
 
                     # accession = line[1:].replace('_', ' ')
@@ -282,7 +287,7 @@ class FileReader(object):
                     sys.exit(1)
 
         return msa, len(seq), dash_exist
-    
+
     @staticmethod
     def ReadStateFile(fn: str) -> Dict[str, str]:
 
@@ -306,11 +311,11 @@ class FileReader(object):
             for line in reader:
                 if "Best-fit model" in line or "Model of substitution" in line:
                     best_evolution_model = line.replace("\n", "").strip().split(": ")[-1]
-                
+
         return best_evolution_model
-    
+
     @staticmethod
-    def ConverToBinary(fn: str) -> Dict[str, str]: 
+    def ConverToBinary(fn: str) -> Dict[str, str]:
         msa_binary = {}
         accession = ""
         seq = ""
@@ -326,7 +331,7 @@ class FileReader(object):
                         accession = accession.replace('>', '')
                     seq = ""
                 else:
-                    
+
                     binary_line = [
                         1 if l in util.residues else 0 if l in util.reserved_chars else 2 for l in line
                     ]
@@ -348,11 +353,11 @@ class FileReader(object):
 class FileWriter(object):
 
     @staticmethod
-    def WriteMutMatrix(res_loc_count_dict: Dict[Tuple[int, int, int], int], 
+    def WriteMutMatrix(res_loc_count_dict: Dict[Tuple[int, int, int], int],
                         residue_dict_flip: Dict[int, str],
                         protein_len: int,
                         mut_matrix_path: str,
-                        accum_matrix_path: str) -> None: 
+                        accum_matrix_path: str) -> None:
 
         res_loc_info_dict = util.get_sorted_res_loc_info(res_loc_count_dict, protein_len)
         colname = ["Site", "Parent>Child:SubCount", "RowIndex", "ColIndex"]
@@ -360,7 +365,7 @@ class FileWriter(object):
 
         with open(mut_matrix_path, "w") as writer:
             writer.write("\t".join(colname) + "\n")
-            
+
             for pos, item in sorted(res_loc_info_dict.items()):
                 if len(item) == 0:
                     line = "\t".join((str(pos+1), "-", "-", "-"))
@@ -377,12 +382,12 @@ class FileWriter(object):
                         parent_child.append(">".join((parent, child)) + ":" + str(data))
                         rows.append(parent_id)
                         cols.append(child_id)
-                        
+
                     parent_child_str = ",".join(parent_child)
                     row_str = ",".join(map(str, np.array(rows)))
                     col_str = ",".join(map(str, np.array(cols)))
                     line = "\t".join((str(pos+1), parent_child_str, row_str, col_str))
-                
+
                 line += "\n"
                 writer.write(line)
 
@@ -395,7 +400,7 @@ class FileWriter(object):
             col_val = "          ".join((" ", col_val)) + "\n"
             writer.write(col_val)
             writer.write(col_index)
-            
+
             for i in range(accum_mutation_matrix.shape[0]):
                 row_str = "    ".join(map(str, accum_mutation_matrix[i]))
                 row_str = "    ".join((util.residues[i], row_str))
@@ -418,7 +423,7 @@ class FileWriter(object):
     def WriteRecurrenceList(recurrence_list: List[List[Union[str, int, float]]],
                             outFilename: str) -> None:
 
-        colname = ['Site', 'Parent', 'Child', 'Recurrence', 
+        colname = ['Site', 'Parent', 'Child', 'Recurrence',
                    "Reversion", "P-Value", "AllSiteSubs",  "SiteComposition"]
         with open(outFilename, "w") as writer:
             writer.write("\t".join(colname) + "\n")
@@ -426,7 +431,3 @@ class FileWriter(object):
                 if isinstance(rec_list[0], int):
                     rec_list[0] += 1
                 writer.write("\t".join(map(str, rec_list)) + "\n")
-
-
-
-        

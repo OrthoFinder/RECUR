@@ -1,14 +1,15 @@
 
-from recur.citation import print_citation
 from recur import iqtree_nthreads, recur_nthreads
+from recur.citation import print_citation
 
-def PrintHelp():  
+
+def PrintHelp():
 
     print("")
-    print("SIMPLE USAGE:") 
+    print("SIMPLE USAGE:")
     print("Run full RECUR analysis on a protein or codon alignment <dir/file>")
     print("recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CODON>")
-    
+
     print("")
     print("OPTIONS:")
     print("-f <dir/file>                Protein or codon alignment in FASTA format [Required]")
@@ -25,9 +26,9 @@ def PrintHelp():
     print("-iv <str>                    IQ-TREE2 path [Default: local]")
     print("-uc <int>                    Update cycle used in progress bar [Default: no progress bar]")
     print("-bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]")
-    
-    
+
+
     print("")
     print("LICENSE:")
     print(" Distributed under the GNU General Public License (GPLv3). See License.md")
-    print(print_citation) 
+    print(print_citation)

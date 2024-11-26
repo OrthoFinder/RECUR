@@ -66,17 +66,17 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
     ```bash
     pip install -r requirements.txt
     ```
-    Then run 
+    Then run
     ```bash
     python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
     ```
-    to test the installation and the environment. 
+    to test the installation and the environment.
 
-  Once your RECUR job has done, you can run 
+  Once your RECUR job has done, you can run
   ```bash
   deactivate
   ```
-  to deactivate the virtual environment. The next time when you use RECUR, you can simply activate the virtual environment by running 
+  to deactivate the virtual environment. The next time when you use RECUR, you can simply activate the virtual environment by running
   ```bash
   . .venv/bin/activate
   ```
@@ -84,7 +84,7 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
 
   > Note: If python3 doesn't work, try using python instead, or check your `/usr/bin` directory to determine which version of Python is installed on your system. Please note that the current version of RECUR requires Python version 3.9 or higher, but no greater than 3.13.
 
-### Installing RECUR on Windows and MacOS 
+### Installing RECUR on Windows and MacOS
 
   If you are on a Windows machine or a MAC, you need to install IQ-TREE2 before you can run RECUR. You can download the latest version of IQ-TREE2 [here](http://www.iqtree.org/#download).
 
@@ -112,15 +112,15 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   ```
   Now that you have successfully created and activated a new virtual environment, you can follow the three steps mentioned in [Installing RECUR on Linux](#installing-recur-on-linux) to install RECUR or just the python dependencies based on your needs. Then run one of the following commands (depending on whether you have installed RECUR or not) to test if RECUR runs on your machine.
 
-  * With RECUR installed 
+  * With RECUR installed
     ```bash
     recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv system
     ```
-  * Without RECUR installed 
+  * Without RECUR installed
     ```bash
     python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv system
     ```
-  where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package. 
+  where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package.
 
   *To deactivate the virtual enviroment* run
   ```bash
@@ -140,11 +140,11 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   conda install bioconda/label/cf201901::iqtree
   ```
   Now that you have a suitable environment with IQ-TREE2 installed, you can follow the previous steps to install RECUR directly or the relevant dependencies.
-  * With RECUR installed 
+  * With RECUR installed
     ```bash
     recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv conda
     ```
-  * Without RECUR installed 
+  * Without RECUR installed
     ```bash
     python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv conda
     ```
@@ -154,8 +154,8 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   Apart from the above methods, you can also run RECUR inside a container. You can find the RECUR image on [Docker Hub](https://hub.docker.com/repository/docker/orthofinder/recur/general).
 
   - **Personal computer**
-  
-    Before you can run the RECUR container, you need to have Docker Desktop installed. 
+
+    Before you can run the RECUR container, you need to have Docker Desktop installed.
     - Windows: https://docs/images.docker.com/desktop/install/windows-install/
     - macOS: https://docs/images.docker.com/desktop/install/mac-install/
     - Linux: https://docs/images.docker.com/desktop/install/linux-install/
@@ -175,13 +175,13 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
   ```
   To run the RECUR container on your dataset, you will need to create a folder which contains your data in your current working directory. For instance, you have a data folder called MyData which contains a protein alignment file called `my_alignment.aln` and a file called `my_alignment.outgroups.txt` that contains all the outgroups, you can run the following command to start the RECUR container and make it run your dataset.
   ```
-  docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData:Z orthofinder/recur:v1.0.0 recur -f MyData/my_alignment.aln -st AA --outgroups MyData/my_alignment.outgroups.txt   
+  docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData:Z orthofinder/recur:v1.0.0 recur -f MyData/my_alignment.aln -st AA --outgroups MyData/my_alignment.outgroups.txt
   ```
-  Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections. 
+  Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
 
 ## How to Use RECUR
 
-In this section, we will dive deep into the options you can have to run RECUR. The commands shown in this section will assume that you have RECUR installed on your machine. 
+In this section, we will dive deep into the options you can have to run RECUR. The commands shown in this section will assume that you have RECUR installed on your machine.
 
 ### Options Overview
 
@@ -194,7 +194,7 @@ In this section, we will dive deep into the options you can have to run RECUR. T
   -m <str>                     Model of sequence evolution [Default: estimated from alignment]
   -blfix                       Fix branch lengths of tree. [Default: False]
   -nt <int>                    Number of threads provided to IQ-TREE2
-  -t <int>                     Number of threads used for RECUR internal processing 
+  -t <int>                     Number of threads used for RECUR internal processing
   --seed <int>                 Random starting see number [Default: 8]
   -o <txt>                     Results directory [Default: same directory as MSA files]
   -iv <str>                    IQ-TREE2 path [Default: local]
@@ -203,26 +203,26 @@ In this section, we will dive deep into the options you can have to run RECUR. T
 ```
 Please note that the default values for `-t`, `-nt` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
 ```bash
-recur 
+recur
 python3 recur.py
 ```
 ### Simple Usage
 
-The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g., 
+The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g.,
 
 >`recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON>`
 
-* `--outgroups`: informs RECUR how to correctly root the tree. 
+* `--outgroups`: informs RECUR how to correctly root the tree.
 
-   You can either provide a .txt file with each outgroup species listed on a new line, or if you have a small number of outgroup species you can write the species on the command line. e.g., `--outgroups "SpeciesA,SpeciesB,SpeciesC"`. 
+   You can either provide a .txt file with each outgroup species listed on a new line, or if you have a small number of outgroup species you can write the species on the command line. e.g., `--outgroups "SpeciesA,SpeciesB,SpeciesC"`.
 
-* `-st`: signals the sequence type in the MSA. 
+* `-st`: signals the sequence type in the MSA.
 
-   For a protein MSA `-st AA` should be provided. For a codon MSA, the different NCBI genetic codes can be specified (defined [here](http://www.iqtree.org/doc/Substitution-Models#codon-models)). `-st CODON` will use the standard genetic code. 
+   For a protein MSA `-st AA` should be provided. For a codon MSA, the different NCBI genetic codes can be specified (defined [here](http://www.iqtree.org/doc/Substitution-Models#codon-models)). `-st CODON` will use the standard genetic code.
 
 ### Advanced Usage
 
-- Using a constraint tree 
+- Using a constraint tree
 
 To specify the topology of the phylogeny used by RECUR the user can provide a constraint tree using the -te flag. The argument is a file containing a tree in Newick format. E.g.,
 
@@ -238,9 +238,9 @@ A model of sequence evolution (as long as it is supported by IQ-TREE2) can be pr
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> -m <model_of_evolution>
 ```
 
-- Running RECUR on a directory 
+- Running RECUR on a directory
 
-To free you from typing multiple commands in a terminal to run on multiple genes, RECUR provides an option to run on a folder. E.g., 
+To free you from typing multiple commands in a terminal to run on multiple genes, RECUR provides an option to run on a folder. E.g.,
 
 ```bash
 recur [options] -f <directory> --outgroups <directory> -st <AA|CODON> -te <directory>
@@ -250,7 +250,7 @@ For example, if you have three genes files, each have a different set of outgrou
   <img src="./docs/images/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="250"/>
 </p>
 
-If your genes share the same outgroups and tree, you only need to create a single outgroups file and tree file in your data folder. Those two files will be share by all the genes for your RECUR analysis. E.g., 
+If your genes share the same outgroups and tree, you only need to create a single outgroups file and tree file in your data folder. Those two files will be share by all the genes for your RECUR analysis. E.g.,
 
 <p align="center">
   <img src="./docs/images/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="250"/>
@@ -263,12 +263,12 @@ If your genes share the same outgroups and tree, you only need to create a singl
 
 - Running RECUR with parallel processing
 
-To speed up the analysis, RECUR has introduced both multiprocessing and multithreading in the package. By default, the number of threads will be automatically calculated based the configuration of your machine. Alternatively, they can be user specified using the following three options. 
+To speed up the analysis, RECUR has introduced both multiprocessing and multithreading in the package. By default, the number of threads will be automatically calculated based the configuration of your machine. Alternatively, they can be user specified using the following three options.
 
 - `-t`: Number of threads used for the RECUR algorithms
 - `-nt`: Number of threads for IQ-TREE2 to run in parallel
 
-Note, the number of threads cannot exceed the computer allowance. 
+Note, the number of threads cannot exceed the computer allowance.
 
 > * `-t` <= maximum_num_logical_threads
 > * `-nt` <= maximum_num_logical_threads
@@ -287,9 +287,9 @@ If you do not specify the output folder using `-o`, the results are located in t
   <img src="./docs/images/RECUR_output_structure.PNG" alt="RECUR output structure" width="500"/>
 </p>
 
-The list of recurrent substitutions is found in the `*.recur.tsv` file. Additional results of intermediate steps can be found in the `.recur` folder. 
+The list of recurrent substitutions is found in the `*.recur.tsv` file. Additional results of intermediate steps can be found in the `.recur` folder.
 
-Inside the `*.recur` folder, you will find two `*.txt` files, i.e., `Citation.txt` and `Log.txt`, and four subdirectories, i.e., `Real_Phylogeny`, `Infered_Sequences`, `Monte_Carlo_Simulation` and `Substitution_Matirces`. 
+Inside the `*.recur` folder, you will find two `*.txt` files, i.e., `Citation.txt` and `Log.txt`, and four subdirectories, i.e., `Real_Phylogeny`, `Infered_Sequences`, `Monte_Carlo_Simulation` and `Substitution_Matirces`.
 
 - `Real_Phylogeny`: contains the tree constructed from the alignment (`*.treefile`), the associated .iqtree file (`*.iqtree`) with information on model testing and the raw ancestral state reconstruction file (`*.state`) output from IQ-TREE2.
 - `Inferred_Sequences`: contains the inferred ancestral sequences with node labels corresponding to the tree in the Real_Phylogeny directory.
@@ -320,15 +320,15 @@ The `*.recur.tsv` file contains a list of recurrent substitutions, i.e., an amin
 * `Site`: indicates the position in the protein MSA.
 * `Parent`: indicates the ancestral amino acid residue.
 * `Child`: indicates the descent amino acid residue.
-* `Recurrence`: indicates the number of times that amino acid substitution occurred at that site across the phylogeny. 
-* `Reversion`: indicates the number of times the reverse amino acid substitution occurred at that site across the phylogeny. 
+* `Recurrence`: indicates the number of times that amino acid substitution occurred at that site across the phylogeny.
+* `Reversion`: indicates the number of times the reverse amino acid substitution occurred at that site across the phylogeny.
 * `P-value`: signifies the probability that the substitution has not occurred by chance (for details of its calculation please read Robbins et al., 2024).
-* `AllSiteSubs`: provides a list of all other substitutions that occurred at that site. 
-* `SiteComposition`: indicates the count of each residue at that site in the protein MSA. 
+* `AllSiteSubs`: provides a list of all other substitutions that occurred at that site.
+* `SiteComposition`: indicates the count of each residue at that site in the protein MSA.
 
 ### A Note on Reproducibility
 
-According to Shen et al. (2020), irreproducibility in maximum likelihood phylogenetic inference is a significant issue [^1]. Regardless of the method related parameters that would affect the reproducibility of the final outputs, different random starting seed number, number of threads and processor type can also introduce uncertainties to the results. Such effect can be observed by setting different `-nt`, or setting different seed number using `--seed` in RECUR for each run. When running RECUR on different machine with different processor type even with the fixed `-nt` and `--seed`, the results can still be different. Nevertheless, the results should stay the same for each run when running RECUR on the same machine with the fixed input parameters.  
+According to Shen et al. (2020), irreproducibility in maximum likelihood phylogenetic inference is a significant issue [^1]. Regardless of the method related parameters that would affect the reproducibility of the final outputs, different random starting seed number, number of threads and processor type can also introduce uncertainties to the results. Such effect can be observed by setting different `-nt`, or setting different seed number using `--seed` in RECUR for each run. When running RECUR on different machine with different processor type even with the fixed `-nt` and `--seed`, the results can still be different. Nevertheless, the results should stay the same for each run when running RECUR on the same machine with the fixed input parameters.
 
 ## Citations
 
@@ -341,4 +341,3 @@ If you have an idea for an improvement or new feature, please open a [feature re
 
 ## References
 [^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1038/s41467-020-20005-6)
-
