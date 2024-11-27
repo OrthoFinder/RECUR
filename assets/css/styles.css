@@ -1,0 +1,19 @@
+/* Target the post title (h3 inside .post-list) */
+.post-list h3 {
+    font-family: 'Arial', sans-serif;
+    /* Change to your desired font */
+    font-size: 1.5em;
+    /* Adjust font size */
+    font-weight: bold;
+    /* Change font weight */
+    color: #333;
+    /* Change font color */
+}
+
+/* Optionally, target the link inside the title */
+.post-list h3 a.post-link {
+    text-decoration: none;
+    /* Remove underline */
+    color: #007acc;
+    /* Change link color */
+}

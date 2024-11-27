@@ -1,0 +1,42 @@
+---
+layout: default
+---
+
+{%- if site.pages.size > 0 -%}
+<ul class="page-list">
+    {%- for page in site.pages -%}
+    {%- if page.title == "Installation" or page.title == "Discussion" -%}
+    <li>
+        <h2>
+            <a class="page-link" href="{{ page.url | relative_url }}">
+                {{ page.title | escape }}
+            </a>
+        </h2>
+        {%- if site.show_excerpts -%}
+        {{ page.excerpt }}
+        {%- endif -%}
+    </li>
+    {%- endif -%}
+    {%- endfor -%}
+</ul>
+{%- endif -%}
+
+{%- if site.posts.size > 0 -%}
+<ul class="post-list">
+    {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
+    {%- for post in site.posts -%}
+    <li>
+        <span class="post-meta">{{ post.date | date: date_format }}</span>
+        <h2>
+            <a class="post-link" href="{{ post.url | relative_url }}">
+                {{ post.title | escape }}
+            </a>
+        </h2>
+        {%- if site.show_excerpts -%}
+        {{ post.excerpt }}
+        {%- endif -%}
+    </li>
+    {%- endfor -%}
+
+</ul>
+{%- endif -%}
