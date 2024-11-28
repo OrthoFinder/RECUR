@@ -35,7 +35,13 @@ PYTHON := ./.venv/bin/python3
 PIP := ./.venv/bin/pip
 VENV_BIN := ./.venv/bin/
 
-install_iqtree:
+make_usr_bin:
+	@if [ ! -d "$(USER_INSTALL_DIR)" ]; then \
+		echo "Directory $(USER_INSTALL_DIR) does not exist. Creating it..."; \
+		mkdir -p $(USER_INSTALL_DIR); \
+	fi
+
+install_iqtree: make_usr_bin
 	@if [ "$(FORCE)" = "1" ] || [ ! -f "$(IQTREE_BINARY)" ]; then \
 		echo "Installing IQ-TREE2 for Linux/MacOS..."; \
 		if [ "$(shell uname)" = "Darwin" ]; then \
@@ -96,7 +102,7 @@ clean_iqtree2:
 venv: .venv/bin/activate
 	@echo "Virtual environment activated."
 
-install: venv 
+install: venv make_usr_bin
 	@echo "Installing RECUR..."
 	$(PIP) install -e . || { echo "Error: Failed to install RECUR. Exiting."; exit 1; }
 	@if [ "$(SYSTEM_WIDE)" = "1" ]; then \
@@ -157,4 +163,4 @@ purge:
 		echo "RECUR not found..."; \
 	fi
 
-.PHONY: install install_iqtree clean clean_iqtree2 venv purge
+.PHONY: make_usr_bin clean clean_iqtree2 purge
