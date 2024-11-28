@@ -4,15 +4,16 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+This is a software developed by the [Steven Kelly Lab](http://www.stevekellylab.com/)
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
+You can find the source code for RECUR at GitHub:
+[RECUR](https://github.com/OrthoFinder/RECUR)
 
+The Kelly Lab develops software for analysis of biological data (including, genes genomes and quantitative data). This software provides the foundation of our experimental research. Details on individual methods can be found at the links below.
+- [OrthoFinder](https://github.com/OrthoFinder/OrthoFinder) 
+Accurate orthogroups, gene trees, species tree, gene duplication events and more, made easy.
+You can find the legacy version [here](https://github.com/OrthoFinder/OrthoFinder).
 
-[jekyll-organization]: https://github.com/jekyll
+- [OGtoberfest](https://github.com/OrthoFinder/OGtoberfest)
+Benchmarking Orthogroups and Orthologs
