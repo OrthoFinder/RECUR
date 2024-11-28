@@ -181,8 +181,8 @@ TestData/
 benchmark/
 RCA/
 .pre-commit-config.yaml
-Makefile
 build-manylinuxwheel.sh
 build-package.sh
 build-wheels.sh
-dependency-graph.png
+dependency-graph.png_site
+_site/
