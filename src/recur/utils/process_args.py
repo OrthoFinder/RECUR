@@ -509,18 +509,22 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
             print(
                 "\nWARNING: The combination of the number of RECUR threads and IQ-TREE2 threads exceeds the threadshold accepted by RECUR."
             )
-
-        if options.iqtree_nthreads <= mp.cpu_count():
+        
+        if options.iqtree_nthreads <= mp.cpu_count() and options.recur_nthreads >= mp.cpu_count() :
             options.recur_nthreads = mp.cpu_count() // options.iqtree_nthreads
-
+            print("Adjusting the threads as follows: ")
+            print(f"RECUR threads: {options.recur_nthreads}, IQ-TREE2 threads: {options.iqtree_nthreads}")
+            print(
+                "\nRECOMMENDATION: To ensure reproducibility and optimal performance, configure the number of threads used by IQ-TREE2 to be either 1 or to match the number of threads used by RECUR."
+            )
         elif options.iqtree_nthreads > mp.cpu_count():
             options.recur_nthreads, options.iqtree_nthreads = 1, mp.cpu_count()
 
-        print("Adjusting the threads as follows: ")
-        print(f"RECUR threads: {options.recur_nthreads}, IQ-TREE2 threads: {options.iqtree_nthreads}")
-        print(
-            "\nRECOMMENDATION: To ensure reproducibility and optimal performance, configure the number of threads used by IQ-TREE2 to be either 1 or to match the number of threads used by RECUR."
-        )
+            print("Adjusting the threads as follows: ")
+            print(f"RECUR threads: {options.recur_nthreads}, IQ-TREE2 threads: {options.iqtree_nthreads}")
+            print(
+                "\nRECOMMENDATION: To ensure reproducibility and optimal performance, configure the number of threads used by IQ-TREE2 to be either 1 or to match the number of threads used by RECUR."
+            )
 
     if not options.qStartFromMSA:
         print("ERROR: Please specify the input directory for RECUR using the option: '-f'.")
