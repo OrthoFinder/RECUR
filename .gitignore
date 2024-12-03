@@ -14,5 +14,4 @@ ExampleData/
 __pycache__/
 build/
 docker-compose.yml
-docs/usage.markdown
 src/
