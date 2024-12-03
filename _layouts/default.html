@@ -20,7 +20,7 @@
             </a>
             <h2>{{ site.description | default: site.github.project_tagline }}</h2>
             <section>
-                {% unless page.url == "/" %}
+                <!-- {% unless page.url == "/" %}
                 <a href="{{ '/' | relative_url }}">Home</a>
                 {% endunless %}
 
@@ -28,6 +28,10 @@
                 {% unless page.url == "/" %}
                 <a href="{{ page.url | relative_url }}">{{ page.title | escape }}</a>
                 {% endunless %}
+                {% endfor %} -->
+
+                {% for page in site.pages %}
+                <a href="{{ page.url | relative_url }}">{{ page.title | escape }}</a>
                 {% endfor %}
             </section>
             <section id="downloads">
