@@ -1,0 +1,12 @@
+{
+    // "[scss]": {
+    //     "editor.formatOnSave": false, // Disable auto-formatting for SCSS
+    //     "editor.defaultFormatter": null // Prevent any formatter from running on SCSS
+    // },
+    // "files.exclude": {
+    //     "**/assets/style.scss": true // Optional: Ignore the file in VSCode file explorer
+    // }
+    "[html]": {
+        "editor.formatOnSave": false
+    }
+}

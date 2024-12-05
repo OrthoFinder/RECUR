@@ -1,0 +1,70 @@
+<footer class="site-footer h-card">
+  <data class="u-url" href="{{ "/" | relative_url }}"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <!-- <p class="feed-subscribe">
+          <a href="{{ site.feed.path | default: 'feed.xml' | absolute_url }}">
+            <svg class="svg-icon orange">
+              <use xlink:href="{{ 'assets/minima-social-icons.svg#rss' | relative_url }}"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p> -->
+        <!-- {%- include social.html -%}
+        <div class="social-icons">
+          {% if site.author.github %}
+          <a href="{{ site.author.github }}" target="_blank" title="GitHub">
+            <svg class="svg-icon grey">
+              <use xlink:href="{{ 'assets/minima-social-icons.svg#github' | relative_url }}"></use>
+            </svg>
+            <span>GitHub</span>
+          </a>
+          {% endif %}
+          {% if site.author.twitter %}
+          <a href="{{ site.author.twitter }}" target="_blank" title="Twitter">
+            <svg class="svg-icon grey">
+              <use xlink:href="{{ 'assets/minima-social-icons.svg#twitter' | relative_url }}"></use>
+            </svg>
+            <span>Twitter</span>
+          </a>
+          {% endif %}
+        </div>
+        {%- if site.author %} -->
+
+        
+        <ul class="contact-list">
+          <!-- {% if site.author.name -%}
+          <li class="p-name">{{ site.author.name | escape }}</li>
+          {% endif -%}
+          {% if site.author.email -%}
+          <li><a class="u-email" href="mailto:{{ site.author.email }}">{{ site.author.email }}</a></li>
+          {%- endif %} -->
+
+          {% if site.author.name %}
+          <li class="p-name">Author: {{ site.author.name | escape }}</li>
+          {% endif %}
+          {% if site.author.email %}
+          <li>Email: <a class="u-email" href="mailto:{{ site.author.email }}">{{ site.author.email }}</a></li>
+          {% endif %}
+          <!-- {% if site.author.github %}
+          <li>
+            <a href="{{ site.author.github }}" target="_blank" title="GitHub Profile">GitHub</a>
+          </li>
+          {% endif %} -->
+        </ul>
+        {%- endif %}
+      </div>
+      <div class="footer-col">
+        <p>{{ site.description | escape }}</p>
+      </div>
+    </div>
+
+    <div class="social-links">
+      {%- include social.html -%}
+    </div>
+
+  </div>
+
+</footer>
