@@ -70,6 +70,8 @@ minima:
     #   url: https://linkedin.com/OrthoFinder/RECUR
     # - platform: rss
     #   url: /feed.xml
+include:
+  - assets/minima-social-icons.svg
 
 header_pages:
   - index.markdown # Home
