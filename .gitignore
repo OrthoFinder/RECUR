@@ -188,3 +188,4 @@ dependency-graph.png_site
 _site/
 docs/usage.markdown
 recur_site/
+Gemfile.lock

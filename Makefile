@@ -7,10 +7,27 @@ $(error This Makefile requires GNU Make. Please use gmake instead of make.)
 endif
 
 SYSTEM_WIDE ?= 0
-
 HOME_DIR := $(if $(HOME),$(HOME),$(shell echo ~))
+
+PROMPT_USER_INSTALL_DIR = \
+	@if [ -d "$(HOME_DIR)/bin" ]; then \
+		read -p "Directory $(HOME_DIR)/bin exists. Do you want to use it? (y/n) " choice; \
+		case $$choice in \
+			[yY]*) echo "$(HOME_DIR)/bin";; \
+			[nN]*) \
+				read -p "Enter a new directory name (relative to $(HOME_DIR)): " new_dir; \
+				USER_INSTALL_DIR=$(HOME_DIR)/$$new_dir; \
+				echo $$USER_INSTALL_DIR; \
+				mkdir -p $$USER_INSTALL_DIR || { echo "Error creating directory $$USER_INSTALL_DIR. Exiting."; exit 1; }; \
+				;; \
+			*) echo "Invalid choice. Exiting."; exit 1; \
+		esac; \
+	else \
+		echo "$(HOME_DIR)/bin"; \
+	fi
+
+USER_INSTALL_DIR := $(shell $(PROMPT_USER_INSTALL_DIR))
 SYSTEM_INSTALL_DIR := /usr/local/bin
-USER_INSTALL_DIR := $(HOME_DIR)/bin
 RECUR_DIR := $(USER_INSTALL_DIR)
 
 ifeq ($(SYSTEM_WIDE),1)
@@ -61,6 +78,10 @@ install_iqtree: make_usr_bin
 		fi; \
 		curl -L $$IQTREE_URL -o iqtree2.tar.gz || { echo "Error: Failed to download IQ-TREE2. Exiting."; exit 1; }; \
 		mkdir -p "$(IQTREE_INSTALL_DIR)" || { echo "Error: Failed to create directory $(IQTREE_INSTALL_DIR). Exiting."; exit 1; }; \
+		if [ ! -w "$(IQTREE_INSTALL_DIR)" ]; then \
+			echo "Error: Directory $(IQTREE_INSTALL_DIR) is not writable. Check permissions or run with appropriate privileges."; \
+			exit 1; \
+		fi; \
 		$(SUDO_PREFIX) tar --strip-components=2 -xzf iqtree2.tar.gz -C "$(IQTREE_INSTALL_DIR)" || { echo "Error: Failed to extract IQ-TREE2. Exiting."; exit 1; }; \
 		rm iqtree2.tar.gz || { echo "Error: Failed to remove temporary file iqtree2.tar.gz. Exiting."; exit 1; }; \
 		echo "IQ-TREE2 installed to $(IQTREE_INSTALL_DIR)."; \
@@ -91,7 +112,6 @@ clean_iqtree2:
 		{ echo "Error: Failed to remove user-specific IQ-TREE2 binary from $(IQTREE_BINARY). Exiting."; exit 1; }; \
 	fi
 
-
 .venv/bin/activate: requirements.txt
 	@echo "Creating virtual environment for RECUR..."
 	python3 -m venv .venv
@@ -116,13 +136,12 @@ install: venv make_usr_bin
 			exit 1; \
 		fi; \
 	else \
-		mkdir -p $(HOME_DIR)/bin || { echo "Error: Failed to create directory $(HOME_DIR)/bin. Exiting."; exit 1; }; \
-		echo "Copying RECUR to $(HOME_DIR)/bin..."; \
-		cp $(VENV_BIN)recur $(HOME_DIR)/bin/ && \
-		echo "RECUR successfully copied to $(HOME_DIR)/bin." || \
-		{ echo "Error: Failed to copy RECUR to $(HOME_DIR)/bin. Exiting."; exit 1; }; \
+		mkdir -p $(USER_INSTALL_DIR) || { echo "Error: Failed to create directory $(USER_INSTALL_DIR). Exiting."; exit 1; }; \
+		echo "Copying RECUR to $(USER_INSTALL_DIR)..."; \
+		cp $(VENV_BIN)recur $(USER_INSTALL_DIR)/ && \
+		echo "RECUR successfully copied to $(USER_INSTALL_DIR)." || \
+		{ echo "Error: Failed to copy RECUR to $(USER_INSTALL_DIR). Exiting."; exit 1; }; \
 	fi
-
 
 install_dependencies: venv 
 	$(PIP) install -r requirements.txt
