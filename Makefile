@@ -173,12 +173,24 @@ install_iqtree2: make_usr_bin
 		echo "Downloading IQ-TREE2 from $$IQTREE_URL..."; \
 		temp_dir=$$(mktemp -d); \
 		download_path=$$temp_dir/iqtree2-src; \
-		wget -O $$download_path $$IQTREE_URL $(if $(QUIET),> /dev/null 2>&1) || { echo "Error: Failed to download IQ-TREE2."; rm -rf $$temp_dir; exit 1; }; \
+		if [ "$(QUIET)" = "true" ]; then \
+			wget -O $$download_path $$IQTREE_URL > /dev/null 2>&1 || { echo "Error: Failed to download IQ-TREE2."; rm -rf $$temp_dir; exit 1; }; \
+		else \
+			wget -O $$download_path $$IQTREE_URL || { echo "Error: Failed to download IQ-TREE2."; rm -rf $$temp_dir; exit 1; }; \
+		fi; \
 		echo "Extracting IQ-TREE..."; \
 		if echo "$$IQTREE_URL" | grep -q '.tar.gz'; then \
-			tar -xzf $$download_path -C $$temp_dir $(if $(QUIET),> /dev/null 2>&1) || { echo "Error: Failed to extract IQ-TREE2 tar.gz file."; rm -rf $$temp_dir; exit 1; }; \
+			if [ "$(QUIET)" = "true" ]; then \
+				tar -xzf $$download_path -C $$temp_dir > /dev/null 2>&1 || { echo "Error: Failed to extract IQ-TREE2 tar.gz file."; rm -rf $$temp_dir; exit 1; }; \
+			else \
+				tar -xzf $$download_path -C $$temp_dir || { echo "Error: Failed to extract IQ-TREE2 tar.gz file."; rm -rf $$temp_dir; exit 1; }; \
+			fi; \
 		elif echo "$$IQTREE_URL" | grep -q '.zip'; then \
-			unzip -o $$download_path -d $$temp_dir $(if $(QUIET),> /dev/null 2>&1) || { echo "Error: Failed to extract IQ-TREE2 zip file."; rm -rf $$temp_dir; exit 1; }; \
+			if [ "$(QUIET)" = "true" ]; then \
+				unzip -o $$download_path -d $$temp_dir > /dev/null 2>&1 || { echo "Error: Failed to extract IQ-TREE2 zip file."; rm -rf $$temp_dir; exit 1; }; \
+			else \
+				unzip -o $$download_path -d $$temp_dir || { echo "Error: Failed to extract IQ-TREE2 zip file."; rm -rf $$temp_dir; exit 1; }; \
+			fi; \
 		else \
 			echo "Error: Unknown file format for IQ-TREE2."; rm -rf $$temp_dir; exit 1; \
 		fi; \
@@ -188,13 +200,14 @@ install_iqtree2: make_usr_bin
 			echo "Error: IQ-TREE2 binary not found after extraction."; rm -rf $$temp_dir; exit 1; \
 		fi; \
 		echo "Moving IQ-TREE2 binary to $(BINARY_INSTALL_DIR)..."; \
-		$(SUDO_PREFIX) mv $$iqtree2_binary $(BINARY_INSTALL_DIR) $(if $(QUIET),> /dev/null 2>&1) || { echo "Error: Failed to move IQ-TREE2 binary."; rm -rf $$temp_dir; exit 1; }; \
+		$(SUDO_PREFIX) mv $$iqtree2_binary $(BINARY_INSTALL_DIR) || { echo "Error: Failed to move IQ-TREE2 binary."; rm -rf $$temp_dir; exit 1; }; \
 		rm -rf $$temp_dir; \
 		echo "IQ-TREE2 installation completed successfully."; \
 	else \
 		iqtree2_path=$$(command -v iqtree2); \
 		echo "IQ-TREE2 already exists at: $$iqtree2_path. Skipping installation."; \
 	fi
+
 
 clean_iqtree2:
 	@echo "Cleaning user-specific IQ-TREE2 installation..."; \
