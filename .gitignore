@@ -189,3 +189,4 @@ _site/
 docs/usage.markdown
 recur_site/
 Gemfile.lock
+**/*venv/

@@ -69,6 +69,28 @@ from recur.utils import files, process_args, util
 #     return my_env, local_iqtree2_path, bin_dir, conda_prefix
 
 
+def find_iqtree2():
+    # Check the PATH environment variable
+    iqtree_path = shutil.which("iqtree2")
+    if iqtree_path:
+        return iqtree_path
+    
+    # If not in PATH, the looks for iqtree2 in a list of common directories 
+    # where binaries are often installed
+    common_dirs = [
+        os.path.expanduser("~/bin"),
+        os.path.expanduser("~/.local/bin"),
+        os.path.expanduser("~/local/bin"),
+        "/usr/local/bin",
+        "/usr/bin",
+        "/opt/bin",
+    ]
+    for directory in common_dirs:
+        iqtree_path = os.path.join(directory, "iqtree2")
+        if os.path.isfile(iqtree_path) and os.access(iqtree_path, os.X_OK):
+            return iqtree_path
+        
+
 def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
 
     sys.setrecursionlimit(10**6)
@@ -80,11 +102,20 @@ def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
         base_dir = os.path.dirname(sys.executable)
     else:
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+    
+    iqtree2_path = find_iqtree2()
+    if iqtree2_path is None:
+        print("IQ-TREE2 not found! Please install it before running RECUR!")
+        print("IQ-TREE2 can be installed by running `make install_iqtree2`")
+        sys.exit(1)
 
-    home_dir = os.path.expanduser("~")
-    iqtree_install_dir = os.path.join(home_dir, "bin")
-    local_iqtree2_path = os.path.join(iqtree_install_dir, "iqtree2")
+    iqtree_install_dir = os.path.dirname(iqtree2_path)
     bin_dir = iqtree_install_dir
+
+    # home_dir = os.path.expanduser("~")
+    # iqtree_install_dir = os.path.join(home_dir, "bin")
+    # local_iqtree2_path = os.path.join(iqtree_install_dir, "iqtree2")
+    # bin_dir = iqtree_install_dir
 
     conda_prefix = my_env.get("CONDA_PREFIX")
     if conda_prefix:
@@ -100,7 +131,7 @@ def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
             my_env["LD_LIBRARY_PATH"] = my_env.get("LD_LIBRARY_PATH_ORIG", "")
             my_env["DYLD_LIBRARY_PATH"] = my_env.get("DYLD_LIBRARY_PATH_ORIG", "")
 
-    return my_env, local_iqtree2_path, bin_dir, conda_prefix
+    return my_env, iqtree2_path, bin_dir, conda_prefix
 
 def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None) -> bool:
     try:
@@ -124,7 +155,6 @@ def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None) -> bool:
     except Exception as e:
         print(f"An error occurred while trying to run '{command}': {e}")
         return False
-
 
 def initialise_recur(iqtree_version: Optional[str] = None) -> Dict[str, str]:
     my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
