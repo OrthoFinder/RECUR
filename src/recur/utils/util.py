@@ -208,6 +208,48 @@ def Fail():
     helpinfo.PrintHelp()
     sys.exit(1)
 
+def GetFileName(baseFileName: str,
+                i: int,
+                sequence_type: str,
+                extended_filename: bool) -> str:
+    
+    if not extended_filename:
+        if i == 0:
+            return baseFileName + ".tsv"
+        else:
+            return baseFileName + ("_%d" % i) + ".tsv"
+    else:
+        sequence_type = sequence_type if sequence_type else ""
+        extension = sequence_type
+
+        if i == 0:
+            return baseFileName + "." + extension + ".tsv"
+        else:
+            return baseFileName + ("_%d" % i) + "." + extension + ".tsv"
+
+def CreateNewFileName(baseFileName: str,
+                    sequence_type: str,
+                    qDate: bool = True,
+                    extended_filename: bool = False,
+                    keepprev: bool = False) -> str:
+    iAppend = 0
+    newFileName = GetFileName(baseFileName,
+                                    iAppend,
+                                    sequence_type,
+                                    extended_filename)
+    if keepprev:
+        dateStr = datetime.date.today().strftime("%b%d") if qDate else ""
+        baseFileName = baseFileName  + "." + dateStr
+        while os.path.exists(newFileName):
+            iAppend += 1.
+            newFileName = GetFileName(baseFileName,
+                                            iAppend,
+                                            sequence_type,
+                                            extended_filename)
+
+    return newFileName
+
+
 def GetDirectoryName(baseDirName: str,
                      i: int,
                      sequence_type: str,
@@ -239,7 +281,7 @@ def CreateNewWorkingDirectory(baseDirectoryName: str,
                                         extended_filename)
     if keepprev:
         dateStr = datetime.date.today().strftime("%b%d") if qDate else ""
-        baseDirectoryName = baseDirectoryName  + dateStr
+        baseDirectoryName = baseDirectoryName  + "." + dateStr
         while os.path.exists(newDirectoryName):
             iAppend += 1
             newDirectoryName = GetDirectoryName(baseDirectoryName,

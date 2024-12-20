@@ -1248,7 +1248,11 @@ def main(args: Optional[List[str]] = None):
                                                                 residue_dict_flip,
                                                                 protein_len)
 
-                filewriter.WriteRecurrenceList(recurrence_list_updated, filehandler.GetRecurrenceListFN(recurrenceDir))
+                filewriter.WriteRecurrenceList(
+                    recurrence_list_updated, 
+                    filehandler.GetRecurrenceListFN(recurrenceDir),
+                    options
+                    )
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 production_logger.info(prepend + "p values computing complete.", extra={'to_file': True, 'to_console': True})
 

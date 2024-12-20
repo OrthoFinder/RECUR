@@ -3,6 +3,7 @@
 
 import os
 import sys
+import datetime
 import traceback
 from typing import Dict, List, Optional, Set, Tuple, Union
 
@@ -421,10 +422,26 @@ class FileWriter(object):
 
     @staticmethod
     def WriteRecurrenceList(recurrence_list: List[List[Union[str, int, float]]],
-                            outFilename: str) -> None:
+                            outFilename: str,
+                            options: process_args.Options,
+                            ) -> None:
 
         colname = ['Site', 'Parent', 'Child', 'Recurrence',
                    "Reversion", "P-Value", "AllSiteSubs",  "SiteComposition"]
+
+        baseFileName = outFilename.rsplit(".", 1)[0] 
+        if options.name == "":
+            outFilename = util.CreateNewFileName(baseFileName,
+                                            options.sequence_type,
+                                            extended_filename=options.extended_filename,
+                                            keepprev=options.keepprev)
+        else:
+            outFilename = util.CreateNewFileName(baseFileName + "." + options.name,
+                                                options.sequence_type,
+                                                qDate=False,
+                                                extended_filename=options.extended_filename,
+                                                keepprev=options.keepprev)
+ 
         with open(outFilename, "w") as writer:
             writer.write("\t".join(colname) + "\n")
             for rec_list in recurrence_list:
