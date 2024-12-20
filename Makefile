@@ -59,9 +59,9 @@ IQTREE_MACOS_ARM := https://github.com/iqtree/iqtree2/releases/download/v2.3.6/i
 
 IQTREE_BINARY := $(BINARY_INSTALL_DIR)/iqtree2
 
-PYTHON := ./.venv/bin/python3
-PIP := ./.venv/bin/pip
-VENV_BIN := ./.venv/bin/
+PYTHON := ./$(ENV_NAME)/bin/python3
+PIP := ./$(ENV_NAME)/bin/pip
+VENV_BIN := ./$(ENV_NAME)/bin/
 
 
 check_conda:
