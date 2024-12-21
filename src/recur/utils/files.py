@@ -3,8 +3,8 @@
 
 import os
 import sys
-import datetime
 import traceback
+from collections import Counter
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 import dendropy
@@ -16,9 +16,9 @@ from recur.utils import process_args, util
 
 class FileHandler(object):
 
-    def __init__(self):
+    def __init__(self, results_dir: str = ""):
         self.wd_current = ""
-        self.rd1 = ""
+        self.rd1 = results_dir
         self.gene_of_interest = None
 
     def CreateOutputDirectories(self, options: process_args.Options, base_dir: str) -> None:
@@ -34,9 +34,22 @@ class FileHandler(object):
                                                       qDate=False,
                                                       extended_filename=options.extended_filename,
                                                       keepprev=options.keepprev)
-        self.wd_current = self.rd1
+        self.wd_current = self.rd1 + os.sep
         if not os.path.exists(self.wd_current):
             os.makedirs(self.wd_current, exist_ok=True)
+
+    def CreateMCSDirectories(self, options: process_args.Options) -> None:
+        mcs_dir = self.rd1 + "Monte_Carlo_Similation"
+        
+        if options.disk_save:
+            mcs_dir = util.CreateNewWorkingDirectory(mcs_dir,
+                                                    options.sequence_type,
+                                                    qDate=False,
+                                                    extended_filename=False,
+                                                    keepprev=True)
+        self.mcs_dir = mcs_dir 
+        if not os.path.exists(self.mcs_dir):
+            os.makedirs(self.mcs_dir, exist_ok=True)
 
 
     def CheckFileCorrespondance(self, gene: str, state_file: str, tree_file:str) -> None:
@@ -170,6 +183,12 @@ class FileHandler(object):
         node_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.inferred_ancestral_sequences.dna.aln")
         return node_seqs_file
 
+    def GetBinaryCombinedProtSeqsFN(self) -> str:
+        if self.GetInferredSeqsDir() is None:
+            raise Exception("No Inferred_Sequences directory.")
+        combined_seqs_file = os.path.join(self.GetInferredSeqsDir(), f"{self.gene_of_interest}.recur_combined_protein_sequences_bin.aln")
+        return combined_seqs_file
+
     def GetCombinedProtSeqsFN(self) -> str:
         if self.GetInferredSeqsDir() is None:
             raise Exception("No Inferred_Sequences directory.")
@@ -188,11 +207,25 @@ class FileHandler(object):
 
         recurrence_list_file = os.path.join(recDir, f"{self.gene_of_interest}.recur.tsv")
         return recurrence_list_file
+    
+    def GetRecurrenceListRealPhylogenyFN(self, recDir: Optional[str] = None) -> str:
+        if recDir is None:
+            raise Exception("No Results directory.")
+
+        recurrence_list_file = os.path.join(recDir, f"{self.gene_of_interest}.recur.real_phylogeny.tsv")
+        return recurrence_list_file
+
+    def GetRecurrenceCountPhylogenyFN(self, recDir: Optional[str] = None) -> str:
+        if recDir is None:
+            raise Exception("No Results directory.")
+
+        recurrence_count_file = os.path.join(recDir, f"{self.gene_of_interest}.recur.real_phylogeny.count.tsv")
+        return recurrence_count_file
 
     def GetMCSimulationTreeFN(self) -> str:
-        if self.GetMCSimulationDir() is None:
+        if self.mcs_dir is None:
             raise Exception("No Monte_Carlo_Simuation directory.")
-        mcs_treefile = [os.path.join(self.GetMCSimulationDir(), file) for file in os.listdir(self.GetMCSimulationDir()) if file.endswith("alisim.full.treefile")]
+        mcs_treefile = [os.path.join(self.mcs_dir, file) for file in os.listdir(self.mcs_dir) if file.endswith("alisim.full.treefile")]
 
         if len(mcs_treefile) == 0:
             raise Exception("No Monte Carlo Simulated treefile.")
@@ -200,31 +233,35 @@ class FileHandler(object):
         return mcs_treefile[0]
 
     def GetMutMatrixDir(self) -> str:
-        d = self.rd1 + "Substitution_Matrices" + os.sep
+        d = os.path.join(self.rd1, "Substitution_Matrices") + os.sep
+        # self.rd1 + "Substitution_Matrices" + os.sep
         if not os.path.exists(d):
             os.mkdir(d)
         return d
 
     def GetInferredSeqsDir(self) -> str:
-        d = self.rd1 + "Inferred_Sequences" + os.sep
+        d = os.path.join(self.rd1, "Inferred_Sequences") + os.sep
+        # d = self.rd1 + "Inferred_Sequences" + os.sep
         if not os.path.exists(d):
             os.mkdir(d)
         return d
 
-    def GetMCSimulationDir(self) -> str:
-        d = self.rd1 + "Monte_Carlo_Similation" + os.sep
-        if not os.path.exists(d):
-            os.mkdir(d)
-        return d
+    # def GetMCSimulationDir(self) -> str:
+    #     d = self.rd1 + "Monte_Carlo_Similation" + os.sep
+    #     if not os.path.exists(d):
+    #         os.mkdir(d)
+    #     return d
 
     def GetBinaryPhylogenyDir(self) -> str:
-        d = self.rd1 + "Indel_Estimation" + os.sep
+        d = os.path.join(self.rd1, "Indel_Estimation") + os.sep
+        # d = self.rd1 + "Indel_Estimation" + os.sep
         if not os.path.exists(d):
             os.mkdir(d)
         return d
 
     def GetRealPhylogenyDir(self) -> str:
-        d = self.rd1 + "Real_Phylogeny" + os.sep
+        d = os.path.join(self.rd1, "Real_Phylogeny") + os.sep
+        # d = self.rd1 + "Real_Phylogeny" + os.sep
         if not os.path.exists(d):
             os.mkdir(d)
         return d
@@ -350,6 +387,64 @@ class FileReader(object):
                 msa_binary[accession] = seq
 
         return msa_binary
+    
+    @staticmethod    
+    def ReadMCSRecurrenceCount(base_dir: str) -> List[Dict[Tuple[int, int, int], int]]:
+        mcs_count_files = []
+        with os.scandir(base_dir) as entries:
+            for entry in entries:
+                if entry.is_dir():
+                    if "Monte_Carlo_Similation" in entry.name:
+                        for file in os.listdir(entry):
+                            file_path = os.path.join(entry, file)
+                            mcs_count_files.append(file_path)
+
+        mcs_results = []
+        for file in mcs_count_files:
+            mcs_count_dict = {}
+            with open(file) as reader:
+                for i, line in enumerate(reader):
+                    if i == 0:
+                        continue
+
+                    res_loc, parent, child, count = map(int, line.strip().split("\t"))
+                    mcs_count_dict[(res_loc, parent, child)] = count
+            mcs_results.append(mcs_count_dict)
+
+        return mcs_results
+    
+    @staticmethod    
+    def ReadRecurrenceCount(recurrence_count_file: str) -> Dict[Tuple[int, int, int], int]:
+
+        recurrence_count_dict = {}
+        with open(recurrence_count_file) as reader:
+            for i, line in enumerate(reader):
+                if i == 0:
+                    continue
+                res_loc, parent, child, count = map(int, line.strip().split("\t"))
+                recurrence_count_dict[(res_loc, parent, child)] = count
+
+        return recurrence_count_dict
+    
+    @staticmethod    
+    def ReadRecurrenceList(recurrence_list_fn: str) -> List[List[Union[str, int]]]:
+
+        recurrence_list = []
+        with open(recurrence_list_fn) as reader:
+            for i, line in enumerate(reader):
+                if i == 0:
+                    continue
+                res_loc, parent, child, recurrence, reversion = line.strip().split("\t")
+                recurrence_list.append([
+                    int(res_loc) - 1,
+                    parent,
+                    child,
+                    int(recurrence),
+                    int(reversion)
+                ])
+        
+        return recurrence_list
+    
 
 class FileWriter(object):
 
@@ -419,6 +514,48 @@ class FileWriter(object):
                 writer.write(">%s\n" % seq)
                 writer.write(seqs_dict[seq] + "\n")
                 writer.write("\n")
+
+    @staticmethod
+    def WriteMCSRecurrenceCountToFile(
+        mcs_results: List[Dict[Tuple[int, int, int], int]],
+        mcs_dir: str,
+    ) -> None:
+        
+        colname = ["Site", "ParentIndex", "ChildIndex", "Count"]
+        for i, mcs_count_dict in enumerate(mcs_results):
+            outFilename = os.path.join(mcs_dir, f"mcs_recurrence_count_{i}.tsv")
+            with open(outFilename, "w") as writer:
+                writer.write("\t".join(colname) + "\n")
+                for key, val in mcs_count_dict.items():
+                    rec_loc, parent, child = key 
+                    writer.write("\t".join((str(rec_loc), str(parent), str(child), str(val))) + "\n")
+
+    @staticmethod
+    def WriteRecurrenceCountToFile(
+        rec_loc_count_dict: Dict[Tuple[int, int, int], int],
+        outFilename: str,
+    ) -> None:
+        
+        colname = ["Site", "ParentIndex", "ChildIndex", "Count"]
+        with open(outFilename, "w") as writer:
+            writer.write("\t".join(colname) + "\n")
+            for key, val in rec_loc_count_dict.items():
+                rec_loc, parent, child = key 
+                writer.write("\t".join((str(rec_loc), str(parent), str(child), str(val))) + "\n")
+
+
+    @staticmethod
+    def WriteRecurrenceListRealPhylogeny(
+            recurrence_list: List[List[Union[str, int]]],
+            outFilename: str,
+        ) -> None:
+        colname = ['Site', 'Parent', 'Child', 'Recurrence', "Reversion"]
+        with open(outFilename, "w") as writer:
+            writer.write("\t".join(colname) + "\n")
+            for rec_list in recurrence_list:
+                if isinstance(rec_list[0], int):
+                    rec_list[0] += 1
+                writer.write("\t".join(map(str, rec_list)) + "\n")
 
     @staticmethod
     def WriteRecurrenceList(recurrence_list: List[List[Union[str, int, float]]],

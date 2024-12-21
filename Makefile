@@ -240,11 +240,14 @@ install_dependencies: venv
 
 install: install_iqtree2 venv make_usr_bin 
 	@echo "Checking global paths for RECUR..."; \
-	recur_exists=$$(command -v recur > /dev/null && echo 1 || echo 0); \
-
+	recur_exists=$$(command -v recur > /dev/null 2>&1 && echo 1 || echo 0); \
 	if [ "$(FORCE)" = "true" ] || [ "$$recur_exists" = "0" ]; then \	
-		echo "Installing RECUR..."
-		$(PIP) install -e . || { echo "Error: Failed to install RECUR. Exiting."; exit 1; }
+		echo "Installing RECUR..."; \
+		if [ "$(QUIET)" = "true" ]; then \
+			$(PIP) install -e . > /dev/null 2>&1 || { echo "Error: Failed to install RECUR. Exiting."; exit 1; }; \
+		else \
+			$(PIP) install -e . || { echo "Error: Failed to install RECUR. Exiting."; exit 1; }; \
+		fi; \
 		mkdir -p $(USER_INSTALL_DIR) || { echo "Error: Failed to create directory $(USER_INSTALL_DIR). Exiting."; exit 1; }; \
 		echo "Copying RECUR to $(USER_INSTALL_DIR)..."; \
 		cp $(VENV_BIN)recur $(USER_INSTALL_DIR)/ && \
@@ -254,6 +257,7 @@ install: install_iqtree2 venv make_usr_bin
 		recur_path=$$(command -v recur); \
 		echo "RECUR already exists at: $$recur_path. Skipping installation."; \
 	fi
+
 
 run: install_iqtree2 install
 	@echo "Running RECUR..."

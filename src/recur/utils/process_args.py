@@ -25,6 +25,8 @@ class Options(object):
         self.alnpre = None
         self.name = ""  # name to identify this set of results
         self.extended_filename = False
+        self.disk_save = False
+        self.compute_recurrence = False
         self.output_prefix = None
         self.gene_tree = None
         self.root_node = None
@@ -51,6 +53,7 @@ class Options(object):
         self.update_cycle = None
         self.system_info = False
         self.override = True
+        self.project_dir = None
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -140,6 +143,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-kp" or arg == "--keep-prev-results":
             options.keepprev = True
+
+        elif arg == "-cr" or arg == "--compute-recurrence":
+            options.compute_recurrence = True
 
         elif arg == "-blfix" or arg == "--fix-branch-length":
             options.fix_branch_length = True
@@ -458,7 +464,8 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
             while resultsDir_nonDefault.endswith("/"):
                 resultsDir_nonDefault = resultsDir_nonDefault[:-1]
 
-            resultsDir_nonDefault += "/"
+            resultsDir_nonDefault += os.sep
+            # resultsDir_nonDefault += "/"
             # if os.path.exists(resultsDir_nonDefault):
             #     print("ERROR: non-default output directory already exists: %s\n" % resultsDir_nonDefault)
             #     util.Fail()
@@ -481,6 +488,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-efn" or arg == "--extended-filename":
             options.extended_filename = True
+
+        elif arg == "-ds" or arg == "--disk-save":
+            options.disk_save = True
 
         else:
             print("Unrecognised argument: %s\n" % arg)
@@ -532,5 +542,8 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
     if resultsDir_nonDefault:
         options.recDir = resultsDir_nonDefault
+        options.project_dir = resultsDir_nonDefault
+    else:
+        options.project_dir = alnDir
 
     return options, alnDir, alnPath, resultsDir_nonDefault

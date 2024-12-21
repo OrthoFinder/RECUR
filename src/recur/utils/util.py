@@ -378,3 +378,4 @@ def ConvertToSequence(parent_list: List[str],
         new_seq[child] = "".join([residue_dict_flip[num] if num != 0 else "-" for num in child_arr[i, :]])
 
     return new_seq
+
