@@ -61,7 +61,7 @@ IQTREE_BINARY := $(BINARY_INSTALL_DIR)/iqtree2
 
 PYTHON := ./$(ENV_NAME)/bin/python3
 PIP := ./$(ENV_NAME)/bin/pip
-VENV_BIN := ./$(ENV_NAME)/bin/
+VENV_BIN := ./$(ENV_NAME)/bin
 
 
 check_conda:
@@ -250,7 +250,7 @@ install: install_iqtree2 venv make_usr_bin
 		fi; \
 		mkdir -p $(USER_INSTALL_DIR) || { echo "Error: Failed to create directory $(USER_INSTALL_DIR). Exiting."; exit 1; }; \
 		echo "Copying RECUR to $(USER_INSTALL_DIR)..."; \
-		cp $(VENV_BIN)recur $(USER_INSTALL_DIR)/ && \
+		cp $(VENV_BIN)/recur $(USER_INSTALL_DIR)/ && \
 		echo "RECUR successfully copied to $(USER_INSTALL_DIR)." || \
 		{ echo "Error: Failed to copy RECUR to $(USER_INSTALL_DIR). Exiting."; exit 1; }; \
 	elif [ "$$recur_exists" = "1" ]; then \
@@ -261,10 +261,10 @@ install: install_iqtree2 venv make_usr_bin
 
 run: install_iqtree2 install
 	@echo "Running RECUR..."
-	@if [ -f "$(VENV_BIN)recur" ]; then \
-		$(VENV_BIN)recur -f ExampleData -st AA --outgroups ExampleData
-	elif [ -f "$(RECUR_DIR)recur" ]; then \
-		$(RECUR_DIR)recur -f ExampleData -st AA --outgroups ExampleData
+	@if [ -f "$(VENV_BIN)/recur" ]; then \
+		$(VENV_BIN)/recur -f ExampleData -st AA --outgroups ExampleData
+	elif [ -f "$(RECUR_DIR)/recur" ]; then \
+		$(RECUR_DIR)/recur -f ExampleData -st AA --outgroups ExampleData
 	else \
 		echo "RECUR not found. Installing..."; \
 		$(MAKE) install; \
@@ -281,9 +281,9 @@ purge:
 	rm -rf **/__pycache__
 	rm -rf ./build ./dist ./recur.egg-info
 
-	if [ -f "$(RECUR_DIR)recur" ]; then \
-		rm -f "$(RECUR_DIR)recur"
-		echo "$(RECUR_DIR)recur including it's environment have been removed..."; \
+	if [ -f "$(RECUR_DIR)/recur" ]; then \
+		rm -f "$(RECUR_DIR)/recur"
+		echo "$(RECUR_DIR)/recur including it's environment have been removed..."; \
 	else \
 		echo "RECUR not found..."; \
 	fi
