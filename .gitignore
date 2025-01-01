@@ -28,7 +28,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 PKG-INFO
-Dockerfile
+Dockerfile*
 .dockerignore
 docker-compose.yml
 
