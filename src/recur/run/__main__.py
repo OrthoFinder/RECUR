@@ -289,7 +289,6 @@ def ParentChildRelation(treefile: str,
         root_of_interest = next((child for child in rt_children if child != outgroup_mrca), None)
 
         if root_of_interest is None:
-
             return None, outgroup_squences, [], [], "No root of interest found; tree structure might be incorrect."
 
         root_node = root_of_interest.label
@@ -297,7 +296,7 @@ def ParentChildRelation(treefile: str,
 
         outgroup_subtree_species = [leaf.taxon.label for leaf in outgroup_mrca.leaf_iter()]
 
-        taxon_count = 0
+        branch_count = 0
         parent_list: List[str] = []
         child_list: List[str] = []
         for nd in root_of_interest.postorder_iter():
@@ -318,15 +317,17 @@ def ParentChildRelation(treefile: str,
                 parent_list.append(parent)
                 child_list.append(child)
 
-                taxon_count += 1
+                branch_count += 1
 
         if len(outgroup_subtree_species) != len(outgroup_squences):
             outgroup_squences = outgroup_subtree_species
-
+        
+        # Bifurcating check
         expected_relationships = 2 * (n_species - len(outgroup_squences)) - 2
 
-        if taxon_count != expected_relationships:
-            return root_node, outgroup_squences, parent_list, child_list, f"Taxon count {taxon_count} does not match expected relationships {expected_relationships}."
+        if branch_count != expected_relationships:
+            return root_node, outgroup_squences, parent_list, child_list, \
+                f"Taxon count {branch_count} does not match expected relationships {expected_relationships}."
 
         return root_node, outgroup_squences, parent_list, child_list, ""
     except BrokenPipeError:
@@ -1071,8 +1072,6 @@ def main(args: Optional[List[str]] = None):
 
                     outgroup_mrca, preserve_underscores = util.CheckOutgroups(outgroup_mrca, alignment_dict)
 
-
-
                     if options.sequence_type == "AA":
                         node_prot_seqs_fn = filehandler.GetNodeProtSeqsFN()
                         filewriter.WriteSeqsToAln(node_seq_dict, node_prot_seqs_fn)
@@ -1087,7 +1086,7 @@ def main(args: Optional[List[str]] = None):
                         filewriter.WriteSeqsToAln(node_prot_seqs_dict, node_prot_seqs_fn)
                         alignment_dict, _ = util.GetSeqsDict(alignment_dict, options.sequence_type)
                     
-                    if options.disk_save:
+                    if options.disk_save and options.multi_stage:
                         combined_prot_seqs_fn = filehandler.GetCombinedProtSeqsFN()
                         filewriter.WriteSeqsToAln(combined_prot_seqs_dict, combined_prot_seqs_fn)
 
@@ -1139,15 +1138,17 @@ def main(args: Optional[List[str]] = None):
                     node_seq_dict.clear()
                     combined_seq_dict.clear()
 
-                    root_node, outgroup_squences, parent_list, child_list, error_msg = ParentChildRelation(treefile,
-                                                                                                        outgroup_mrca,
-                                                                                                        n_species,
-                                                                                                        preserve_underscores,
-                                                                                                        )
+                    root_node, outgroup_squences, parent_list, child_list, error_msg = \
+                        ParentChildRelation(treefile,
+                                            outgroup_mrca,
+                                            n_species,
+                                            preserve_underscores,
+                                            )
 
                     if error_msg:
                         production_logger.error(error_msg)
-                        continue
+                        if not options.continue_on_error:
+                            continue
 
                     if outgroup_mrca and len(outgroup_mrca) != len(outgroup_squences):
                         warnings.warn(f"Outgroup sequences provided not monophyletic. Outgroups will be updated. Please find the updated outgroups in the log file.")
@@ -1188,7 +1189,8 @@ def main(args: Optional[List[str]] = None):
                         recurrenceDir = alnDir
                     else:
                         recurrenceDir = options.recDir
-                    if options.disk_save:
+
+                    if options.disk_save and options.multi_stage:
                         filewriter.WriteRecurrenceListRealPhylogeny(
                             recurrence_list, 
                             filehandler.GetRecurrenceListRealPhylogenyFN(recurrenceDir)
@@ -1198,9 +1200,9 @@ def main(args: Optional[List[str]] = None):
                             rec_loc_count_dict,
                             filehandler.GetRecurrenceCountPhylogenyFN(recurrenceDir)
                         )
-                        print("NOTE: You are running one the disk saving mode!")
-                        print("You need to run `recur -f project_dir -cr` to obtain the recurrence list.")
 
+                        print("NOTE: You are running one the multistage and disk saving mode!")
+                        print("You need to run `recur -f project_dir -cr` to obtain the recurrence list.", end="\n"*2)
 
                     if len(recurrence_list) == 0:
                         production_logger.info(f"ATTENTION: No recurrence has identified for gene {gene}! Monte-Carlo Simiatlion will be SKIPPED!\n",
@@ -1331,8 +1333,9 @@ def main(args: Optional[List[str]] = None):
                         )
                         print("NOTE: You are running one the disk saving mode!")
                         print("You need to run `recur -f project_dir -cr` to obtain the recurrence list.")
-
-                        sys.exit(0)
+                        
+                        if options.multi_stage:
+                            sys.exit(0)
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Starting compute p values.")

@@ -21,12 +21,14 @@ fi
 
 SEED1=$((SEED0 + (MAXNALIGN / NALIGN) - 1)) 
 
-
-recur -f ExampleData -st AA --outgroups ExampleData --num-alignments $NALIGN -ds --seed $SEED0
+# -ds stands for disk saving
+# -ms stands for multi stage
+# -ds can be used alone, however, -ms cannot, it needs to be used together with -ds
+recur -f ExampleData -st AA --outgroups ExampleData --num-alignments $NALIGN -ds -ms --seed $SEED0
 
 for i in $(seq $((SEED0 + 1)) $SEED1); do
     echo
-    custom_command="recur -f ExampleData -st AA --outgroups ExampleData --num-alignments $NALIGN -ds -rs 3 --seed $i"
+    custom_command="recur -f ExampleData -st AA --outgroups ExampleData --num-alignments $NALIGN -ds -ms -rs 3 --seed $i"
     echo ">>>>> Run command: $custom_command"
 
     custom_result=$($custom_command 2>&1)

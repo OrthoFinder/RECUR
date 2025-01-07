@@ -26,6 +26,7 @@ class Options(object):
         self.name = ""  # name to identify this set of results
         self.extended_filename = False
         self.disk_save = False
+        self.multi_stage = False
         self.compute_recurrence = False
         self.output_prefix = None
         self.gene_tree = None
@@ -54,6 +55,7 @@ class Options(object):
         self.system_info = False
         self.override = True
         self.project_dir = None
+        self.continue_on_error = False
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -491,6 +493,12 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-ds" or arg == "--disk-save":
             options.disk_save = True
+
+        elif arg == "-ms" or arg == "--multi-stage":
+            options.multi_stage = True
+
+        elif arg == "-coe" or arg == "--continue-on-error":
+            options.continue_on_error = True
 
         else:
             print("Unrecognised argument: %s\n" % arg)
