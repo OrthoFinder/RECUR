@@ -89,9 +89,15 @@ jobs:
       run: |
         make install_iqtree2
 
+    - name: Add IQ-TREE2 to PATH
+      run: echo "/home/runner/local/bin" >> $GITHUB_PATH
+
     - name: Start a new session
       run: |
         . ~/.bashrc
+
+    - name: Verify IQ-TREE2 in PATH
+      run: which iqtree2
 
     - name: Test run iqtree2
       run: |
