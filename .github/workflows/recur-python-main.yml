@@ -88,6 +88,13 @@ jobs:
     - name: Install iqtree2
       run: |
         make install_iqtree2
+
+    - name: Start a new session
+      run: |
+        . ~/.bashrc
+
+    - name: Test run iqtree2
+      run: |
         iqtree2 --version
 
     - name: Test with mypy
