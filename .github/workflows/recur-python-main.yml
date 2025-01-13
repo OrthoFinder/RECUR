@@ -79,11 +79,16 @@ jobs:
       run: |
         echo "Cache used? ${{ steps.cache-dependencies.outputs.used-cache}}"
 
-    - name: Add iqtree2 to PATH
-      run: echo "$(pwd)/src/recur/bin" >> $GITHUB_PATH
+    # - name: Add iqtree2 to PATH
+    #   run: echo "$(pwd)/src/recur/bin" >> $GITHUB_PATH
 
-    - name: Ensure iqtree2 is executable
-      run: chmod +x src/recur/bin/iqtree2
+    # - name: Ensure iqtree2 is executable
+    #   run: chmod +x src/recur/bin/iqtree2
+
+    - name: Install iqtree2
+      run: |
+        make install_iqtree2
+        iqtree2 --version
 
     - name: Test with mypy
       id: run-mypy
