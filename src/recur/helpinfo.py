@@ -1,13 +1,17 @@
 
-from recur import iqtree_nthreads, recur_nthreads
+from recur.utils.process_args import iqtree_nthreads, recur_nthreads
 from recur.citation import print_citation
+try:
+    from rich import print
+except ImportError:
+    ...
 
 
 def PrintHelp():
 
     print("")
     print("SIMPLE USAGE:")
-    print("Run full RECUR analysis on a protein or codon alignment <dir/file>")
+    print("Run full [dark_goldenrod]RECUR[/dark_goldenrod] analysis on a protein or codon alignment <dir/file>")
     print("recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CODON>")
 
     print("")
@@ -30,5 +34,5 @@ def PrintHelp():
 
     print("")
     print("LICENSE:")
-    print(" Distributed under the GNU General Public License (GPLv3). See License.md")
+    print(" Distributed under the [dodger_blue1]GNU General Public License (GPLv3)[/dodger_blue1]. See License.md")
     print(print_citation)

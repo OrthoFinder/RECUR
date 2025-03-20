@@ -10,29 +10,32 @@ QUIET ?= false
 FORCE ?= false
 CONDA_PYTHON_VERSION ?= 3.10
 PYTHON_VERSION ?= python3
-RECUR_ENV_DEFAULT := recur_venv
+RECUR_ENV_DEFAULT := recur_env
 ENV_NAME ?= $(RECUR_ENV_DEFAULT)
 
 SYSTEM_WIDE ?= 0
 HOME_DIR := $(if $(HOME),$(HOME),$(shell echo ~))
 
-PROMPT_USER_INSTALL_DIR = \
-	@if [ -d "$(HOME_DIR)/local/bin" ]; then \
-		read -p "Directory $(HOME_DIR)/local/bin exists. Do you want to use it? (y/n) " choice; \
-		case $$choice in \
-			[yY]*) echo "$(HOME_DIR)/local/bin";; \
-			[nN]*) \
-				read -p "Enter a new directory name (relative to $(HOME_DIR)): " new_dir; \
-				USER_INSTALL_DIR=$(HOME_DIR)/$$new_dir; \
-				echo $$USER_INSTALL_DIR; \
-				mkdir -p $$USER_INSTALL_DIR || { echo "Error creating directory $$USER_INSTALL_DIR. Exiting."; exit 1; }; \
-				;; \
-			*) echo "Invalid choice. Exiting."; exit 1; \
-		esac; \
-	else \
-		echo "$(HOME_DIR)/local/bin"; \
-	fi
+USE_CONDA ?= true
 
+ifeq ($(USE_CONDA),false)
+	PROMPT_USER_INSTALL_DIR = \
+		@if [ -d "$(HOME_DIR)/local/bin" ]; then \
+			read -p "Directory $(HOME_DIR)/local/bin exists. Do you want to use it? (y/n) " choice; \
+			case $$choice in \
+				[yY]*) echo "$(HOME_DIR)/local/bin";; \
+				[nN]*) \
+					read -p "Enter a new directory name (relative to $(HOME_DIR)): " new_dir; \
+					USER_INSTALL_DIR=$(HOME_DIR)/$$new_dir; \
+					echo $$USER_INSTALL_DIR; \
+					mkdir -p $$USER_INSTALL_DIR || { echo "Error creating directory $$USER_INSTALL_DIR. Exiting."; exit 1; }; \
+					;; \
+				*) echo "Invalid choice. Exiting."; exit 1; \
+			esac; \
+		else \
+			echo "$(HOME_DIR)/local/bin"; \
+		fi
+endif
 
 USER_INSTALL_DIR := $(shell $(PROMPT_USER_INSTALL_DIR))
 SYSTEM_INSTALL_DIR := /usr/local/bin
@@ -46,7 +49,7 @@ else
     SUDO_PREFIX :=
 endif
 
-IQTREE_DEFAULT_VERSION := 2.3.6
+IQTREE_DEFAULT_VERSION := 2.4.0
 IQTREE_VERSION ?= $(IQTREE_DEFAULT_VERSION)
 
 # URLs for IQ-TREE urlS
@@ -119,7 +122,7 @@ conda_install_recur: create_conda_env
 conda_install: conda_install_recur conda_install_iqtree2
 	@echo "You have now installed RECUR $(RECUR_VERSION) and its dependencies in $(ENV_NAME)!"
 
-clean_conda_venv:
+clean_conda_env:
 	@echo "Checking if Conda environment $(ENV_NAME) exists..."; \
 	. $(shell conda info --base)/etc/profile.d/conda.sh && \
 	if conda env list | grep -q "^$(ENV_NAME)[[:space:]]"; then \

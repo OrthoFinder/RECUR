@@ -29,3 +29,27 @@ runs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         echo "cache='${{ inputs.caching }}'">>$GITHUB_OUTPUT
       shell: bash
+
+    - name: Set up iqtree2 cache
+      id: iqtree2-cache
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/local/bin # Cache directory for iqtree2 installation
+        key: ${{ runner.os }}-iqtree2
+        restore-keys: |
+          ${{ runner.os }}-iqtree2
+
+    - name: Install iqtree2 using Makefile
+      if: steps.iqtree2-cache.outputs.cache-hit != 'true'
+      run: |
+        # Navigate to the directory containing the Makefile
+        cd path/to/makefile_directory
+        make install_iqtree2
+        # Verify iqtree2 installation
+        iqtree2 --version
+        echo "iqtree2-cache-hit='false'" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Add iqtree2 to PATH
+      run: echo "/home/runner/local/bin" >> $GITHUB_PATH
+      shell: bash

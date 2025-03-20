@@ -24,9 +24,10 @@ import numpy as np
 import psutil
 from rich import print, progress
 
-from recur import __version__, helpinfo
+from recur import __version__, __location__, helpinfo
 from recur.run import run_commands
 from recur.utils import files, process_args, util
+
 
 # warnings.filterwarnings("ignore", module='dendropy')
 
@@ -69,79 +70,93 @@ from recur.utils import files, process_args, util
 #     return my_env, local_iqtree2_path, bin_dir, conda_prefix
 
 
-def find_iqtree2():
-    # Check the PATH environment variable
-    iqtree_path = shutil.which("iqtree2")
-    if iqtree_path:
-        return iqtree_path
+# def find_iqtree2():
+#     # Check the PATH environment variable
+#     iqtree_path = shutil.which("iqtree2")
+#     if iqtree_path:
+#         return iqtree_path
     
-    # If not in PATH, the looks for iqtree2 in a list of common directories 
-    # where binaries are often installed
-    common_dirs = [
-        os.path.expanduser("~/bin"),
-        os.path.expanduser("~/.local/bin"),
-        os.path.expanduser("~/local/bin"),
-        "/usr/local/bin",
-        "/usr/bin",
-        "/opt/bin",
-    ]
-    for directory in common_dirs:
-        iqtree_path = os.path.join(directory, "iqtree2")
-        if os.path.isfile(iqtree_path) and os.access(iqtree_path, os.X_OK):
-            return iqtree_path
+#     # If not in PATH, the looks for iqtree2 in a list of common directories 
+#     # where binaries are often installed
+#     common_dirs = [
+#         os.path.expanduser("~/bin"),
+#         os.path.expanduser("~/.local/bin"),
+#         os.path.expanduser("~/local/bin"),
+#         "/usr/local/bin",
+#         "/usr/bin",
+#         "/opt/bin",
+#     ]
+#     for directory in common_dirs:
+#         iqtree_path = os.path.join(directory, "iqtree2")
+#         if os.path.isfile(iqtree_path) and os.access(iqtree_path, os.X_OK):
+#             return iqtree_path
         
 
-def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
+# def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
 
-    sys.setrecursionlimit(10**6)
-    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+#     sys.setrecursionlimit(10**6)
+#     os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
-    my_env = os.environ.copy()
+#     my_env = os.environ.copy()
 
-    if getattr(sys, 'frozen', False): 
-        base_dir = os.path.dirname(sys.executable)
-    else:
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+#     if getattr(sys, 'frozen', False): 
+#         base_dir = os.path.dirname(sys.executable)
+#     else:
+#         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
     
-    iqtree2_path = find_iqtree2()
-    if iqtree2_path is None:
-        print("IQ-TREE2 not found! Please install it before running RECUR!")
-        print("IQ-TREE2 can be installed by running `make install_iqtree2`")
-        sys.exit(1)
+#     iqtree2_path = find_iqtree2()
+#     if iqtree2_path is None:
+#         print("IQ-TREE2 not found! Please install it before running RECUR!")
+#         print("IQ-TREE2 can be installed by running `make install_iqtree2`")
+#         sys.exit(1)
 
-    iqtree_install_dir = os.path.dirname(iqtree2_path)
-    bin_dir = iqtree_install_dir
+#     iqtree_install_dir = os.path.dirname(iqtree2_path)
+#     bin_dir = iqtree_install_dir
 
-    # home_dir = os.path.expanduser("~")
-    # iqtree_install_dir = os.path.join(home_dir, "bin")
-    # local_iqtree2_path = os.path.join(iqtree_install_dir, "iqtree2")
-    # bin_dir = iqtree_install_dir
+#     # home_dir = os.path.expanduser("~")
+#     # iqtree_install_dir = os.path.join(home_dir, "bin")
+#     # local_iqtree2_path = os.path.join(iqtree_install_dir, "iqtree2")
+#     # bin_dir = iqtree_install_dir
 
-    conda_prefix = my_env.get("CONDA_PREFIX")
-    if conda_prefix:
-        conda_bin = os.path.join(conda_prefix, "Scripts") if os.name == "nt" else os.path.join(conda_prefix, "bin")
-        my_env["PATH"] = conda_bin + os.pathsep + my_env["PATH"]
+#     conda_prefix = my_env.get("CONDA_PREFIX")
+#     if conda_prefix:
+#         conda_bin = os.path.join(conda_prefix, "Scripts") if os.name == "nt" else os.path.join(conda_prefix, "bin")
+#         my_env["PATH"] = conda_bin + os.pathsep + my_env["PATH"]
 
-    my_env["PATH"] = bin_dir + os.pathsep + my_env["PATH"]
+#     my_env["PATH"] = bin_dir + os.pathsep + my_env["PATH"]
 
-    if getattr(sys, "frozen", False):
-        if os.name == "nt":  # Windows-specific
-            my_env["PATH"] = my_env.get("PATH_ORIG", "")
-        else:  # Unix-like systems
-            my_env["LD_LIBRARY_PATH"] = my_env.get("LD_LIBRARY_PATH_ORIG", "")
-            my_env["DYLD_LIBRARY_PATH"] = my_env.get("DYLD_LIBRARY_PATH_ORIG", "")
+#     if getattr(sys, "frozen", False):
+#         if os.name == "nt":  # Windows-specific
+#             my_env["PATH"] = my_env.get("PATH_ORIG", "")
+#         else:  # Unix-like systems
+#             my_env["LD_LIBRARY_PATH"] = my_env.get("LD_LIBRARY_PATH_ORIG", "")
+#             my_env["DYLD_LIBRARY_PATH"] = my_env.get("DYLD_LIBRARY_PATH_ORIG", "")
 
-    return my_env, iqtree2_path, bin_dir, conda_prefix
+#     return my_env, iqtree2_path, bin_dir, conda_prefix
 
-def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None) -> bool:
+def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None, print_info: bool = False) -> bool:
     try:
-        process = subprocess.Popen(command, env=env, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        process = subprocess.Popen(
+            command, 
+            env=env, 
+            shell=True, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True
+        )
         stdout, stderr = process.communicate()
-
-        # if stdout:
-        #     print(stdout.strip())
-        # if stderr:
-        #     print(stderr.strip())
+        if print_info:
+            if stdout:
+                if command in [
+                    "command -v iqtree2", 
+                    "which iqtree2", 
+                    "where iqtree2", 
+                    "Get-Command iqtree2"
+                    ]:
+                    print(f"Using iqtree2 from: ")
+                print(stdout.strip())
+            if stderr:
+                print(stderr.strip())
 
         returncode = process.returncode
         if returncode == 0:
@@ -156,8 +171,39 @@ def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None) -> bool:
         print(f"An error occurred while trying to run '{command}': {e}")
         return False
 
-def initialise_recur(iqtree_version: Optional[str] = None) -> Dict[str, str]:
-    my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
+def setup_environment()-> Dict[str, str]:
+
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"    # fix issue with numpy/openblas. Will mean that single threaded options aren't automatically parallelised 
+
+    my_env = os.environ.copy()
+    # use orthofinder supplied executables by preference
+    local_bin_dir = os.path.join(__location__, 'bin')
+    bin_dirs = [
+        "/opt/bin",
+        os.path.expanduser("~/bin"),
+        os.path.expanduser("~/.local/bin"),
+        os.path.expanduser("~/local/bin"),
+        "/usr/bin",
+        "/usr/local/bin",
+        local_bin_dir,
+    ]
+    for bin_dir in bin_dirs:
+        my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
+
+    conda_prefix = my_env.get("CONDA_PREFIX")
+    if conda_prefix:
+        conda_bin = os.path.join(conda_prefix, "Scripts") if os.name == "nt" else os.path.join(conda_prefix, "bin")
+        my_env["PATH"] = conda_bin + os.pathsep + my_env["PATH"]
+    
+    return my_env
+
+# my_env = setup_environment()
+
+# def initialise_recur(iqtree_version: Optional[str] = None) -> Dict[str, str]:
+
+def initialise_recur(show_iqtree_path: bool = False) -> Dict[str, str]:
+    # my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
+    my_env = setup_environment()
     system = platform.system()
 
     try:
@@ -171,31 +217,37 @@ def initialise_recur(iqtree_version: Optional[str] = None) -> Dict[str, str]:
         print(f"Multiprocessing context setting error on {system}: {e}")
         pass
 
-    if system == "Linux" and iqtree_version == 'local':
-        my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
-        if CanRunCommand(f"{local_iqtree2_path} --version", env=my_env):
-            return my_env
+    # if system == "Linux" and iqtree_version == 'local':
+    #     my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
+    #     if CanRunCommand(f"{local_iqtree2_path} --version", env=my_env):
+    #         return my_env
 
-    if iqtree_version == "conda" and conda_prefix:
-        iqtree_path = shutil.which("iqtree2")
-        if iqtree_path:
-            print("\nConda version of IQ-TREE2 found.")
-            print(f"IQ-TREE2 path: {iqtree_path}")
-            return my_env
+    # if iqtree_version == "conda" and conda_prefix:
+    #     iqtree_path = shutil.which("iqtree2")
+    #     if iqtree_path:
+    #         print("\nConda version of IQ-TREE2 found.")
+    #         print(f"IQ-TREE2 path: {iqtree_path}")
+    #         return my_env
 
-    if iqtree_version == "system" and not conda_prefix:
-        iqtree_path = shutil.which("iqtree2")
-        if iqtree_path:
-            print("\nSystem-wide version of IQ-TREE2 found.")
-            print(f"IQ-TREE2 path: {iqtree_path}")
-            return my_env
+    # if iqtree_version == "system" and not conda_prefix:
+    #     iqtree_path = shutil.which("iqtree2")
+    #     if iqtree_path:
+    #         print("\nSystem-wide version of IQ-TREE2 found.")
+    #         print(f"IQ-TREE2 path: {iqtree_path}")
+    #         return my_env
 
-    if conda_prefix and CanRunCommand("iqtree2 --version", env=my_env):
-        print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
-        return my_env
-
-    if CanRunCommand("iqtree2 --version", env=my_env):
-        print("Local IQ-TREE2 binary failed to run, falling back to system-wide binary.")
+    # if conda_prefix and CanRunCommand("iqtree2 --version", env=my_env):
+    #     print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
+    #     return my_env
+    iqtree_path = shutil.which("iqtree2", path=my_env["PATH"])
+    iqtree2_version_cmd = iqtree_path + " --version"
+    if CanRunCommand(iqtree2_version_cmd, env=my_env):
+        if show_iqtree_path:
+            print("\ncan run iqtree2 - [bold green]ok[/bold green]")
+            if system == "Windows":
+                CanRunCommand("where iqtree2", env=my_env, print_info=True)
+            else:
+                CanRunCommand("which iqtree2", env=my_env, print_info=True)
         return my_env
 
     print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
@@ -704,7 +756,7 @@ def main(args: Optional[List[str]] = None):
         sys.exit()
 
     elif args[0] == "-v" or args[0] == "--version":
-        print(f"RECUR:v{__version__}")
+        print(f"[dark_goldenrod]RECUR[/dark_goldenrod]:v[deep_sky_blue2]{__version__}[/deep_sky_blue2]")
         sys.exit()
 
     start_main = time.perf_counter()
@@ -714,8 +766,8 @@ def main(args: Optional[List[str]] = None):
 
         options, alnDir, alnPath, resultsDir_nonDefault = process_args.ProcessArgs(args)
         
-        iqtree_version = options.iqtree_version if options.iqtree_version else "system"
-        my_env = initialise_recur(iqtree_version)
+        # iqtree_version = options.iqtree_version if options.iqtree_version else "system"
+        my_env = initialise_recur(options.show_iqtree_path)
 
         if options.system_info:
             util.get_system_info()
@@ -768,17 +820,21 @@ def main(args: Optional[List[str]] = None):
                 print()
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 print(prepend + "Starting compute p values.")
-                recurrence_list_pvalue = compute_p_values(mcs_results,
-                                                        recurrence_list,
-                                                        residue_dict,
-                                                        len(mcs_results))
+                recurrence_list_pvalue = compute_p_values(
+                    mcs_results,
+                    recurrence_list,
+                    residue_dict,
+                    len(mcs_results)
+                )
 
-                recurrence_list_updated = update_recurrence_list(rec_loc_count_dict,
-                                                                recurrence_list_pvalue,
-                                                                combined_prot_seqs_dict,
-                                                                species_of_interest,
-                                                                residue_dict_flip,
-                                                                protein_len)
+                recurrence_list_updated = update_recurrence_list(
+                    rec_loc_count_dict,
+                    recurrence_list_pvalue,
+                    combined_prot_seqs_dict,
+                    species_of_interest,
+                    residue_dict_flip,
+                    protein_len
+                )
 
                 filewriter.WriteRecurrenceList(
                     recurrence_list_updated, 
@@ -967,18 +1023,19 @@ def main(args: Optional[List[str]] = None):
                         else:
                             fix_branch_length = options.fix_branch_length
 
-                        commands = run_commands.GetGeneTreeBuildCommands([aln_path],
-                                                            real_phyDir,
-                                                            options.evolution_model,
-                                                            options.iqtree_nthreads,
-                                                            phy_seed=options.seed,
-                                                            asr=asr,
-                                                            sequence_type=options.sequence_type,
-                                                            gene_tree=gene_tree,
-                                                            bootstrap=options.bootstrap,
-                                                            sh_alrt=options.bootstrap,
-                                                            fix_branch_length=fix_branch_length,
-                                                            )
+                        commands = run_commands.GetGeneTreeBuildCommands(
+                            [aln_path],
+                            real_phyDir,
+                            options.evolution_model,
+                            options.iqtree_nthreads,
+                            phy_seed=options.seed,
+                            asr=asr,
+                            sequence_type=options.sequence_type,
+                            gene_tree=gene_tree,
+                            bootstrap=options.bootstrap,
+                            sh_alrt=options.bootstrap,
+                            fix_branch_length=fix_branch_length,
+                        )
 
                         if gene_tree is None:
                             production_logger.info(f"step1 iqtree2 gene tree building command: ", extra={'to_file': True, 'to_console': False})
@@ -988,13 +1045,15 @@ def main(args: Optional[List[str]] = None):
                             production_logger.info(f"step1 iqtree2 ancestral state reconstruction command: ", extra={'to_file': True, 'to_console': False})
                             production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
-                        run_commands.RunCommand(commands,
-                                                real_phyDir,
-                                                env=my_env,
-                                                nthreads=options.recur_nthreads,
-                                                delete_files=True,
-                                                files_to_keep=["state", "treefile", "iqtree"],
-                                                fd_limit=options.fd_limit)
+                        run_commands.RunCommand(
+                            commands,
+                            real_phyDir,
+                            env=my_env,
+                            nthreads=options.recur_nthreads,
+                            delete_files=True,
+                            files_to_keep=["state", "treefile", "iqtree"],
+                            fd_limit=options.fd_limit
+                        )
 
                         treefile = filehandler.GetTreeFileFN()
                         iqtreefile = filehandler.GetIQTreeFileFN()
@@ -1030,26 +1089,30 @@ def main(args: Optional[List[str]] = None):
                             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                             production_logger.info(prepend + f"Starting ancestral state reconstruction.", extra={'to_file': True, 'to_console': True})
 
-                            commands = run_commands.GetGeneTreeBuildCommands([aln_path],
-                                                                real_phyDir,
-                                                                best_evolution_model,
-                                                                options.iqtree_nthreads,
-                                                                phy_seed=options.seed,
-                                                                sequence_type=options.sequence_type,
-                                                                gene_tree=treefile,
-                                                                asr=True,
-                                                                fix_branch_length=options.fix_branch_length)
+                            commands = run_commands.GetGeneTreeBuildCommands(
+                                [aln_path],
+                                real_phyDir,
+                                best_evolution_model,
+                                options.iqtree_nthreads,
+                                phy_seed=options.seed,
+                                sequence_type=options.sequence_type,
+                                gene_tree=treefile,
+                                asr=True,
+                                fix_branch_length=options.fix_branch_length
+                            )
 
                             production_logger.info(f"step2 iqtree2 ancestral state reconstruction command: ",  extra={'to_file': True, 'to_console': False})
                             production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
-                            run_commands.RunCommand(commands,
-                                                    real_phyDir,
-                                                    env=my_env,
-                                                    nthreads=options.recur_nthreads,
-                                                    delete_files=True,
-                                                    files_to_keep=["state", "treefile", "iqtree"],
-                                                    fd_limit=options.fd_limit)
+                            run_commands.RunCommand(
+                                commands,
+                                real_phyDir,
+                                env=my_env,
+                                nthreads=options.recur_nthreads,
+                                delete_files=True,
+                                files_to_keep=["state", "treefile", "iqtree"],
+                                fd_limit=options.fd_limit
+                            )
 
                             statefile = filehandler.GetStateFileFN()
                             if not restart_step2 and restart_step3:
@@ -1102,25 +1165,29 @@ def main(args: Optional[List[str]] = None):
                         binary_aln_path = filehandler.GetBinarySeqsFN()
                         filewriter.WriteSeqsToAln(binary_alignment_dict, binary_aln_path)
 
-                        binary_tree_commands = run_commands.GetGeneTreeBuildCommands([binary_aln_path],
-                                                                filehandler.GetBinaryPhylogenyDir(),
-                                                                "GTR2",
-                                                                options.iqtree_nthreads,
-                                                                phy_seed=options.seed,
-                                                                gene_tree=treefile,
-                                                                asr=True,
-                                                                fix_branch_length=options.binary_blfix)
+                        binary_tree_commands = run_commands.GetGeneTreeBuildCommands(
+                            [binary_aln_path],
+                            filehandler.GetBinaryPhylogenyDir(),
+                            "GTR2",
+                            options.iqtree_nthreads,
+                            phy_seed=options.seed,
+                            gene_tree=treefile,
+                            asr=True,
+                            fix_branch_length=options.binary_blfix
+                        )
 
                         production_logger.info("iqtree2 ancestral indel estimation command: ",  extra={'to_file': True, 'to_console': False})
                         production_logger.info(f"{binary_tree_commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
-                        run_commands.RunCommand(binary_tree_commands,
-                                                filehandler.GetBinaryPhylogenyDir(),
-                                                env=my_env,
-                                                nthreads=options.recur_nthreads,
-                                                delete_files=True,
-                                                files_to_keep=["state", "treefile", "aln"],
-                                                fd_limit=options.fd_limit)
+                        run_commands.RunCommand(
+                            binary_tree_commands,
+                            filehandler.GetBinaryPhylogenyDir(),
+                            env=my_env,
+                            nthreads=options.recur_nthreads,
+                            delete_files=True,
+                            files_to_keep=["state", "treefile", "aln"],
+                            fd_limit=options.fd_limit
+                        )
 
                         binary_statefile = filehandler.GetBinaryStateFileFN()
 
@@ -1139,11 +1206,12 @@ def main(args: Optional[List[str]] = None):
                     combined_seq_dict.clear()
 
                     root_node, outgroup_squences, parent_list, child_list, error_msg = \
-                        ParentChildRelation(treefile,
-                                            outgroup_mrca,
-                                            n_species,
-                                            preserve_underscores,
-                                            )
+                        ParentChildRelation(
+                            treefile,
+                            outgroup_mrca,
+                            n_species,
+                            preserve_underscores,
+                        )
 
                     if error_msg:
                         production_logger.error(error_msg)
@@ -1155,21 +1223,23 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info("Updated outgroups: {outgroup_mrca}", extra={'to_file': True, 'to_console': False})
                         outgroup_mrca = outgroup_squences
 
-                    rec_loc_count_dict, parent_arr, child_arr = count_mutations(parent_list,
-                                                                                child_list,
-                                                                                combined_prot_seqs_dict,
-                                                                                residue_dict,
-                                                                                dash_exist=dash_exist,
-                                                                                binary_sequence_dict=binary_combined_seq_dict,
-                                                                                )
+                    rec_loc_count_dict, parent_arr, child_arr = count_mutations(
+                        parent_list,
+                        child_list,
+                        combined_prot_seqs_dict,
+                        residue_dict,
+                        dash_exist=dash_exist,
+                        binary_sequence_dict=binary_combined_seq_dict,
+                    )
 
                     if dash_exist:
-                        binary_modified_seq = util.ConvertToSequence(parent_list,
-                                                                    child_list,
-                                                                    parent_arr,
-                                                                    child_arr,
-                                                                    residue_dict_flip
-                                                                    )
+                        binary_modified_seq = util.ConvertToSequence(
+                            parent_list,
+                            child_list,
+                            parent_arr,
+                            child_arr,
+                            residue_dict_flip
+                        )
                         binary_modified_seq_fn = filehandler.GetBinaryCombinedProtSeqsFN()
                         filewriter.WriteSeqsToAln(binary_modified_seq, binary_modified_seq_fn)
 
@@ -1177,13 +1247,18 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(f"Root of species of interest: {root_node}", extra={'to_file': True, 'to_console': True})
                     production_logger.info(f"Substitution matrix output: {filehandler.GetMutMatrixDir()}\n", extra={'to_file': True, 'to_console': True})
                     
-                    filewriter.WriteMutMatrix(rec_loc_count_dict,
-                                            residue_dict_flip,
-                                            protein_len,
-                                            filehandler.GetMutCountMatricesFN(),
-                                            filehandler.GetAccumMutCountMatricesFN())
+                    filewriter.WriteMutMatrix(
+                        rec_loc_count_dict,
+                        residue_dict_flip,
+                        protein_len,
+                        filehandler.GetMutCountMatricesFN(),
+                        filehandler.GetAccumMutCountMatricesFN()
+                    )
                 
-                    recurrence_list = get_recurrence_list(rec_loc_count_dict, residue_dict_flip)
+                    recurrence_list = get_recurrence_list(
+                        rec_loc_count_dict, 
+                        residue_dict_flip
+                    )
                     
                     if not options.recDir:
                         recurrenceDir = alnDir
@@ -1238,13 +1313,15 @@ def main(args: Optional[List[str]] = None):
                         else:
                             raise ValueError("Root node of interest is None.")
 
-                        mcs_commands = run_commands.GetMCsimulationCommand(output_prefix,
-                                                                        options.iqtree_nthreads,
-                                                                        options.mcs_seed,
-                                                                        best_evolution_model,
-                                                                        treefile,
-                                                                        fn_root_node,
-                                                                        options.nalign)
+                        mcs_commands = run_commands.GetMCsimulationCommand(
+                            output_prefix,
+                            options.iqtree_nthreads,
+                            options.mcs_seed,
+                            best_evolution_model,
+                            treefile,
+                            fn_root_node,
+                            options.nalign
+                        )
                         if restart_step3:
                             if gene_tree is None and not restart_step2:
                                 production_logger.info("### Restart RECUR from Step3 ###\n", extra={'to_file': True, 'to_console': True})
@@ -1302,20 +1379,22 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(prepend + "Starting create substitution matrices for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
                     production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
 
-                    mcs_results = process_mcs_files_in_chunks(mcs_alnDir,
-                                                    parent_list,
-                                                    child_list,
-                                                    residue_dict,
-                                                    options.nthreads,
-                                                    isnuc_fasta,
-                                                    options.sequence_type,
-                                                    res_loc_list,
-                                                    production_logger,
-                                                    width,
-                                                    dash_exist=dash_exist,
-                                                    binary_sequence_dict=binary_combined_seq_dict,
-                                                    update_cycle=options.update_cycle,
-                                                    mcs_batch_size=options.mcs_batch_size)
+                    mcs_results = process_mcs_files_in_chunks(
+                        mcs_alnDir,
+                        parent_list,
+                        child_list,
+                        residue_dict,
+                        options.nthreads,
+                        isnuc_fasta,
+                        options.sequence_type,
+                        res_loc_list,
+                        production_logger,
+                        width,
+                        dash_exist=dash_exist,
+                        binary_sequence_dict=binary_combined_seq_dict,
+                        update_cycle=options.update_cycle,
+                        mcs_batch_size=options.mcs_batch_size
+                    )
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Substitution matrices creation complete.\n")
