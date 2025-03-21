@@ -6,7 +6,11 @@ layout: home
 title: Home
 ---
 
-## Introduction
+
+## RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments
+<br>
+
+
 ![RECUR method workflow](./assets/images/RECUR_workflow_figure.png)
 
 <div align="center">

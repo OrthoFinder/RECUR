@@ -4,16 +4,45 @@ title: Usage
 permalink: /usage/
 ---
 
-
 ## How to Use RECUR
 
-In this section, we will dive deep into the options you can have to run RECUR. The commands shown in this section will assume that you have RECUR installed on your machine.
+- [How to Use RECUR](#how-to-use-recur)
+  - [Simple Usage](#simple-usage)
+  - [Advance Usage](#advanced-usage)
+    - [Options Overview](#options-overview)
+    - [Using a constraint tree](#using-a-constraint-tree)
+    - [Providing a model of evolution](#providing-a-model-of-evolution)
+    - [Running RECUR on a directory](#running-recur-on-a-directory)
+  - [RECUR Results](#recur-results)
+    - [Recurrence List](#recurrence-list)
+    - [Output Structure and Extended Results](#output-structure-and-exteneded-results)
+  - [A Note on Reproducibility](#a-note-on-reproducibility)
 
-### Options Overview
+### Simple Usage
+
+The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g.,
+
+`recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON>`
+
+* `--outgroups`: informs RECUR how to correctly root the tree.
+
+   You can either provide a .txt file with each outgroup species listed on a new line, or if you have a small number of outgroup species you can write the species on the command line. e.g., `--outgroups "SpeciesA,SpeciesB,SpeciesC"`.
+
+* `-st`: signals the sequence type in the MSA.
+
+   For a protein MSA `-st AA` should be provided. For a codon MSA, the different NCBI genetic codes can be specified (defined [here](http://www.iqtree.org/doc/Substitution-Models#codon-models)). `-st CODON` will use the standard genetic code.
+
+
+<!-- ### Options Overview -->
+
+### Advanced Usage
+
+#### Options Overview 
+In this section, we will dive deep into the options you have to run RECUR. The commands shown in this section will assume that you have RECUR installed on your machine.
 
 ```bash
   -f <dir/file>                Protein or codon alignment in FASTA format [Required]
-  -st <str>                     <AA|CODON> [Required][Default: CODON1]
+  -st <str>                     <AA|CODON> [Required][Default: AA]
   --outgroups <dir/file/str>   List of outgroup sequences [Required]
   --num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]
   -te <dir/file>               Complete constraint tree [Default: Estimated from alignment]
@@ -32,23 +61,8 @@ Please note that the default values for `-t`, `-nt` are processor dependent. If 
 recur
 python3 recur.py
 ```
-### Simple Usage
 
-The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g.,
-
->`recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON>`
-
-* `--outgroups`: informs RECUR how to correctly root the tree.
-
-   You can either provide a .txt file with each outgroup species listed on a new line, or if you have a small number of outgroup species you can write the species on the command line. e.g., `--outgroups "SpeciesA,SpeciesB,SpeciesC"`.
-
-* `-st`: signals the sequence type in the MSA.
-
-   For a protein MSA `-st AA` should be provided. For a codon MSA, the different NCBI genetic codes can be specified (defined [here](http://www.iqtree.org/doc/Substitution-Models#codon-models)). `-st CODON` will use the standard genetic code.
-
-### Advanced Usage
-
-- Using a constraint tree
+#### Using a constraint tree
 
 To specify the topology of the phylogeny used by RECUR the user can provide a constraint tree using the -te flag. The argument is a file containing a tree in Newick format. E.g.,
 
@@ -56,7 +70,7 @@ To specify the topology of the phylogeny used by RECUR the user can provide a co
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile>
 ```
 
-- Providing a model of evolution
+#### Providing a model of evolution
 
 A model of sequence evolution (as long as it is supported by IQ-TREE2) can be provided using the `-m` flag. E.g.,
 
@@ -64,7 +78,7 @@ A model of sequence evolution (as long as it is supported by IQ-TREE2) can be pr
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> -m <model_of_evolution>
 ```
 
-- Running RECUR on a directory
+#### Running RECUR on a directory
 
 To free you from typing multiple commands in a terminal to run on multiple genes, RECUR provides an option to run on a folder. E.g.,
 
@@ -105,15 +119,36 @@ For instance, if your computer has 8 logical threads, you can have the following
 recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -nt 8
 ```
 
-### Output Structure
+### RECUR Results
+#### Recurrence List
 
-If you do not specify the output folder using `-o`, the results are located in the same directory as the MSA files.
+The main output file from RECUR is a list of all recurrent substitutions inferred to have occurred across the phylogeny, which is found in the `*.recur.tsv` file.
+
+<p align="center">
+  <img src="../assets/images/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="500"/>
+</p>
+
+The `*.recur.tsv` file contains a list of recurrent substitutions, i.e., an amino acid substitution that occurred more than once at a specific site, identified in the alignment. Here is the breakdown of each columns inside this output file:
+* `Site`: indicates the position in the protein MSA.
+* `Parent`: indicates the ancestral amino acid residue.
+* `Child`: indicates the descent amino acid residue.
+* `Recurrence`: indicates the number of times that amino acid substitution occurred at that site across the phylogeny.
+* `Reversion`: indicates the number of times the reverse amino acid substitution occurred at that site across the phylogeny.
+* `P-value`: signifies the probability that the substitution has not occurred by chance (for details of its calculation please read Robbins et al., 2024).
+* `AllSiteSubs`: provides a list of all other substitutions that occurred at that site.
+* `SiteComposition`: indicates the count of each residue at that site in the protein MSA.
+
+
+#### Output Structure and Extended Results
+
+RECUR outputs additional results files from each step in the analysis which can be found in the `.recur` folder. Provided no output folder was specified using `-o`, the results are structured as seen below. 
+<!-- If you do not specify the output folder using `-o`, the results are located in the same directory as the MSA files. -->
 
 <p align="center">
   <img src="../assets/images/RECUR_output_structure.PNG" alt="RECUR output structure" width="500"/>
 </p>
 
-The list of recurrent substitutions is found in the `*.recur.tsv` file. Additional results of intermediate steps can be found in the `.recur` folder.
+ <!-- Additional results of intermediate steps can be found in the `.recur` folder. -->
 
 Inside the `*.recur` folder, you will find two `*.txt` files, i.e., `Citation.txt` and `Log.txt`, and four subdirectories, i.e., `Real_Phylogeny`, `Infered_Sequences`, `Monte_Carlo_Simulation` and `Substitution_Matirces`.
 
@@ -135,22 +170,6 @@ As for the `RowIndex` and `ColIndex` columns, they index the substitution in a m
 </p>
 
 - `Monte_Carlo_Simulation`: contains the simulated alignments based on the best model of evolution,  phylogeny and root sequence of the subtree excluding the outgroup. The number of alignment files in this directory will match the number of Monte Carlo Simulation used in your analysis. It can be adjusted by setting `--num-alignments` to a different value.
-
-### Interpretation of the Recurrence List
-
-<p align="center">
-  <img src="../assets/images/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="500"/>
-</p>
-
-The `*.recur.tsv` file contains a list of recurrent substitutions, i.e., an amino acid substitution that occurred more than once at a specific site, identified in the alignment. Here is the breakdown of each columns inside this output file:
-* `Site`: indicates the position in the protein MSA.
-* `Parent`: indicates the ancestral amino acid residue.
-* `Child`: indicates the descent amino acid residue.
-* `Recurrence`: indicates the number of times that amino acid substitution occurred at that site across the phylogeny.
-* `Reversion`: indicates the number of times the reverse amino acid substitution occurred at that site across the phylogeny.
-* `P-value`: signifies the probability that the substitution has not occurred by chance (for details of its calculation please read Robbins et al., 2024).
-* `AllSiteSubs`: provides a list of all other substitutions that occurred at that site.
-* `SiteComposition`: indicates the count of each residue at that site in the protein MSA.
 
 ### A Note on Reproducibility
 

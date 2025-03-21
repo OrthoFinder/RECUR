@@ -98,13 +98,12 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
 
   * With RECUR installed
     ```bash
-    recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv system
+    recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
     ```
   * Without RECUR installed
     ```bash
-    python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt -iv system
+    python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
     ```
-  where `-iv` stands for IQ-TREE2 version. By default, RECUR will use the Linux binary version from the package.
 
   *To deactivate the virtual enviroment* run
   ```bash
@@ -143,7 +142,8 @@ The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic soft
     - Windows: https://docs/images.docker.com/desktop/install/windows-install/
     - macOS: https://docs/images.docker.com/desktop/install/mac-install/
     - Linux: https://docs/images.docker.com/desktop/install/linux-install/
-
+    
+    <br>
     Once you have the Docker Desktop installed, please launch it and run the following command in the terminal to check if it is up and running.
 
     ```bash
