@@ -134,7 +134,9 @@ The `*.recur.tsv` file contains a list of recurrent substitutions, i.e., an amin
 * `Child`: indicates the descent amino acid residue.
 * `Recurrence`: indicates the number of times that amino acid substitution occurred at that site across the phylogeny.
 * `Reversion`: indicates the number of times the reverse amino acid substitution occurred at that site across the phylogeny.
-* `P-value`: signifies the probability that the substitution has not occurred by chance (for details of its calculation please read Robbins et al., 2024).
+* `P-value`: signifies the probability that the substitution has not occurred by chance (for details of its calculation please read Robbins et al., 2025).
+
+  Note: A p-value equal to 0.001 (with the default 1000 simulations) indicates the recurrence of the substitution was not observed in any of the simulated alignments and is unlikely to have occurred by chance.
 * `AllSiteSubs`: provides a list of all other substitutions that occurred at that site.
 * `SiteComposition`: indicates the count of each residue at that site in the protein MSA.
 

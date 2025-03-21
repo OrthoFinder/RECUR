@@ -21,14 +21,16 @@
 title: RECUR
 email: lizzie.robbins1@gmail.com
 author:
-  name: Elizabeth Robbins
-  email: lizzie.robbins1@gmail.com
+  name: Elizabeth Robbins, Yi Liu
+  # email: lizzie.robbins1@gmail.com
   github: https://github.com/OrthoFinder/RECUR
-  twitter: https://twitter.com/OrthoFinder/RECUR
+  # twitter: https://twitter.com/OrthoFinder/RECUR
   # address: 123 Example St, Example City, EX 45678
 
+#  Finding Recurrent Substitutions from Multiple Sequence Alignments.
 description: >- # this means to ignore newlines until "baseurl:"
-  Finding Recurrent Substitutions from Multiple Sequence Alignments
+  This is a software developed by the [Steven Kelly Lab](http://www.stevekellylab.com/).
+
 baseurl: "/RECUR" # the subpath of your site, e.g. /blog
 url: "https://orthofinder.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 # url: "https://RECUR.com" # the base hostname & protocol for your site, e.g. http://example.com
@@ -62,10 +64,10 @@ minima:
       title: GitHub
       icon: github
       url: https://github.com/OrthoFinder/RECUR
-    - platform: twitter
-      title: Twitter
-      icon: twitter
-      url: https://twitter.com/OrthoFinder/RECUR
+    # - platform: twitter
+    #   title: Twitter
+    #   icon: twitter
+    #   url: https://twitter.com/OrthoFinder/RECUR
     # - platform: linkedin
     #   url: https://linkedin.com/OrthoFinder/RECUR
     # - platform: rss
