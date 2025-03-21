@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 
 import dendropy
 import numpy as np
+from rich import print
 
 from recur import __version__
 from recur.utils import process_args, util

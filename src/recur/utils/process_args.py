@@ -1,18 +1,12 @@
-import fnmatch
-import multiprocessing as mp
 import os
-import shutil
-import sys
+import fnmatch
 from typing import Any, Dict, List, Optional, Tuple, Union
-
+import multiprocessing as mp
+from rich import print
 import dendropy
 
 from recur import __version__, helpinfo
 from recur.utils import util
-
-
-import multiprocessing as mp
-from typing import Tuple
 
 def find_balanced_pair(n: int) -> Tuple[int, int]:
     best_pair = (1, n)

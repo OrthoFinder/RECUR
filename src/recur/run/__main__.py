@@ -901,9 +901,9 @@ def main(args: Optional[List[str]] = None):
                     alignment_dict, alignment_len, dash_exist = filereader.ReadAlignment(aln_path)
                     n_species = len(alignment_dict)
 
-                    production_logger.info(f"Analysing: {gene}", extra={'to_file': True, 'to_console': True})
-                    production_logger.info(f"Number of extant species found: {n_species}", extra={'to_file': True, 'to_console': True})
-                    production_logger.info(f"Length of the {gene} alignment: {alignment_len}", extra={'to_file': True, 'to_console': True})
+                    production_logger.info(f"Analysing: {os.path.basename(aln_path)}", extra={'to_file': True, 'to_console': True})
+                    production_logger.info(f"Number of sequences found: {n_species}", extra={'to_file': True, 'to_console': True})
+                    production_logger.info(f"Length of alignment: {alignment_len}", extra={'to_file': True, 'to_console': True})
                     production_logger.info(f"Results Directory: {results_dir}\n", extra={'to_file': True, 'to_console': True})
 
                     species_of_interest = [*alignment_dict.keys()]
@@ -1014,7 +1014,7 @@ def main(args: Optional[List[str]] = None):
 
                         if override or restart_step1:
                             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                            production_logger.info(prepend + "Ran IQ-TREE to build the gene trees for the real phylogeny", extra={'to_file': True, 'to_console': True})
+                            production_logger.info(prepend + "Running IQ-TREE to build the real phylogeny", extra={'to_file': True, 'to_console': True})
                             production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
 
                         if gene_tree is None:
@@ -1244,7 +1244,7 @@ def main(args: Optional[List[str]] = None):
                         filewriter.WriteSeqsToAln(binary_modified_seq, binary_modified_seq_fn)
 
                     del parent_arr, child_arr
-                    production_logger.info(f"Root of species of interest: {root_node}", extra={'to_file': True, 'to_console': True})
+                    production_logger.info(f"Root of subtree of interest (excluding outgroup sequences): {root_node}", extra={'to_file': True, 'to_console': True})
                     production_logger.info(f"Substitution matrix output: {filehandler.GetMutMatrixDir()}\n", extra={'to_file': True, 'to_console': True})
                     
                     filewriter.WriteMutMatrix(
@@ -1376,7 +1376,7 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(f"Results Directory: {recurrenceDir}\n", extra={'to_file': True, 'to_console': True})
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + "Starting create substitution matrices for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
+                    production_logger.info(prepend + "Starting substitution matrices calculation for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
                     production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
 
                     mcs_results = process_mcs_files_in_chunks(
@@ -1397,7 +1397,7 @@ def main(args: Optional[List[str]] = None):
                     )
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + "Substitution matrices creation complete.\n")
+                    production_logger.info(prepend + "Substitution matrices complete.\n")
                     
                     if options.disk_save:
                         for file in util.iter_dir(mcs_alnDir):
@@ -1417,7 +1417,7 @@ def main(args: Optional[List[str]] = None):
                             sys.exit(0)
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + "Starting compute p values.")
+                    production_logger.info(prepend + "Starting to compute p values.")
 
 
                     recurrence_list_pvalue = compute_p_values(mcs_results,
@@ -1448,17 +1448,17 @@ def main(args: Optional[List[str]] = None):
                     del recurrence_list_pvalue, recurrence_list_updated
                     gc.collect()
 
-                    util.log_memory_usage(f"after processing gene {gene}", production_logger)
+                    # util.log_memory_usage(f"after processing gene {gene}", production_logger)
 
                     end = time.perf_counter()
                     duration = end - start
                     if production_logger:
-                        production_logger.info(f"Finished analysis of {gene} in {duration:.2f} seconds", extra={'to_file': True, 'to_console': True})
+                        production_logger.info(f"Finished analysis of {os.path.basename(aln_path)} in {duration:.2f} seconds", extra={'to_file': True, 'to_console': True})
                     else:
-                        print(f"Finished analysis of {gene} in {duration:.2f} seconds")
+                        print(f"Finished analysis of {os.path.basename(aln_path)} in {duration:.2f} seconds")
 
                 except Exception as e:
-                    print(f"\nERROR occurred during analysis of {gene}: {e}")
+                    print(f"\nERROR occurred during analysis of {os.path.basename(aln_path)}: {e}")
                     print(traceback.format_exc())
                     cleanup()
 
@@ -1474,7 +1474,7 @@ def main(args: Optional[List[str]] = None):
         if d_results:
             util.PrintCitation(d_results)
 
-        util.log_memory_usage("after final cleanup")
+        # util.log_memory_usage("after final cleanup")
 
         end_main = time.perf_counter()
         duration_main = end_main - start_main
@@ -1482,14 +1482,14 @@ def main(args: Optional[List[str]] = None):
         if production_logger:
             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
             production_logger.info(prepend + "RECUR run completed\n", extra={'to_file': True, 'to_console': True})
-            production_logger.info(f"*** RECUR finishes in {duration_main:.2f} seconds ***", extra={'to_file': True, 'to_console': True})
+            production_logger.info(f"*** RECUR finished in {duration_main:.2f} seconds ***", extra={'to_file': True, 'to_console': True})
             # Flush and close the handlers to ensure all logs are written
             for handler in production_logger.handlers:
                 handler.flush()
                 handler.close()
         else:
             print("RECUR run completed\n")
-            print(f"*** RECUR finishes in {duration_main:.2f} seconds ***")
+            print(f"*** RECUR finished in {duration_main:.2f} seconds ***")
 
         cleanup()
         kill_child_processes(os.getpid())

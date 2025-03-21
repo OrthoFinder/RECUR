@@ -13,6 +13,7 @@ from typing import Dict, Iterator, List, Optional, Tuple
 import numpy as np
 import psutil
 import yaml
+from rich import print
 
 from recur import genetic_codes, helpinfo
 from recur.citation import citation, print_citation

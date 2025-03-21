@@ -8,6 +8,7 @@ import sys
 import threading
 import warnings
 from typing import Dict, List, Optional, Set
+from rich import print
 
 # uncomment to get round problem with python multiprocessing library that can set all cpu affinities to a single cpu
 # This can cause use of only a limited number of cpus in other cases so it has been commented out

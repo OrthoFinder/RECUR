@@ -1,5 +1,6 @@
 import os
 from typing import Dict, List, Optional
+from rich import print
 
 from recur.utils import parallel_task_manager
 
