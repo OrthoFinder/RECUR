@@ -31,10 +31,8 @@ author:
 description: >- # this means to ignore newlines until "baseurl:"
   This is a software developed by the [Steven Kelly Lab](http://www.stevekellylab.com/).
 
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://OrthoFinder-RECUR.com"
-# url: "https://orthofinder.github.io" # the base hostname & protocol for your site, e.g. http://example.com
-# url: "https://RECUR.com" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/RECUR" # the subpath of your site, e.g. /blog
+url: "https://orthofinder.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 # twitter_username: OrthoFinder/RECUR
 github_username: OrthoFinder/RECUR
