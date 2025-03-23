@@ -1,2 +1,20 @@
 // Placeholder to allow defining custom styles that override everything else.
 // (Use `_sass/minima/custom-variables.scss` to override variable defaults)
+h1 {
+    font-family: 'Arial', sans-serif; // or another font
+    font-size: 2.5rem; // adjust as needed
+    // font-weight: bold; // adjust as needed
+    color: #333; // example color
+}
+
+.nav,
+.tabs {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 2rem; // or whatever size you want
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem; // sets base font size
+    line-height: 1.5; // improves readability
+}

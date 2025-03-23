@@ -6,17 +6,17 @@ permalink: /usage/
 
 ## How to Use RECUR
 
-- [How to Use RECUR](#how-to-use-recur)
-  - [Simple Usage](#simple-usage)
-  - [Advance Usage](#advanced-usage)
-    - [Options Overview](#options-overview)
-    - [Using a constraint tree](#using-a-constraint-tree)
-    - [Providing a model of evolution](#providing-a-model-of-evolution)
-    - [Running RECUR on a directory](#running-recur-on-a-directory)
-  - [RECUR Results](#recur-results)
-    - [Recurrence List](#recurrence-list)
-    - [Output Structure and Extended Results](#output-structure-and-exteneded-results)
-  - [A Note on Reproducibility](#a-note-on-reproducibility)
+- [Simple Usage](#simple-usage)
+- [Advance Usage](#advanced-usage)
+  - [Options Overview](#options-overview)
+  - [Using a constraint tree](#using-a-constraint-tree)
+  - [Providing a model of evolution](#providing-a-model-of-evolution)
+  - [Running RECUR on a directory](#running-recur-on-a-directory)
+- [RECUR Results](#recur-results)
+  - [Recurrence List](#recurrence-list)
+  - [Output Structure and Extended Results](#output-structure-and-exteneded-results)
+- [A Note on Reproducibility](#a-note-on-reproducibility)
+- [References](#references)
 
 ### Simple Usage
 
@@ -177,3 +177,6 @@ As for the `RowIndex` and `ColIndex` columns, they index the substitution in a m
 
 According to Shen et al. (2020), irreproducibility in maximum likelihood phylogenetic inference is a significant issue [^1]. Regardless of the method related parameters that would affect the reproducibility of the final outputs, different random starting seed number, number of threads and processor type can also introduce uncertainties to the results. Such effect can be observed by setting different `-nt`, or setting different seed number using `--seed` in RECUR for each run. When running RECUR on different machine with different processor type even with the fixed `-nt` and `--seed`, the results can still be different. Nevertheless, the results should stay the same for each run when running RECUR on the same machine with the fixed input parameters.
 
+## References
+
+[^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1038/s41467-020-20005-6)
