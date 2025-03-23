@@ -4,7 +4,7 @@ title: FAQ
 permalink: /faq/
 ---
 
-## Frequent Asked Questions
+## Frequently Asked Questions
 
 
 **1. How many sequences can RECUR handle?**
