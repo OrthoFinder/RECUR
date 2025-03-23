@@ -5,6 +5,15 @@ h1 {
     font-size: 2.5rem; // adjust as needed
     // font-weight: bold; // adjust as needed
     color: #333; // example color
+    // line-height: 1.5;
+}
+
+h2 {
+    font-family: 'Arial', sans-serif; // or another font
+    font-size: 1.5rem; // adjust as needed
+    // font-weight: bold; // adjust as needed
+    color: #333; // example color
+    line-height: 1.5;
 }
 
 .nav,
@@ -17,4 +26,10 @@ body {
     font-family: 'Roboto', sans-serif;
     font-size: 1rem; // sets base font size
     line-height: 1.5; // improves readability
+}
+
+p {
+    margin-top: 1.2rem;
+    margin-bottom: 1.2rem;
+    /* A slightly larger gap */
 }

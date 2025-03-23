@@ -1,14 +1,38 @@
 /**
  * Site header
  */
+
+
+// .site-header {
+//   border-top: 5px solid $border-color-03;
+//   border-bottom: 1px solid $border-color-01;
+//   min-height: $spacing-unit * 1.865;
+//   line-height: $base-line-height * $base-font-size * 2.25;
+
+//   // Positioning context for the mobile navigation icon
+//   position: relative;
+// }
+
 .site-header {
+  position: fixed; // Make the header fixed
+  top: 0; // Stick to the top of the viewport
+  left: 0;
+  width: 100%; // Span the full width
+  z-index: 1000; // Ensure it sits above other elements
+  background-color: #ffffff;
+  // Flex layout: items in a row, aligned center vertically, spaced apart
+  // display: flex;
+  // align-items: center;
+  // justify-content: space-between; // Title on left, nav on right
+
+  // Optional: add some padding for vertical and horizontal space
+  // padding-top: 0.5rem;
+  // padding-bottom: 0.5rem;
+
   border-top: 5px solid $border-color-03;
   border-bottom: 1px solid $border-color-01;
   min-height: $spacing-unit * 1.865;
   line-height: $base-line-height * $base-font-size * 2.25;
-
-  // Positioning context for the mobile navigation icon
-  position: relative;
 }
 
 .site-title {
@@ -144,7 +168,7 @@
 
 .footer-col-wrapper,
 .social-links {
-  @include relative-font-size(0.98); // 0.9375
+  @include relative-font-size(0.95); // 0.9375
   color: $brand-color;
 }
 
@@ -201,9 +225,14 @@
 /**
  * Page content
  */
+
+// .page-content {
+//   padding: $spacing-unit 0;
+//   flex: 1 0 auto;
+// }
+
 .page-content {
-  padding: $spacing-unit 0;
-  flex: 1 0 auto;
+  padding-top: $spacing-unit * 1.865 + 50px; // Adjust the extra space as needed
 }
 
 .page-heading {
@@ -359,4 +388,26 @@
   .one-half {
     width: calc(50% - (#{$spacing-unit} / 2));
   }
+}
+
+
+/**
+ * Fix the footer to the bottom of the page if content is short, but pushed down by content if it’s tall
+ */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%; // So we can stretch to full viewport height
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; // At least the full viewport height
+}
+
+main {
+  flex: 1; // Take up remaining space so the footer sits at the bottom
 }
