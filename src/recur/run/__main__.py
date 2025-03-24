@@ -171,24 +171,34 @@ def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None, print_info
         print(f"An error occurred while trying to run '{command}': {e}")
         return False
 
-def setup_environment()-> Dict[str, str]:
 
-    os.environ["OPENBLAS_NUM_THREADS"] = "1"    # fix issue with numpy/openblas. Will mean that single threaded options aren't automatically parallelised 
+def setup_environment() -> Dict[str, str]:
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"  # Single-threaded numpy/openblas
 
     my_env = os.environ.copy()
-    # use orthofinder supplied executables by preference
-    local_bin_dir = os.path.join(__location__, 'bin')
-    bin_dirs = [
-        "/opt/bin",
-        os.path.expanduser("~/bin"),
-        os.path.expanduser("~/.local/bin"),
-        os.path.expanduser("~/local/bin"),
-        "/usr/bin",
-        "/usr/local/bin",
-        local_bin_dir,
-    ]
+    local_bin_dir = os.path.join(__location__, 'bin')  # Make sure __location__ is defined
+
+    if os.name == "nt":
+        # Windows-specific directories
+        bin_dirs = [
+            os.path.expanduser(r"~/bin"),
+            os.path.expanduser(r"~\AppData\Local\Programs\Python\Scripts"),
+            r"C:\Program Files\SomeExecutableDir",
+        ]
+    else:
+        # Unix-like directories
+        bin_dirs = [
+            local_bin_dir,
+            "/opt/bin",
+            os.path.expanduser("~/bin"),
+            os.path.expanduser("~/.local/bin"),
+            os.path.expanduser("~/local/bin"),
+            "/usr/bin",
+            "/usr/local/bin",
+        ]
+        
     for bin_dir in bin_dirs:
-        my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
+        my_env["PATH"] = bin_dir + os.pathsep + my_env["PATH"]
 
     conda_prefix = my_env.get("CONDA_PREFIX")
     if conda_prefix:
