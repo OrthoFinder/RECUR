@@ -155,15 +155,15 @@ make_usr_bin:
 	fi; \
 	SHELL_NAME=$$(basename "$${SHELL}"); \
 	if [ "$${SHELL_NAME}" = "zsh" ]; then \
-		SHELL_RC="~/.zshrc"; \
+		SHELL_RC="$${HOME}/.zshrc"; \
 	elif [ "$${SHELL_NAME}" = "bash" ]; then \
 		if [ "$$(uname)" = "Darwin" ]; then \
-			SHELL_RC="~/.bash_profile"; \
+			SHELL_RC="$${HOME}/.bash_profile"; \
 		else \
-			SHELL_RC="~/.bashrc"; \
+			SHELL_RC="$${HOME}/.bashrc"; \
 		fi; \
 	else \
-		SHELL_RC="~/.profile"; \
+		SHELL_RC="$${HOME}/.profile"; \
 	fi; \
 	echo "Using shell configuration file: $${SHELL_RC}"; \
 	echo "Checking if $(USER_INSTALL_DIR) is already in the PATH..."; \
