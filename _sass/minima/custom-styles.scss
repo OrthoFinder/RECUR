@@ -33,3 +33,41 @@ p {
     margin-bottom: 1.2rem;
     /* A slightly larger gap */
 }
+
+
+
+.code-container {
+    position: relative;
+    margin-bottom: 1em;
+}
+
+.copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    font-size: 14px;
+    // background: #fff;
+    color: #888;
+    // border: 1px solid #ccc;
+    border-radius: 4px;
+    border: none !important;
+    background: none !important;
+    cursor: pointer;
+}
+
+.copy-button svg {
+    fill: currentColor;
+    /* ensures the icon color matches the text color */
+}
+
+.copy-button:hover {
+    background-color: #f0f0f0;
+}
+
+.clipboard-icon {
+    margin-right: 4px;
+    /* spacing between icon and text */
+}
