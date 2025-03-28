@@ -6,8 +6,8 @@ services:
       dockerfile: Dockerfile
     image: orthofinder/recur:v1.0.0
     platform: linux/amd64
+    user: "${UID}:${GID}"
     volumes:
       - ./ExampleData:/usr/src/recur/ExampleData:Z
     working_dir: /usr/src/recur
-    # user: recur_user 
     command: ["-f", "ExampleData", "-st", "AA", "--outgroups", "ExampleData"]
