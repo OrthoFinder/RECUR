@@ -9,4 +9,5 @@ services:
     volumes:
       - ./ExampleData:/usr/src/recur/ExampleData:Z
     working_dir: /usr/src/recur
+    # user: recur_user 
     command: ["-f", "ExampleData", "-st", "AA", "--outgroups", "ExampleData"]
