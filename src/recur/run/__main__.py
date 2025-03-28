@@ -250,7 +250,7 @@ def initialise_recur(show_iqtree_path: bool = False) -> Dict[str, str]:
     #     print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
     #     return my_env
     iqtree_path = shutil.which("iqtree2", path=my_env["PATH"])
-    iqtree2_version_cmd = iqtree_path + " --version"
+    iqtree2_version_cmd = f"{iqtree_path}" + " --version"
     if CanRunCommand(iqtree2_version_cmd, env=my_env):
         if show_iqtree_path:
             print("\ncan run iqtree2 - [bold green]ok[/bold green]")
