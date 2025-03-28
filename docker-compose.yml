@@ -9,5 +9,7 @@ services:
     volumes:
       - ./ExampleData:/usr/src/recur/ExampleData:Z
     working_dir: /usr/src/recur 
-    # command: ["python3", "./recur.py"]
-    command: ["python3", "./recur.py", "-f", "ExampleData", "-st", "AA", "--outgroups", "ExampleData"]
+    # # command: ["python3", "./recur.py"]
+    # command: ["python3", "./recur.py", "-f", "ExampleData", "-st", "AA", "--outgroups", "ExampleData"]
+    user: root
+    command: [ "sh", "-c", "chmod -R 755 /usr/src/recur/ExampleData && exec su -s /bin/bash -c 'python3 ./recur.py -f ExampleData -st AA --outgroups ExampleData' recur_user" ]
