@@ -1,0 +1,61 @@
+# Ignore Python cache files
+**/__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache
+*.spec
+
+# Ignore virtual environments
+venv/
+env/
+*venv/
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore Dockerfile and docker-compose files
+Dockerfile
+docker-compose.yml
+
+# Ignore local configuration files
+*.env
+.env
+
+# Ignore node modules if any
+node_modules/
+
+# Ignore build output
+build/
+dist/
+
+# Ignore IDE/editor configuration files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Ignore log files
+*.log
+
+# Ignore other unnecessary files
+myanalysis/
+PEPC/
+Species*/
+hooks/
+ExampleData/*.recur
+ExampleData/*.recur.tsv
+# docs/
+*_cache/
+_site/
+**/*.egg-info
+recur_venv/
+# .git/
+# .github/
+# *.md
+# badge-status.json
+# LICENSE
+# requirements_dev.txt
+# tests/
+
