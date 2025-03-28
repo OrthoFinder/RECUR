@@ -6,7 +6,6 @@ permalink: /installation/
 
 ## Getting Started with RECUR
 
-
   - [Run RECUR in conda](#run-recur-in-conda)
     - [Install RECUR via bioconda](#install-recur-via-bioconda)
     - [Run RECUR in conda via Scoure Code](#run-recur-in-conda-via-scoure-code)
@@ -44,7 +43,7 @@ permalink: /installation/
   conda create -n recur_env python=3.12
   conda activate recur_env
   conda install bioconda::iqtree
-  git clone https://github.com/OrthoFinder/RECUR.git#
+  git clone https://github.com/OrthoFinder/RECUR.git
   cd RECUR 
   pip install .
   recur --version
@@ -58,7 +57,7 @@ permalink: /installation/
   conda create -n recur_env python=3.12
   conda activate recur_env
   conda install bioconda::iqtree
-  git clone https://github.com/OrthoFinder/RECUR.git#
+  git clone https://github.com/OrthoFinder/RECUR.git
   cd RECUR 
   pip install -r requirements.txt 
   python3 recur.py --version # running RECUR without installing it
@@ -79,7 +78,7 @@ permalink: /installation/
   A Makefile is provided to simplify the installation process. Either `make` or `gmake` can be used to run it. Run the following commands to grab a copy of the RECUR scoure code from GitHub, and install RECUR inside a Python virtual enviroment. Again, if `git` is unavailable, please use oether methods such as `wget` or `curl` to download the source code. (**ADD LINK**)
 
   ```bash
-  git clone https://github.com/OrthoFinder/RECUR.git#
+  git clone https://github.com/OrthoFinder/RECUR.git
   cd RECUR 
   make install USE_CONDA=false
   ```
@@ -108,7 +107,7 @@ permalink: /installation/
   If you are unsure about the make/gmake method, you can use the conventional method to install RECUR. 
 
   ```bash
-  git clone https://github.com/OrthoFinder/RECUR.git#
+  git clone https://github.com/OrthoFinder/RECUR.git
   cd RECUR 
   python3 -m venv recur_env 
   . recur_env/bin/activate
@@ -119,7 +118,7 @@ permalink: /installation/
 
   Again, if you do not wish to install RECUR please run 
   ```bash
-  git clone https://github.com/OrthoFinder/RECUR.git#
+  git clone https://github.com/OrthoFinder/RECUR.git
   cd RECUR 
   python3 -m venv recur_env 
   . recur_env/bin/activate
