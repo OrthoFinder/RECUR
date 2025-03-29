@@ -192,3 +192,6 @@ recur_site/
 Gemfile.lock
 **/*venv/
 rbcl/
+CONDUCT*
+CONTRIBUTING*
+DEVNOTES*

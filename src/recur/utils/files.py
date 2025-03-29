@@ -4,7 +4,6 @@
 import os
 import sys
 import traceback
-from collections import Counter
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 import dendropy

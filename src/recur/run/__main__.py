@@ -31,108 +31,6 @@ from recur.utils import files, process_args, util
 
 # warnings.filterwarnings("ignore", module='dendropy')
 
-# def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
-#     max_int = sys.maxsize
-#     while True:
-#         try:
-#             csv.field_size_limit(max_int)
-#             break
-#         except OverflowError:
-#             max_int = int(max_int / 10)
-
-#     # Set maximum recursion limit and OpenBLAS thread limit
-#     sys.setrecursionlimit(10**6)
-#     os.environ["OPENBLAS_NUM_THREADS"] = "1"
-
-#     my_env = os.environ.copy()
-
-#     if getattr(sys, 'frozen', False):  # For PyInstaller
-#         base_dir = os.path.dirname(sys.executable)
-#     else:
-#         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-
-#     local_iqtree2_path = os.path.join(base_dir, 'recur', 'bin', 'iqtree2')
-#     bin_dir = os.path.dirname(local_iqtree2_path)
-
-#     conda_prefix = my_env.get('CONDA_PREFIX')
-#     if conda_prefix:
-#         conda_bin = os.path.join(conda_prefix, 'Scripts') if os.name == 'nt' else os.path.join(conda_prefix, 'bin')
-#         my_env['PATH'] = conda_bin + os.pathsep + my_env['PATH']
-
-#     # Restore original paths if running from a frozen environment
-#     if getattr(sys, 'frozen', False):
-#         if os.name == 'nt':  # Windows-specific
-#             my_env['PATH'] = my_env.get('PATH_ORIG', '')
-#         else:  # Unix-like systems
-#             my_env['LD_LIBRARY_PATH'] = my_env.get('LD_LIBRARY_PATH_ORIG', '')
-#             my_env['DYLD_LIBRARY_PATH'] = my_env.get('DYLD_LIBRARY_PATH_ORIG', '')
-
-#     return my_env, local_iqtree2_path, bin_dir, conda_prefix
-
-
-# def find_iqtree2():
-#     # Check the PATH environment variable
-#     iqtree_path = shutil.which("iqtree2")
-#     if iqtree_path:
-#         return iqtree_path
-    
-#     # If not in PATH, the looks for iqtree2 in a list of common directories 
-#     # where binaries are often installed
-#     common_dirs = [
-#         os.path.expanduser("~/bin"),
-#         os.path.expanduser("~/.local/bin"),
-#         os.path.expanduser("~/local/bin"),
-#         "/usr/local/bin",
-#         "/usr/bin",
-#         "/opt/bin",
-#     ]
-#     for directory in common_dirs:
-#         iqtree_path = os.path.join(directory, "iqtree2")
-#         if os.path.isfile(iqtree_path) and os.access(iqtree_path, os.X_OK):
-#             return iqtree_path
-        
-
-# def setup_environment() -> Tuple[Dict[str, str], str, str, Optional[str]]:
-
-#     sys.setrecursionlimit(10**6)
-#     os.environ["OPENBLAS_NUM_THREADS"] = "1"
-
-#     my_env = os.environ.copy()
-
-#     if getattr(sys, 'frozen', False): 
-#         base_dir = os.path.dirname(sys.executable)
-#     else:
-#         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
-    
-#     iqtree2_path = find_iqtree2()
-#     if iqtree2_path is None:
-#         print("IQ-TREE2 not found! Please install it before running RECUR!")
-#         print("IQ-TREE2 can be installed by running `make install_iqtree2`")
-#         sys.exit(1)
-
-#     iqtree_install_dir = os.path.dirname(iqtree2_path)
-#     bin_dir = iqtree_install_dir
-
-#     # home_dir = os.path.expanduser("~")
-#     # iqtree_install_dir = os.path.join(home_dir, "bin")
-#     # local_iqtree2_path = os.path.join(iqtree_install_dir, "iqtree2")
-#     # bin_dir = iqtree_install_dir
-
-#     conda_prefix = my_env.get("CONDA_PREFIX")
-#     if conda_prefix:
-#         conda_bin = os.path.join(conda_prefix, "Scripts") if os.name == "nt" else os.path.join(conda_prefix, "bin")
-#         my_env["PATH"] = conda_bin + os.pathsep + my_env["PATH"]
-
-#     my_env["PATH"] = bin_dir + os.pathsep + my_env["PATH"]
-
-#     if getattr(sys, "frozen", False):
-#         if os.name == "nt":  # Windows-specific
-#             my_env["PATH"] = my_env.get("PATH_ORIG", "")
-#         else:  # Unix-like systems
-#             my_env["LD_LIBRARY_PATH"] = my_env.get("LD_LIBRARY_PATH_ORIG", "")
-#             my_env["DYLD_LIBRARY_PATH"] = my_env.get("DYLD_LIBRARY_PATH_ORIG", "")
-
-#     return my_env, iqtree2_path, bin_dir, conda_prefix
 
 def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None, print_info: bool = False) -> bool:
     try:
@@ -207,12 +105,7 @@ def setup_environment() -> Dict[str, str]:
     
     return my_env
 
-# my_env = setup_environment()
-
-# def initialise_recur(iqtree_version: Optional[str] = None) -> Dict[str, str]:
-
 def initialise_recur(show_iqtree_path: bool = False) -> Dict[str, str]:
-    # my_env, local_iqtree2_path, bin_dir, conda_prefix = setup_environment()
     my_env = setup_environment()
     system = platform.system()
 
@@ -227,28 +120,6 @@ def initialise_recur(show_iqtree_path: bool = False) -> Dict[str, str]:
         print(f"Multiprocessing context setting error on {system}: {e}")
         pass
 
-    # if system == "Linux" and iqtree_version == 'local':
-    #     my_env['PATH'] = bin_dir + os.pathsep + my_env['PATH']
-    #     if CanRunCommand(f"{local_iqtree2_path} --version", env=my_env):
-    #         return my_env
-
-    # if iqtree_version == "conda" and conda_prefix:
-    #     iqtree_path = shutil.which("iqtree2")
-    #     if iqtree_path:
-    #         print("\nConda version of IQ-TREE2 found.")
-    #         print(f"IQ-TREE2 path: {iqtree_path}")
-    #         return my_env
-
-    # if iqtree_version == "system" and not conda_prefix:
-    #     iqtree_path = shutil.which("iqtree2")
-    #     if iqtree_path:
-    #         print("\nSystem-wide version of IQ-TREE2 found.")
-    #         print(f"IQ-TREE2 path: {iqtree_path}")
-    #         return my_env
-
-    # if conda_prefix and CanRunCommand("iqtree2 --version", env=my_env):
-    #     print("Local IQ-TREE2 binary failed to run, falling back to the conda version.")
-    #     return my_env
     iqtree_path = shutil.which("iqtree2", path=my_env["PATH"])
     iqtree2_version_cmd = f'"{iqtree_path}" --version'
     if CanRunCommand(iqtree2_version_cmd, env=my_env):

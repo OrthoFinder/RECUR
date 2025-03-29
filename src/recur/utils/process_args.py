@@ -32,7 +32,7 @@ class Options(object):
         self.nthreads = recur_nthreads
         self.recur_nthreads, self.iqtree_nthreads = recur_iqtree_nthreads, iqtree_nthreads
         self.tree_program = "iqtree2"
-        self.sequence_type = "CODON1"
+        self.sequence_type = "AA" # "CODON1"
         self.evolution_model = "TEST"
         self.qStartFromMSA = False
         self.iqtree_version = "local"

@@ -5,34 +5,110 @@ try:
     from rich import print
 except ImportError:
     ...
+from rich.table import Table
+from rich.console import Console
 
+
+width = 28
 
 def PrintHelp():
 
+    console = Console()
+    table_options = Table(show_header=False, box=None, expand=False)
+    table_options.add_column("Option", justify="left", width=width, no_wrap=False, overflow="fold")
+    table_options.add_column("Description", justify="left", overflow="fold")
+
     print("")
     print("SIMPLE USAGE:")
-    print("Run full [dark_goldenrod]RECUR[/dark_goldenrod] analysis on a protein or codon alignment <dir/file>")
-    print("recur [options] -f <dir/file> --outgroups <outgroup_species/dir/file> -st <AA|CODON>")
+    print("Run full [dark_goldenrod]RECUR[/dark_goldenrod] analysis on a protein or codon alignment <[bright_magenta]dir/file[/bright_magenta]>")
+    print("recur [options] -f <[bright_magenta]dir/file[/bright_magenta]> --outgroups <[bright_magenta]dir/file/str[/bright_magenta]> -st <[dark_cyan]AA|CODON[/dark_cyan]>")
+
+    table_options.add_row(
+        "-f <[bright_magenta]dir/file[/bright_magenta]>",
+        f"Protein or codon alignment in [red1]FASTA[/red1] format [orange3][Required][/orange3]"
+    )
+
+    table_options.add_row(
+        "-st <[bright_magenta]str[/bright_magenta]>",
+        f"<[dark_cyan]AA|CODON[/dark_cyan]> [orange3][Required][/orange3][Default: [dark_cyan]AA[/dark_cyan]]"
+    )
+
+    table_options.add_row(
+        "--outgroups <[bright_magenta]dir/file/str[/bright_magenta]>",
+        f"List of outgroup sequences [orange3][Required][/orange3]"
+    )
+
+    table_options.add_row(
+        "--num-alignments <[bright_magenta]int[/bright_magenta]>",
+        f"Number of simulated alignments for p-value estimation [Default: [deep_sky_blue2]1000[/deep_sky_blue2]]"
+    )
+
+    table_options.add_row(
+        "-te <[bright_magenta]dir/file[/bright_magenta]>",
+        f"Complete constraint tree [Default: [dark_cyan]estimated from alignment[/dark_cyan]]"
+    )
+
+    table_options.add_row(
+        "-m <[bright_magenta]str[/bright_magenta]>",
+        f"Model of sequence evolution [Default: [dark_cyan]estimated from alignment[/dark_cyan]]"
+    )
+
+
+    table_options.add_row(
+        "-nt <[bright_magenta]int[/bright_magenta]>",
+        f"Number of threads provided to IQ-TREE2 [Default: [deep_sky_blue2]1[/deep_sky_blue2] (without alrt); [deep_sky_blue2]{iqtree_nthreads}[/deep_sky_blue2] (with alrt)]"
+    )
+
+    table_options.add_row(
+        "-t <[bright_magenta]int[/bright_magenta]>",
+        f"Number of threads used for RECUR internal processing [Default: [deep_sky_blue2]{recur_nthreads}[/deep_sky_blue2]]"
+    )
+
+    table_options.add_row(
+        "--seed <[bright_magenta]int[/bright_magenta]>",
+        f"Random starting see number [Default: [deep_sky_blue2]8[/deep_sky_blue2]]"
+    )
+
+    table_options.add_row(
+        "-o <[bright_magenta]txt[/bright_magenta]>",
+        f"Results directory [Default: [dark_cyan]same directory as MSA files[/dark_cyan]]"
+    )
+    table_options.add_row(
+        "-uc <[bright_magenta]int[/bright_magenta]>",
+        f"Update cycle used in progress bar [Default: [dark_cyan]no progress bar[/dark_cyan]]"
+    )
+
+    table_options.add_row(
+        "-bs <[bright_magenta]int[/bright_magenta]>",
+        f"Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: [dark_cyan]no batch processing[/dark_cyan]]"
+    )
+
+    table_options.add_row(
+        "-blfix",
+        f"Fix branch lengths of tree. [Default: [dark_cyan]False[/dark_cyan]]"
+    )
 
     print("")
-    print("OPTIONS:")
-    print("-f <dir/file>                Protein or codon alignment in FASTA format [Required]")
-    print("-st <str>                     <AA|CODON> [Required][Default: CODON1]")
-    print("--outgroups <dir/file/str>   List of outgroup sequences [Required]")
-    print("--num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]")
-    print("-te <dir/file>               Complete constraint tree [Default: estimated from alignment]")
-    print("-m <str>                     Model of sequence evolution [Default: estimated from alignment]")
-    print("-blfix                       Fix branch lengths of tree. [Default: False]")
-    print(f"-nt <int>                    Number of threads provided to IQ-TREE2 [Default: 1 (without alrt); {iqtree_nthreads} (with alrt)]")
-    print(f"-t <int>                     Number of threads used for RECUR internal processing [Default: {recur_nthreads}]")
-    print("--seed <int>                 Random starting see number [Default: 8]")
-    print("-o <txt>                     Results directory [Default: same directory as MSA files]")
-    print("-iv <str>                    IQ-TREE2 path [Default: local]")
-    print("-uc <int>                    Update cycle used in progress bar [Default: no progress bar]")
-    print("-bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]")
+    console.print("[bold]OPTIONS:[/bold]")
+    console.print(table_options)
+    console.print()
+
+    # print("-f <dir/file>                Protein or codon alignment in FASTA format [Required]")
+    # print("-st <str>                     <AA|CODON> [Required][Default: CODON1]")
+    # print("--outgroups <dir/file/str>   List of outgroup sequences [Required]")
+    # print("--num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]")
+    # print("-te <dir/file>               Complete constraint tree [Default: estimated from alignment]")
+    # print("-m <str>                     Model of sequence evolution [Default: estimated from alignment]")
+    # print("-blfix                       Fix branch lengths of tree. [Default: False]")
+    # print(f"-nt <int>                    Number of threads provided to IQ-TREE2 [Default: 1 (without alrt); {iqtree_nthreads} (with alrt)]")
+    # print(f"-t <int>                     Number of threads used for RECUR internal processing [Default: {recur_nthreads}]")
+    # print("--seed <int>                 Random starting see number [Default: 8]")
+    # print("-o <txt>                     Results directory [Default: same directory as MSA files]")
+    # print("-uc <int>                    Update cycle used in progress bar [Default: no progress bar]")
+    # print("-bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]")
 
 
     print("")
-    print("LICENSE:")
+    print("[bold]LICENSE:[/bold]")
     print(" Distributed under the [dodger_blue1]GNU General Public License (GPLv3)[/dodger_blue1]. See License.md")
     print(print_citation)
