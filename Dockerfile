@@ -44,6 +44,13 @@ RUN echo '#!/bin/bash\n\
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["--help"]
 
+
+# docker rmi -f $(docker images -aq)
+# UID=$(id -u) GID=$(id -g) docker compose up --build
+#  docker tag orthofinder/recur:v1.0.0 orthofinder/recur:latest
+#  docker push orthofinder/recur:v1.0.0
+#  docker push orthofinder/recur:latest
+
 # docker container run -it --rm orthofinder/recur:v1.0.0
 # docker run -it --rm \
 #     -v $(pwd)/MyData:/usr/src/recur/MyData \
