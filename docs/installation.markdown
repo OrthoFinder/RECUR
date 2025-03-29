@@ -160,7 +160,7 @@ permalink: /installation/
 
     If you need to install the Docker Engine before you can run the RECUR container, please find the right docker engine to install on your server in [here](https://docs/images.docker.com/engine/install/).
 
-  With either Docker Desktop or Docker Engine installed on your machine, you can simply run the following command to test if you can run the RECUR container
+  With either Docker Desktop or Docker Engine installed on your machine, you can simply run the following command to test if you can run the RECUR container after you have logged in. 
   ```
   docker container run -it --rm orthofinder/recur:v1.0.0
   ```
