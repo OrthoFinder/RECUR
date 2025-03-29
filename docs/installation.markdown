@@ -92,7 +92,7 @@ permalink: /installation/
 
   After running the above commands, please start a new terminal session or close your terminal and restart a new session. Then you can run RECUR globaly without needing to activate the virtual enviroment where you installed it everytime. 
 
-  To test your installation please run
+  Verify that the installation is successful by running 
 
   ```bash
   recur --version
@@ -106,6 +106,16 @@ permalink: /installation/
 
   If you are unsure about the make/gmake method, you can use the conventional method to install RECUR. 
 
+  **Install directly from GitHub**
+
+  ```bash
+  python3 -m venv recur_env 
+  . recur_env/bin/activate
+  pip install git+https://github.com/OrthoFinder/RECUR.git
+  ```
+
+  **Clone the repository and install locally**
+
   ```bash
   git clone https://github.com/OrthoFinder/RECUR.git
   cd RECUR 
@@ -115,6 +125,8 @@ permalink: /installation/
   recur --version
   recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
+
+ **Clone the repository and without installation**
 
   Again, if you do not wish to install RECUR please run 
   ```bash

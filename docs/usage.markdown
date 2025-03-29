@@ -47,14 +47,13 @@ In this section, we will dive deep into the options you have to run RECUR. The c
   --num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]
   -te <dir/file>               Complete constraint tree [Default: Estimated from alignment]
   -m <str>                     Model of sequence evolution [Default: estimated from alignment]
-  -blfix                       Fix branch lengths of tree. [Default: False]
   -nt <int>                    Number of threads provided to IQ-TREE2
   -t <int>                     Number of threads used for RECUR internal processing
   --seed <int>                 Random starting see number [Default: 8]
   -o <txt>                     Results directory [Default: same directory as MSA files]
-  -iv <str>                    IQ-TREE2 path [Default: local]
   -uc <int>                    Update cycle used in progress bar [Default: no progress bar]
   -bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]
+  -blfix                       Fix branch lengths of tree. [Default: False]
 ```
 Please note that the default values for `-t`, `-nt` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
 ```bash
