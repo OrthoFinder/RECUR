@@ -142,19 +142,38 @@ permalink: /installation/
 
 ### Run RECUR in a Docker Container
 
-  Apart from the above methods, you can also run RECUR inside a container. You can find the RECUR image on [Docker Hub](https://hub.docker.com/repository/docker/orthofinder/recur/general). You need to install the Docker Engine before you can run the RECUR container, please find the right docker engine to install on your server in [here](https://docs/images.docker.com/engine/install/).
+  Apart from the above methods, you can also run RECUR inside a container. You can find the RECUR image on [Docker Hub](https://hub.docker.com/r/orthofinder/recur).
+
+  - **Personal computer**
+
+    Before you can run the RECUR container, you need to have Docker Desktop installed.
+    - Windows: https://docs/images.docker.com/desktop/install/windows-install/
+    - macOS: https://docs/images.docker.com/desktop/install/mac-install/
+    - Linux: https://docs/images.docker.com/desktop/install/linux-install/
+
+    Once you have the Docker Desktop installed, please launch it and run the following command in the terminal to check if it is up and running.
+
+    ```bash
+     docker version
+    ```
+  - **Server**
+
+    If you need to install the Docker Engine before you can run the RECUR container, please find the right docker engine to install on your server in [here](https://docs/images.docker.com/engine/install/).
 
   With either Docker Desktop or Docker Engine installed on your machine, you can simply run the following command to test if you can run the RECUR container
-
-  ```bash
+  ```
   docker container run -it --rm orthofinder/recur:v1.0.0
   ```
-
-  To run the RECUR container on your dataset, you will need to create a folder which contains your data in your current working directory. For instance, you have a data folder called MyData which contains a protein alignment file called `my_alignment.aln` and a file called `my_alignment.outgroups.txt` that contains all the outgroups, you can run the following command to start the RECUR container and make it run your dataset.
+  To run the RECUR container on your dataset, you will need to create a folder which contains your data in your current working directory. For instance, you have a data folder called MyData which contains a protein alignment file called `my_alignment.aln` and a file called `my_alignment.outgroups.txt` that contains all the outgroups. Optionally you can also provide a tree file, e.g., `MyData/my_alignments.tree.txt`. With all the required inputs, you can run the following command to start the RECUR container and make it run your dataset.
 
   ```bash
-  docker container run -it --rm -v $(pwd)/MyData:/usr/src/RECUR/MyData:Z orthofinder/recur:v1.0.0 recur -f MyData/my_alignment.aln -st AA --outgroups MyData/my_alignment.outgroups.txt
+  docker run -it --rm \
+    -v $(pwd)/MyData:/usr/src/recur/MyData \
+    -e LOCAL_UID=$(id -u) -e LOCAL_GID=$(id -g) \
+    orthofinder/recur:v1.0.0 \
+    -f MyData/my_alignments.aln \
+    -st AA \
+    --outgroups MyData/my_alignments.outgroups.txt \
+    -te MyData/my_alignments.tree.txt
   ```
-
   Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
-
