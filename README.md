@@ -15,9 +15,9 @@ Comprehensive installation and usage documentation is available on the [RECUR ho
 
 ## Citations
 
-[1]: *Robbins EHJ, Liu Y, Kelly S. 2025*. **RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments** 
+*Robbins EHJ, Liu Y, Kelly S. 2025*. **RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments** 
 
-### Credits and Acknowledgements
+## Credits and Acknowledgements
 
 This is a software developed by the [Steven Kelly Lab](http://www.stevekellylab.com/).
 
