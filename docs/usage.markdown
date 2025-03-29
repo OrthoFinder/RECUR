@@ -55,7 +55,9 @@ In this section, we will dive deep into the options you have to run RECUR. The c
   -bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]
   -blfix                       Fix branch lengths of tree. [Default: False]
 ```
+
 Please note that the default values for `-t`, `-nt` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
+
 ```bash
 recur
 python3 recur.py

@@ -49,7 +49,7 @@ permalink: /installation/
   recur --version
   recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
-  Please note that the above commands require you to have `git` installed. If `git` is unavailable, please use oether methods such as `wget` or `curl` to download the source code. (**ADD LINK**)
+  Please note that the above commands require you to have `git` installed. If `git` is unavailable, please go to our [release page](https://github.com/OrthoFinder/RECUR/releases) or [download page](https://orthofinder.github.io/RECUR/download/), use oether methods such as `wget` or `curl` to download the source code. 
 
   Having downloaded the RECUR scoure code, if you do not wish to install RECUR, you can simply pass `recur.py` with the your relevant options to Python and run RECUR without installation. For example,  
 
@@ -75,7 +75,7 @@ permalink: /installation/
 
 #### Installation via make/gmake
 
-  A Makefile is provided to simplify the installation process. Either `make` or `gmake` can be used to run it. Run the following commands to grab a copy of the RECUR scoure code from GitHub, and install RECUR inside a Python virtual enviroment. Again, if `git` is unavailable, please use oether methods such as `wget` or `curl` to download the source code. (**ADD LINK**)
+  A Makefile is provided to simplify the installation process. Either `make` or `gmake` can be used to run it. Run the following commands to grab a copy of the RECUR scoure code from GitHub, and install RECUR inside a Python virtual enviroment. Again, if `git` is unavailable, please use oether methods such as `wget` or `curl` to download the source code.
 
   ```bash
   git clone https://github.com/OrthoFinder/RECUR.git

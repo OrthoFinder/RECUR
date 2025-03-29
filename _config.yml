@@ -54,7 +54,7 @@ plugins:
 
 github:
   zip_url: "https://github.com/OrthoFinder/RECUR/archive/refs/heads/main.zip"
-  tar_url: "https://github.com/OrthoFinder/RECUR/archive/refs/heads/main.tar.gz"
+  tar_url: "https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-1.0.0.tar.gz"
   repository_url: "https://github.com/OrthoFinder/RECUR"
 
 minima:
