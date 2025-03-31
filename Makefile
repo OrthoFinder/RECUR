@@ -243,7 +243,7 @@ install_iqtree2: make_usr_bin
 
 clean_iqtree2:
 	@echo "Cleaning user-specific IQ-TREE2 installation..."; \
-	rm -f "$(IQTREE_BINARY)" && \
+	$(SUDO_PREFIX) rm -f "$(IQTREE_BINARY)" && \
 	echo "User-specific IQ-TREE2 successfully removed." || \
 	{ echo "Error: Failed to remove user-specific IQ-TREE2 binary from $(IQTREE_BINARY). Exiting."; exit 1; }; \
 
@@ -302,12 +302,7 @@ run: install_iqtree2 install
 		$(MAKE) install; \
 	fi
 
-clean:
-	@echo "Cleaning build environment..."
-	rm -rf **/__pycache__
-	rm -rf ./build ./dist ./recur.egg-info
-
-purge:
+clean_recur:
 	@echo "Remove RECUR and it's environment and dependencies..."
 	rm -rf $(ENV_NAME) 
 	rm -rf **/__pycache__
