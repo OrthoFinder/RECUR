@@ -63,6 +63,11 @@ permalink: /installation/
   python3 recur.py --version # running RECUR without installing it
   python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
+   
+  To deactivate your RECUR namespace and return to your conda base environment, simply run 
+  ```bash
+  conda deactivate
+  ```
 
   To remove the `recur_env` environment, please run 
   ```bash
@@ -86,7 +91,7 @@ permalink: /installation/
 
   Please note that even if RECUR has a IQ-TREE2 binary shipped with it, running `make install USE_CONDA=false` will reinstall IQ-TREE2 to `~/local/bin` if you do not have IQ-TREE2 installed globally. If you already have IQ-TREE2 installed globally, the isntallation of IQ-TREE2 will be skipped. The same as RECUR. By default, `make install USE_CONDA=false` will install the latest version of IQ-TREE2 and RECUR. If you wish to override your older version of those two softwares, you can run `make install USE_CONDA=false FORCE=true`. 
 
-  You can also utilise the Makefile to only update the IQ-TREE2 binary. Running `make install_iqtree2 USE_CONDA=false FORCE=true` will only force to install/update the IQ-TREE2 binary inside the `~/local/bin`. If you have `sudo` access, you can also run `make install_iqtree2 USE_CONDA=false FORCE=true SYSTEM_WIDE=true` to install IQ-TREE2 inside `/usr/local/bin`. 
+  You can also utilise the Makefile to only update the IQ-TREE2 binary. Running `make install_iqtree2 USE_CONDA=false FORCE=true` will only force to install/update the IQ-TREE2 binary inside the `~/local/bin`. If you have `sudo` access, you can also run `make install_iqtree2 USE_CONDA=false FORCE=true SYSTEM_WIDE=true` to install IQ-TREE2 inside `/usr/local/bin`. The default IQ-TREE2 version is `2.4.0`. To change the default version, you can run `make install_iqtree2 USE_CONDA=false FORCE=true IQTREE_VERSION=2.4.1` for instance.
 
   Once the IQ-TREE2 binary has installed, `make install USE_CONDA=false` will create a virtual enviroment named `recur_env` inside the `RECUR` scoure code directory, then install RECUR inside that virtual environment. Having installed RECUR, it will copy the recur binary file from the virtual environment to a `~/local/bin`.  
 
@@ -98,6 +103,16 @@ permalink: /installation/
   recur --version
   recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
+  To remove the installed RECUR package, it's environment and Python dependencies, please run 
+
+  ```bash
+  make clean_recur
+  ```
+
+  However, this command does not remove IQ-TREE2 in your path. You need to run a separate command to remove the binary, namely
+  ```bash
+  make clean_iqtree2
+  ``` 
 
   > You can also run `make conda_install` to install RECUR inside the `recur_env` namespace inside conda (**NOT AVAILABEL at the moment**). 
   > To remove the `recur_env` namespace, you can simply run `make clean_conda_env`
@@ -112,6 +127,12 @@ permalink: /installation/
   python3 -m venv recur_env 
   . recur_env/bin/activate
   pip install git+https://github.com/OrthoFinder/RECUR.git
+  ```
+
+  To remove RECUR, you can simply deactivate the virtual environment and remove it. 
+  ```bash
+  deactivate
+  rm -rf recur_env
   ```
 
   **Clone the repository and install locally**
@@ -142,6 +163,12 @@ permalink: /installation/
   To deactivate the virtual environment, please run 
   ```bash
   deactivate
+  ```
+
+  If you followed the above instructions and cloned the repo locally, you can run the following command to remove RECUR 
+  ```bash
+  cd ..
+  rm -rf RECUR
   ```
 
   > Note: If python3 doesn't work, try using python instead, or check your `/usr/bin` directory to determine which version of Python is installed on your system. Please note that the current version of RECUR requires Python version 3.9 or higher, but no greater than 3.13.
@@ -189,3 +216,9 @@ permalink: /installation/
     -te MyData/my_alignments.tree.txt
   ```
   Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
+
+  Here the `--rm` flag tells Docker to automatically remove the container once it exits, ensuring no leftover container remains after the run. If you wish you remove the RECUR image, please run 
+
+  ```bash
+  docker rmi orthofinder/recur:v1.0.0
+  ```
