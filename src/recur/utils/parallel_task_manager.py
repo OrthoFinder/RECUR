@@ -7,8 +7,10 @@ import subprocess
 import sys
 import threading
 import warnings
+import platform
 from typing import Dict, List, Optional, Set
 from rich import print
+
 
 # uncomment to get round problem with python multiprocessing library that can set all cpu affinities to a single cpu
 # This can cause use of only a limited number of cpus in other cases so it has been commented out
@@ -19,12 +21,35 @@ from rich import print
 
 lock = threading.RLock()
 
-def RunCommand(command: str,
-               env: Optional[Dict[str, str]] = None,
-               qPrintOnError: bool = False,
-               qPrintStderr: bool = True) -> int:
+
+def drop_privileges():
+    if platform.system() == "Windows":
+        return
+    else:
+        os.setgid(os.getgid())
+        os.setuid(os.getuid())
+
+def RunCommand(
+        command: str,
+        env: Optional[Dict[str, str]] = None,
+        qPrintOnError: bool = False,
+        qPrintStderr: bool = True
+    ) -> int:
+    
+    def drop_privileges():
+        os.setgid(os.getgid())
+        os.setuid(os.getuid())
+
     try:
-        popen = subprocess.Popen(command, env=env, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        popen = subprocess.Popen(
+            command,
+            env=env,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            preexec_fn=drop_privileges  
+        )
+        
         stdout, stderr = popen.communicate()
 
         if qPrintOnError and popen.returncode != 0:

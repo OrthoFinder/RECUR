@@ -106,20 +106,26 @@ def GetMCsimulationCommand(output_prefix: str,
     return [command]
 
 
-def RunCommand(commands: list[str],
-               fileDir: str,
-               env: Optional[Dict[str, str]] = None,
-               nthreads: int = 1,
-               delete_files: bool = False,
-               files_to_keep: Optional[List[str]] = None,
-               files_to_remove: Optional[List[str]] = None,
-               fd_limit: Optional[int] = None) -> None:
+def RunCommand(
+        commands: list[str],
+        fileDir: str,
+        env: Optional[Dict[str, str]] = None,
+        nthreads: int = 1,
+        delete_files: bool = False,
+        files_to_keep: Optional[List[str]] = None,
+        files_to_remove: Optional[List[str]] = None,
+        fd_limit: Optional[int] = None
+    ) -> None:
 
-    parallel_task_manager.RunParallelCommands(nthreads, commands, fileDir,
-                                              env=env,
-                                              delete_files=delete_files,
-                                              files_to_keep=files_to_keep,
-                                              files_to_remove=files_to_remove,
-                                              q_print_on_error=True,
-                                              q_always_print_stderr=False,
-                                              fd_limit=fd_limit)
+    parallel_task_manager.RunParallelCommands(
+        nthreads, 
+        commands, 
+        fileDir,
+        env=env,
+        delete_files=delete_files,
+        files_to_keep=files_to_keep,
+        files_to_remove=files_to_remove,
+        q_print_on_error=True,
+        q_always_print_stderr=False,
+        fd_limit=fd_limit
+    )
