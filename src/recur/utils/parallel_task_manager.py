@@ -21,7 +21,6 @@ from rich import print
 
 lock = threading.RLock()
 
-
 def drop_privileges():
     if platform.system() == "Windows":
         return
@@ -36,9 +35,9 @@ def RunCommand(
         qPrintStderr: bool = True
     ) -> int:
     
-    def drop_privileges():
-        os.setgid(os.getgid())
-        os.setuid(os.getuid())
+    kwargs = {}
+    if platform.system() != "Windows":
+        kwargs["preexec_fn"] = drop_privileges
 
     try:
         popen = subprocess.Popen(
@@ -47,7 +46,7 @@ def RunCommand(
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            preexec_fn=drop_privileges  
+            **kwargs 
         )
         
         stdout, stderr = popen.communicate()
