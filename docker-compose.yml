@@ -7,7 +7,7 @@ services:
     image: orthofinder/recur:v1.0.0
     platform: linux/amd64
     volumes:
-      - ./ExampleData:/usr/src/recur/ExampleData:Z
+      - ./ExampleData:/usr/src/recur/ExampleData
     working_dir: /usr/src/recur
     environment:
       - LOCAL_UID=${UID}
