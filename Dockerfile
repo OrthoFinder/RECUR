@@ -34,13 +34,13 @@ RUN echo '#!/bin/bash\n\
     RECUR_DATA_DIR=${RECUR_DATA_DIR:-/usr/src/recur/MyData}\n\
     if [ -d "$RECUR_DATA_DIR" ]; then\n\
     chmod -R a+rwX "$RECUR_DATA_DIR" || true\n\
-    chown -R $(id -u):$(id -g) "$RECUR_DATA_DIR"\n\
+    chown -R ${LOCAL_UID}:${LOCAL_GID} "$RECUR_DATA_DIR"\n\
     else\n\
     echo "[RECUR ENTRYPOINT] Skipping chmod, data directory not found: $RECUR_DATA_DIR"\n\
     fi\n\
     \n\
-    chown -R $(id -u):$(id -g) ExampleData\n\
-    chown -R $(id -u):$(id -g) /usr/src/recur\n\
+    chown -R ${LOCAL_UID}:${LOCAL_GID} ExampleData\n\
+    chown -R ${LOCAL_UID}:${LOCAL_GID} /usr/src/recur\n\
     exec gosu "$USER_ID:$GROUP_ID" python3 recur.py "$@"' \
     > /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
