@@ -1,20 +1,21 @@
 services:
   recur:
-    container_name: recur
     build:
       context: .
       dockerfile: Dockerfile
     image: orthofinder/recur:v1.0.0
     platform: linux/amd64
     volumes:
-      - ${EXAMPLE_DATA_DIR:-./ExampleData}:/usr/src/recur/ExampleData
+      - ./ExampleData:/usr/src/recur/ExampleData
+
     working_dir: /usr/src/recur
     environment:
       - LOCAL_UID=${UID}
       - LOCAL_GID=${GID}
       - RECUR_DATA_DIR=/usr/src/recur/ExampleData
-    command: ["-f", "ExampleData/example_alignments.aln", "-st", "AA", "--outgroups", "ExampleData/example_alignments.outgroups.txt"]
     user: "${UID}:${GID}"
+    command: ["-f", "ExampleData/example_alignments.aln", "-st", "AA", "--outgroups", "ExampleData/example_alignments.outgroups.txt"]
+
 
 
 
