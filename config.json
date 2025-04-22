@@ -1,0 +1,24 @@
+{
+    "__comment": "Variable names that can be used:",
+    "__comment": "alignment_file: The full path of the input multiple sequence alignment filename",
+    "__comment": "path_to_output: The full path of the user specified output filename",
+    "__comment": "BASEOUTNAME : Just the filename without the directory path (of the output filename)",
+    "__comment": "gene_tree: The full path of the gene tree",
+    "__comment": "output_prefix: Output file prefix",
+    "__comment": "evolution_model: Evolution model",
+    "__comment": "phy_seed: Seed number used in ancestral state reconstruction",
+    "__comment": "mcs_seed: Seed number used in Monte Carlo Simulation",
+    "__comment": "fasta: Alignment file format used in Monte Carlo Simulation",
+    "__comment": "best_evolution_model: Best evolution model found in ancestral state reconstruction",
+    "__comment": "root_node: Root node found in ancestral state reconstruction",
+    "__comment": "nalign: Number of alignment files used in Monte Carlo Simulation, defaults to 1000",
+    "__comment": "iqtree_nthreads: Number of threads used by iqtree methods",
+    "iqtree2": {
+        "asr_cmd": "iqtree2 -s alignment_file -redo -T iqtree_nthreads -m evolution_model -pre path_to_output --seed phy_seed -safe",
+        "alisim_cmd": "iqtree2 --alisim output_prefix -T iqtree_nthreads -m best_evolution_model -te gene_tree --keep-seq-order --root-seq root_node --num-alignments nalign --seed mcs_seed --write-all --out-format fasta -safe"
+    },
+    "iqtree3": {
+        "asr_cmd": "iqtree3 -s alignment_file -redo -T iqtree_nthreads -m evolution_model -pre path_to_output --seed phy_seed -safe",
+        "alisim_cmd": "iqtree3 --alisim output_prefix -T iqtree_nthreads -m best_evolution_model -te gene_tree --keep-seq-order --root-seq root_node --num-alignments nalign --seed mcs_seed --write-all --out-format fasta -safe"
+    }
+}
