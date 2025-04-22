@@ -32,7 +32,12 @@ from recur.utils import files, process_args, util
 # warnings.filterwarnings("ignore", module='dendropy')
 
 
-def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None, print_info: bool = False) -> bool:
+def CanRunCommand(
+        command: str, 
+        env: Optional[Dict[str, str]] = None, 
+        print_info: bool = False,
+        iqtree_version: str = "iqtree2"
+    ) -> bool:
     try:
         process = subprocess.Popen(
             command, 
@@ -46,12 +51,12 @@ def CanRunCommand(command: str, env: Optional[Dict[str, str]] = None, print_info
         if print_info:
             if stdout:
                 if command in [
-                    "command -v iqtree2", 
-                    "which iqtree2", 
-                    "where iqtree2", 
-                    "Get-Command iqtree2"
+                    f"command -v {iqtree_version}", 
+                    f"which {iqtree_version}", 
+                    f"where {iqtree_version}", 
+                    f"Get-Command {iqtree_version}"
                     ]:
-                    print(f"Using iqtree2 from: ")
+                    print(f"Using {iqtree_version} from: ")
                 print(stdout.strip())
             if stderr:
                 print(stderr.strip())
@@ -88,11 +93,11 @@ def setup_environment() -> Dict[str, str]:
         bin_dirs = [
             local_bin_dir,
             "/opt/bin",
+            "/usr/bin",
+            "/usr/local/bin",
             os.path.expanduser("~/bin"),
             os.path.expanduser("~/.local/bin"),
             os.path.expanduser("~/local/bin"),
-            "/usr/bin",
-            "/usr/local/bin",
         ]
         
     for bin_dir in bin_dirs:
@@ -105,7 +110,7 @@ def setup_environment() -> Dict[str, str]:
     
     return my_env
 
-def initialise_recur(show_iqtree_path: bool = False) -> Dict[str, str]:
+def initialise_recur(show_iqtree_path: bool = False, iqtree_version: str = "iqtree2") -> Dict[str, str]:
     my_env = setup_environment()
     system = platform.system()
 
@@ -120,19 +125,19 @@ def initialise_recur(show_iqtree_path: bool = False) -> Dict[str, str]:
         print(f"Multiprocessing context setting error on {system}: {e}")
         pass
 
-    iqtree_path = shutil.which("iqtree2", path=my_env["PATH"])
-    iqtree2_version_cmd = f'"{iqtree_path}" --version'
-    if CanRunCommand(iqtree2_version_cmd, env=my_env):
+    iqtree_path = shutil.which(iqtree_version, path=my_env["PATH"])
+    iqtree_version_cmd = f'"{iqtree_path}" --version'
+    if CanRunCommand(iqtree_version_cmd, env=my_env, iqtree_version=iqtree_version):
         if show_iqtree_path:
-            print("\ncan run iqtree2 - [bold green]ok[/bold green]")
+            print(f"\ncan run {iqtree_version} - [bold green]ok[/bold green]")
             if system == "Windows":
-                CanRunCommand("where iqtree2", env=my_env, print_info=True)
+                CanRunCommand(f"where {iqtree_version}", env=my_env, print_info=True, iqtree_version=iqtree_version)
             else:
-                CanRunCommand("which iqtree2", env=my_env, print_info=True)
+                CanRunCommand(f"which {iqtree_version}", env=my_env, print_info=True, iqtree_version=iqtree_version)
         return my_env
 
-    print("Cannot proceed. IQ-TREE2 does not exist in either local bin or system-wide PATH.")
-    print("Please ensure IQ-TREE2 is properly installed before running RECUR!\n")
+    print("Cannot proceed. IQ-TREE does not exist in either local bin or system-wide PATH.")
+    print("Please ensure IQ-TREE is properly installed before running RECUR!\n")
     sys.exit(1)
 
 def signal_handler(sig: int, frame) -> None:
@@ -648,7 +653,7 @@ def main(args: Optional[List[str]] = None):
         options, alnDir, alnPath, resultsDir_nonDefault = process_args.ProcessArgs(args)
         
         # iqtree_version = options.iqtree_version if options.iqtree_version else "system"
-        my_env = initialise_recur(options.show_iqtree_path)
+        my_env = initialise_recur(options.show_iqtree_path, iqtree_version=options.iqtree_version)
 
         if options.system_info:
             util.get_system_info()
@@ -896,7 +901,7 @@ def main(args: Optional[List[str]] = None):
                         if override or restart_step1:
                             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                             production_logger.info(prepend + "Running IQ-TREE to build the real phylogeny", extra={'to_file': True, 'to_console': True})
-                            production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
+                            production_logger.info("Using %d RECUR thread(s), %d IQ-TREE thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
 
                         if gene_tree is None:
                             asr = False
@@ -916,14 +921,16 @@ def main(args: Optional[List[str]] = None):
                             bootstrap=options.bootstrap,
                             sh_alrt=options.bootstrap,
                             fix_branch_length=fix_branch_length,
+                            iqtree_version=options.iqtree_version,
+                            iqtree_cmd_dict=options.iqtree_cmd_dict
                         )
 
                         if gene_tree is None:
-                            production_logger.info(f"step1 iqtree2 gene tree building command: ", extra={'to_file': True, 'to_console': False})
+                            production_logger.info(f"step1 {options.iqtree_version} gene tree building command: ", extra={'to_file': True, 'to_console': False})
                             production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
                         else:
-                            production_logger.info(f"step1 iqtree2 ancestral state reconstruction command: ", extra={'to_file': True, 'to_console': False})
+                            production_logger.info(f"step1 {options.iqtree_version} ancestral state reconstruction command: ", extra={'to_file': True, 'to_console': False})
                             production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
                         run_commands.RunCommand(
@@ -979,10 +986,12 @@ def main(args: Optional[List[str]] = None):
                                 sequence_type=options.sequence_type,
                                 gene_tree=treefile,
                                 asr=True,
-                                fix_branch_length=options.fix_branch_length
+                                fix_branch_length=options.fix_branch_length,
+                                iqtree_version=options.iqtree_version,
+                                iqtree_cmd_dict=options.iqtree_cmd_dict
                             )
 
-                            production_logger.info(f"step2 iqtree2 ancestral state reconstruction command: ",  extra={'to_file': True, 'to_console': False})
+                            production_logger.info(f"step2 {options.iqtree_version} ancestral state reconstruction command: ",  extra={'to_file': True, 'to_console': False})
                             production_logger.info(f"{commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
                             run_commands.RunCommand(
@@ -1054,10 +1063,12 @@ def main(args: Optional[List[str]] = None):
                             phy_seed=options.seed,
                             gene_tree=treefile,
                             asr=True,
-                            fix_branch_length=options.binary_blfix
+                            fix_branch_length=options.binary_blfix,
+                            iqtree_version=options.iqtree_version,
+                            iqtree_cmd_dict=options.iqtree_cmd_dict
                         )
 
-                        production_logger.info("iqtree2 ancestral indel estimation command: ",  extra={'to_file': True, 'to_console': False})
+                        production_logger.info(f"{options.iqtree_version} ancestral indel estimation command: ",  extra={'to_file': True, 'to_console': False})
                         production_logger.info(f"{binary_tree_commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
                         run_commands.RunCommand(
@@ -1201,7 +1212,9 @@ def main(args: Optional[List[str]] = None):
                             best_evolution_model,
                             treefile,
                             fn_root_node,
-                            options.nalign
+                            options.nalign,
+                            iqtree_version=options.iqtree_version,
+                            iqtree_cmd_dict=options.iqtree_cmd_dict
                         )
                         if restart_step3:
                             if gene_tree is None and not restart_step2:
@@ -1211,7 +1224,7 @@ def main(args: Optional[List[str]] = None):
 
                         prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                         production_logger.info(prepend + "Starting Monte-Carlo Simulation.", extra={'to_file': True, 'to_console': True})
-                        production_logger.info("Using %d RECUR thread(s), %d IQ-TREE2 thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads),
+                        production_logger.info("Using %d RECUR thread(s), %d IQ-TREE thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads),
                                             extra={'to_file': True, 'to_console': False})
                         production_logger.info("step2 iqtrees command: ", extra={'to_file': True, 'to_console': False})
                         production_logger.info(f"{mcs_commands[0]}\n", extra={'to_file': True, 'to_console': False})

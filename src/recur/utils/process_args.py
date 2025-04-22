@@ -1,12 +1,19 @@
 import os
 import fnmatch
+import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 import multiprocessing as mp
+
+
 from rich import print
 import dendropy
 
 from recur import __version__, helpinfo
 from recur.utils import util
+
+
+class InvalidEntryException(Exception):
+    pass
 
 def find_balanced_pair(n: int) -> Tuple[int, int]:
     best_pair = (1, n)
@@ -31,11 +38,10 @@ class Options(object):
     def __init__(self):
         self.nthreads = recur_nthreads
         self.recur_nthreads, self.iqtree_nthreads = recur_iqtree_nthreads, iqtree_nthreads
-        self.tree_program = "iqtree2"
         self.sequence_type = "AA" # "CODON1"
         self.evolution_model = "TEST"
         self.qStartFromMSA = False
-        self.iqtree_version = "local"
+        self.iqtree_version = "iqtree2"
         self.show_iqtree_path = False
         self.gene = None
         self.alnpre = None
@@ -72,6 +78,7 @@ class Options(object):
         self.override = True
         self.project_dir = None
         self.continue_on_error = False
+        self.iqtree_cmd_dict = {}
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -111,6 +118,60 @@ def validate_newick_tree(tree_file_path):
         return False
 
 
+def program_caller(config_file):
+    iqtree_cmd_dict = {}
+
+    if config_file == None:
+        return
+    if not os.path.exists(config_file):
+        print(
+            (
+                "WARNING: Configuration file, '%s', does not exist. No user-confgurable ancestral state reconstruction or Monte Carlo Simulation command have been added.\n"
+                % config_file
+            )
+        )
+        return
+    with open(config_file, "r") as infile:
+        try:
+            d = json.load(infile)
+        except ValueError:
+            print(f"WARNING: Incorrectly formatted configuration file {config_file}")
+            print(
+                "File is not in .json format. No user-confgurable multiple sequence alignment or tree inference methods have been added.\n"
+            )
+            return
+        for name, v in d.items():
+            if name == "__comment":
+                continue
+            if " " in name:
+                print(f"WARNING: Incorrectly formatted configuration file entry: {name}")
+                print(("No space is allowed in name: '%s'" % name))
+                continue
+
+            if "iqtree" in name:
+                iqtree_cmd_dict[name] = {}
+            else:
+                continue
+
+            if "asr_cmd" not in v:
+                print(f"WARNING: Incorrectly formatted configuration file entry: {name}")
+                print("'asr_cmd' entry is missing")
+                util.Fail()
+
+            if "alisim_cmd" not in v:
+                print(f"WARNING: Incorrectly formatted configuration file entry: {name}")
+                print("'alisim_cmd' entry is missing")
+                util.Fail()
+            
+            try:
+                iqtree_cmd_dict[name]["asr_cmd"] = v["asr_cmd"]
+                iqtree_cmd_dict[name]["alisim_cmd"] = v["alisim_cmd"]
+            except InvalidEntryException:
+                pass
+
+    return iqtree_cmd_dict
+
+
 def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[str]]:
 
     options = Options()
@@ -119,6 +180,15 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
     resultsDir_nonDefault = None
     usr_iqtree_nthread = False
     usr_recur_nthread = False
+
+    if "--config" in args:
+        config_index = args.index("--config")
+        config_file = args[config_index + 1]
+        config_path = GetFileArgument(config_file)
+        if os.path.exists(config_path):
+            options.iqtree_cmd_dict = program_caller(config_path)
+        args.remove("--config")
+        args.remove(config_file)
 
     while len(args) > 0:
         arg = args.pop(0)
@@ -192,7 +262,7 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         elif arg == "--mcs-seed":
             options.mcs_seed = int(args.pop(0))
 
-        elif arg == "-iv":
+        elif arg == "-iv" or arg == "--iqtree-version":
             options.iqtree_version = args.pop(0)
 
         elif arg == "-una" or arg == "--usr-node-aln":
