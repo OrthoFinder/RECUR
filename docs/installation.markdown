@@ -14,7 +14,9 @@ permalink: /installation/
     - [Conventional Installation](#conventional-installation)
   - [Run RECUR in a Docker Container](#run-recur-in-a-docker-container)
 
-  The recurrence analysis implemented by RECUR utilises IQ-TREE2 phylogenomic software package to infer a phylogeny, the ancestral node sequences and to generate simulated alignments. Although IQ-TREE2 comes with three versions, i.e., Linux, MacOS and Windows, the prefered OS for RECUR is Linux. RECUR can be run with or without installation. In either case, it is recommended that it is run inside a virtual environment. If you wish to run RECUR on a Windows or a MacOS machine, you need to install IQ-TREE2 before you can run RECUR. You can download the latest version of IQ-TREE2 [here](http://www.iqtree.org/#download).
+  The recurrence analysis implemented by RECUR utilises IQ-TREE (v2.4.0) phylogenomic software package to infer a phylogeny, the ancestral node sequences and to generate simulated alignments. Although IQ-TREE comes with three versions, i.e., Linux, MacOS and Windows, the prefered OS for RECUR is Linux. RECUR can be run with or without installation. In either case, it is recommended that it is run inside a virtual environment. If you wish to run RECUR on a Windows or a MacOS machine, you need to install IQ-TREE before you can run RECUR. You can download the IQ-TREE [here](http://www.iqtree.org/#download). 
+
+  >**⚠️ Note: RECUR requires IQ-TREE version 2.0 or higher to function correctly. Ensure that your environment meets this requirement before proceeding.**
 
 
 ### Run RECUR in conda
@@ -35,9 +37,9 @@ permalink: /installation/
 
 #### Run RECUR in conda via Scoure Code
 
-  An IQ-TREE2 binary is shipped with RECUR, however this precompiled binary might not be compatable with your underlying OS. Therefore, you might want to install IQ-TREE2 separately inside a conda namespace, then download the [scoure code of RECUR from GitHub](https://github.com/OrthoFinder/RECUR) and run it with or without installaton.
+  An IQ-TREE binary is shipped with RECUR, however this precompiled binary might not be compatable with your underlying OS. Therefore, you might want to install IQ-TREE separately inside a conda namespace, then download the [scoure code of RECUR from GitHub](https://github.com/OrthoFinder/RECUR) and run it with or without installaton.
 
-  The commands to install IQ-TREE2 and run RECUR via scoure code installation is shown as follows.
+  The commands to install IQ-TREE and run RECUR via scoure code installation is shown as follows.
 
   ```bash
   conda create -n recur_env python=3.12
@@ -76,7 +78,7 @@ permalink: /installation/
 
 ### Run RECUR on Linux 
 
-  If you are working on a Linux machine or WSL2, running RECUR is straightforward. A separate installation of IQ-TREE2 is not necessary. 
+  If you are working on a Linux machine or WSL2, running RECUR is straightforward. A separate installation of IQ-TREE is not necessary. 
 
 #### Installation via make/gmake
 
@@ -87,13 +89,13 @@ permalink: /installation/
   cd RECUR 
   make install USE_CONDA=false
   ```
-  When you run `make install USE_CONDA=false`, a prompt message will pop up on your terminal and ask your permission to use or create a `~/local/bin` under your home directory. If `y`, IQ-TREE2 and RECUR binaries will be saved in that directory on completion of the installation process. If `n`, you will need to provide a name of the directory you wish to create or use relative to your home directory.
+  When you run `make install USE_CONDA=false`, a prompt message will pop up on your terminal and ask your permission to use or create a `~/local/bin` under your home directory. If `y`, IQ-TREE and RECUR binaries will be saved in that directory on completion of the installation process. If `n`, you will need to provide a name of the directory you wish to create or use relative to your home directory.
 
-  Please note that even if RECUR has a IQ-TREE2 binary shipped with it, running `make install USE_CONDA=false` will reinstall IQ-TREE2 to `~/local/bin` if you do not have IQ-TREE2 installed globally. If you already have IQ-TREE2 installed globally, the isntallation of IQ-TREE2 will be skipped. The same as RECUR. By default, `make install USE_CONDA=false` will install the latest version of IQ-TREE2 and RECUR. If you wish to override your older version of those two softwares, you can run `make install USE_CONDA=false FORCE=true`. 
+  Please note that even if RECUR has a IQ-TREE binary shipped with it, running `make install USE_CONDA=false` will reinstall IQ-TREE to `~/local/bin` if you do not have IQ-TREE installed globally. If you already have IQ-TREE installed globally, the isntallation of IQ-TREE will be skipped. The same as RECUR. By default, `make install USE_CONDA=false` will install the latest version of IQ-TREE and RECUR. If you wish to override your older version of those two softwares, you can run `make install USE_CONDA=false FORCE=true`. 
 
-  You can also utilise the Makefile to only update the IQ-TREE2 binary. Running `make install_iqtree2 USE_CONDA=false FORCE=true` will only force to install/update the IQ-TREE2 binary inside the `~/local/bin`. If you have `sudo` access, you can also run `make install_iqtree2 USE_CONDA=false FORCE=true SYSTEM_WIDE=true` to install IQ-TREE2 inside `/usr/local/bin`. The default IQ-TREE2 version is `2.4.0`. To change the default version, you can run `make install_iqtree2 USE_CONDA=false FORCE=true IQTREE_VERSION=2.4.1` for instance.
+  You can also utilise the Makefile to only update the IQ-TREE binary. Running `make install_iqtree2 USE_CONDA=false FORCE=true` will only force to install/update the IQ-TREE binary inside the `~/local/bin`. If you have `sudo` access, you can also run `make install_iqtree2 USE_CONDA=false FORCE=true SYSTEM_WIDE=true` to install IQ-TREE inside `/usr/local/bin`. The default IQ-TREE version is `2.4.0`.
 
-  Once the IQ-TREE2 binary has installed, `make install USE_CONDA=false` will create a virtual enviroment named `recur_env` inside the `RECUR` scoure code directory, then install RECUR inside that virtual environment. Having installed RECUR, it will copy the recur binary file from the virtual environment to a `~/local/bin`.  
+  Once the IQ-TREE binary has installed, `make install USE_CONDA=false` will create a virtual enviroment named `recur_env` inside the `RECUR` scoure code directory, then install RECUR inside that virtual environment. Having installed RECUR, it will copy the recur binary file from the virtual environment to a `~/local/bin`.  
 
   After running the above commands, please start a new terminal session or close your terminal and restart a new session. Then you can run RECUR globaly without needing to activate the virtual enviroment where you installed it everytime. 
 
@@ -109,7 +111,7 @@ permalink: /installation/
   make clean_recur
   ```
 
-  However, this command does not remove IQ-TREE2 in your path. You need to run a separate command to remove the binary, namely
+  However, this command does not remove IQ-TREE in your path. You need to run a separate command to remove the binary, namely
   ```bash
   make clean_iqtree2
   ``` 
@@ -207,13 +209,13 @@ permalink: /installation/
 
   ```bash
   docker run -it --rm \
-    -v $(pwd)/MyData:/usr/src/recur/MyData \
-    -e LOCAL_UID=$(id -u) -e LOCAL_GID=$(id -g) \
-    orthofinder/recur:v1.0.0 \
-    -f MyData/my_alignments.aln \
-    -st AA \
-    --outgroups MyData/my_alignments.outgroups.txt \
-    -te MyData/my_alignments.tree.txt
+      -v $(pwd)/MyData:/usr/src/recur/MyData \
+      -e LOCAL_UID=$(id -u) -e LOCAL_GID=$(id -g) \
+      orthofinder/recur:v1.0.0 \
+      -f MyData/my_alignments.aln \
+      -st AA \
+      --outgroups MyData/my_alignments.outgroups.txt \
+      -te MyData/my_alignments.tree.txt
   ```
   Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
 

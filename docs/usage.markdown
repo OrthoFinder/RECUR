@@ -47,12 +47,13 @@ In this section, we will dive deep into the options you have to run RECUR. The c
   --num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]
   -te <dir/file>               Complete constraint tree [Default: Estimated from alignment]
   -m <str>                     Model of sequence evolution [Default: estimated from alignment]
-  -nt <int>                    Number of threads provided to IQ-TREE2
+  -nt <int>                    Number of threads provided to IQ-TREE
   -t <int>                     Number of threads used for RECUR internal processing
   --seed <int>                 Random starting see number [Default: 8]
   -o <txt>                     Results directory [Default: same directory as MSA files]
   -uc <int>                    Update cycle used in progress bar [Default: no progress bar]
   -bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]
+  -iv <str>                    IQ-TREE version [Default: iqtree2]
   -blfix                       Fix branch lengths of tree. [Default: False]
 ```
 
@@ -73,7 +74,7 @@ recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|
 
 #### Providing a model of evolution
 
-A model of sequence evolution (as long as it is supported by IQ-TREE2) can be provided using the `-m` flag. E.g.,
+A model of sequence evolution (as long as it is supported by IQ-TREE) can be provided using the `-m` flag. E.g.,
 
 ```bash
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> -m <model_of_evolution>
@@ -107,7 +108,7 @@ If your genes share the same outgroups and tree, you only need to create a singl
 To speed up the analysis, RECUR has introduced both multiprocessing and multithreading in the package. By default, the number of threads will be automatically calculated based the configuration of your machine. Alternatively, they can be user specified using the following three options.
 
 - `-t`: Number of threads used for the RECUR algorithms
-- `-nt`: Number of threads for IQ-TREE2 to run in parallel
+- `-nt`: Number of threads for IQ-TREE to run in parallel
 
 Note, the number of threads cannot exceed the computer allowance.
 
@@ -155,7 +156,7 @@ RECUR outputs additional results files from each step in the analysis which can 
 
 Inside the `*.recur` folder, you will find two `*.txt` files, i.e., `Citation.txt` and `Log.txt`, and four subdirectories, i.e., `Real_Phylogeny`, `Infered_Sequences`, `Monte_Carlo_Simulation` and `Substitution_Matirces`.
 
-- `Real_Phylogeny`: contains the tree constructed from the alignment (`*.treefile`), the associated .iqtree file (`*.iqtree`) with information on model testing and the raw ancestral state reconstruction file (`*.state`) output from IQ-TREE2.
+- `Real_Phylogeny`: contains the tree constructed from the alignment (`*.treefile`), the associated .iqtree file (`*.iqtree`) with information on model testing and the raw ancestral state reconstruction file (`*.state`) output from IQ-TREE.
 - `Inferred_Sequences`: contains the inferred ancestral sequences with node labels corresponding to the tree in the Real_Phylogeny directory.
 - `Substitution_Matirces`: contains a `*.substituion_matrix.tsv` file and a `*.accum_substituion_matrix.txt` file. The `*.substituion_matrix.tsv` summarises the substitutions that occurred at each site in the protein across the phylogeny, while the `*.accum_substituion_matrix.txt` presents the accumulated counts for each amino acid substitution type across all residues.
 
