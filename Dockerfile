@@ -2,6 +2,7 @@ FROM python:3.12-slim AS builder
 
 WORKDIR /usr/src/recur
 
+# Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -15,10 +16,12 @@ FROM python:3.12-slim
 
 WORKDIR /usr/src/recur
 
+# Copy the site-packages, binaries, and code from the builder
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /usr/src/recur /usr/src/recur
 
+# Install gosu for UID/GID switching
 RUN apt-get update && apt-get install -y gosu && rm -rf /var/lib/apt/lists/*
 
 RUN chmod -R a+rX /usr/src/recur
@@ -66,27 +69,6 @@ RUN echo '#!/bin/bash\n\
 
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# IMPORTANT: do NOT override with 'USER 1000:1000' or similar
-# We want to start as root so we can create users/chown. Then drop privileges with gosu.
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["--help"]
-
-
-
-
-# docker rmi -f $(docker images -aq)
-# UID=$(id -u) GID=$(id -g) docker compose up --build
-#  docker tag orthofinder/recur:v1.0.0 orthofinder/recur:latest
-#  docker push orthofinder/recur:v1.0.0
-#  docker push orthofinder/recur:latest
-# docker run -it --rm --entrypoint bash orthofinder/recur:v1.0.0
-
-# docker container run -it --rm orthofinder/recur:v1.0.0
-# docker run -it --rm \
-#     -v $(pwd)/MyData:/usr/src/recur/MyData \
-#     -e LOCAL_UID=$(id -u) -e LOCAL_GID=$(id -g) \
-#     orthofinder/recur:v1.0.0 \
-#     -f MyData/example_alignments.aln \
-#     -st AA \
-#     --outgroups MyData/example_alignments.outgroups.txt
 
