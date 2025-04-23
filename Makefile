@@ -53,12 +53,12 @@ IQTREE_DEFAULT_VERSION := 2.4.0
 IQTREE_VERSION ?= $(IQTREE_DEFAULT_VERSION)
 
 # URLs for IQ-TREE urlS
-IQTREE_LINUX_INTEL := https://github.com/iqtree/iqtree2/releases/download/v2.3.6/iqtree-2.3.6-Linux-intel.tar.gz
-IQTREE_LINUX_ARM := https://github.com/iqtree/iqtree2/releases/download/v2.3.6/iqtree-2.3.6-Linux-arm.tar.gz
+IQTREE_LINUX_INTEL := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-Linux-intel.tar.gz
+IQTREE_LINUX_ARM := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-Linux-arm.tar.gz
 
-IQTREE_MACOS_UNIVERSAL := https://github.com/iqtree/iqtree2/releases/download/v2.3.6/iqtree-2.3.6-macOS.zip
-IQTREE_MACOS_INTEL := https://github.com/iqtree/iqtree2/releases/download/v2.3.6/iqtree-2.3.6-macOS-intel.zip
-IQTREE_MACOS_ARM := https://github.com/iqtree/iqtree2/releases/download/v2.3.6/iqtree-2.3.6-macOS-arm.zip
+IQTREE_MACOS_UNIVERSAL := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-macOS.zip
+IQTREE_MACOS_INTEL := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-macOS-intel.zip
+IQTREE_MACOS_ARM := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-macOS-arm.zip
 
 IQTREE_BINARY := $(BINARY_INSTALL_DIR)/iqtree2
 

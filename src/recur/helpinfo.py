@@ -56,7 +56,7 @@ def PrintHelp():
 
     table_options.add_row(
         "-nt <[bright_magenta]int[/bright_magenta]>",
-        f"Number of threads provided to IQ-TREE2 [Default: [deep_sky_blue2]1[/deep_sky_blue2] (without alrt); [deep_sky_blue2]{iqtree_nthreads}[/deep_sky_blue2] (with alrt)]"
+        f"Number of threads provided to IQ-TREE [Default: [deep_sky_blue2]1[/deep_sky_blue2] (without alrt); [deep_sky_blue2]{iqtree_nthreads}[/deep_sky_blue2] (with alrt)]"
     )
 
     table_options.add_row(
@@ -84,6 +84,11 @@ def PrintHelp():
     )
 
     table_options.add_row(
+        "-iv <[bright_magenta]str[/bright_magenta]>",
+        f"IQ-TREE version. [Default: [dark_cyan]iqtree2[/dark_cyan]]"
+    )
+
+    table_options.add_row(
         "-blfix",
         f"Fix branch lengths of tree. [Default: [dark_cyan]False[/dark_cyan]]"
     )
@@ -100,7 +105,7 @@ def PrintHelp():
     # print("-te <dir/file>               Complete constraint tree [Default: estimated from alignment]")
     # print("-m <str>                     Model of sequence evolution [Default: estimated from alignment]")
     # print("-blfix                       Fix branch lengths of tree. [Default: False]")
-    # print(f"-nt <int>                    Number of threads provided to IQ-TREE2 [Default: 1 (without alrt); {iqtree_nthreads} (with alrt)]")
+    # print(f"-nt <int>                    Number of threads provided to IQ-TREE [Default: 1 (without alrt); {iqtree_nthreads} (with alrt)]")
     # print(f"-t <int>                     Number of threads used for RECUR internal processing [Default: {recur_nthreads}]")
     # print("--seed <int>                 Random starting see number [Default: 8]")
     # print("-o <txt>                     Results directory [Default: same directory as MSA files]")
