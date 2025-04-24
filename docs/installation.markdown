@@ -51,7 +51,7 @@ permalink: /installation/
   recur --version
   recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
-  Please note that the above commands require you to have `git` installed. If `git` is unavailable, please go to our [release page](https://github.com/OrthoFinder/RECUR/releases) or [download page](https://orthofinder.github.io/RECUR/download/), use oether methods such as `wget` or `curl` to download the source code. 
+  Please note that the above commands require you to have `git` installed. If `git` is unavailable, please go to our [release page](https://github.com/OrthoFinder/RECUR/releases) or [download page](https://orthofinder.github.io/RECUR/download/), use other methods such as `wget` or `curl` to download the source code. 
 
   Having downloaded the RECUR scoure code, if you do not wish to install RECUR, you can simply pass `recur.py` with the your relevant options to Python and run RECUR without installation. For example,  
 
@@ -65,16 +65,17 @@ permalink: /installation/
   python3 recur.py --version # running RECUR without installing it
   python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
-   
-  To deactivate your RECUR namespace and return to your conda base environment, simply run 
+
+  Once you've finished your analysis and want to exit the current environment, simply run:
   ```bash
   conda deactivate
   ```
-
-  To remove the `recur_env` environment, please run 
+  If you'd like to completely remove the environment where RECUR was installed, you can do so with:
   ```bash
+  conda deactivate
   conda remove -n recur_env --all
   ```
+  The first command deactivates the environment, and the second one deletes it entirely. If you want to use RECUR again in the future, you’ll need to recreate the environment and reinstall the package.
 
 ### Run RECUR on Linux 
 
@@ -82,7 +83,7 @@ permalink: /installation/
 
 #### Installation via make/gmake
 
-  A Makefile is provided to simplify the installation process. Either `make` or `gmake` can be used to run it. Run the following commands to grab a copy of the RECUR scoure code from GitHub, and install RECUR inside a Python virtual enviroment. Again, if `git` is unavailable, please use oether methods such as `wget` or `curl` to download the source code.
+  A Makefile is provided to simplify the installation process. Either `make` or `gmake` can be used to run it. Run the following commands to grab a copy of the RECUR scoure code from GitHub, and install RECUR inside a Python virtual enviroment. Again, if `git` is unavailable, please use other methods such as `wget` or `curl` to download the source code.
 
   ```bash
   git clone https://github.com/OrthoFinder/RECUR.git
@@ -162,16 +163,18 @@ permalink: /installation/
   python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
   
-  To deactivate the virtual environment, please run 
+  To deactivate the virtual environment, please run:
   ```bash
   deactivate
   ```
 
   If you followed the above instructions and cloned the repo locally, you can run the following command to remove RECUR 
   ```bash
+  deactivate
   cd ..
   rm -rf RECUR
   ```
+  This will delete both the environment and all files related to RECUR. If you plan to use RECUR again in the future, you’ll need to recreate the environment and reinstall the package.
 
   > Note: If python3 doesn't work, try using python instead, or check your `/usr/bin` directory to determine which version of Python is installed on your system. Please note that the current version of RECUR requires Python version 3.9 or higher, but no greater than 3.13.
   > If you are running RECUR on Windows, please note that activating and deactivating the virtual enviroment work slightly different. 
