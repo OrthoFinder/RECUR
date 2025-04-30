@@ -1,0 +1,20 @@
+include LICENSE
+include README.md
+include pyproject.toml
+
+recursive-include src/recur *.yaml
+recursive-include src/recur/genetic_codes *
+recursive-include ExampleData *
+
+# prune docs
+prune tests
+prune .github
+
+exclude Dockerfile
+exclude .dockerignore
+# global-exclude *.png *.svg
+
+## uncoment the next line if you wish to include iqtree2 when you build the package
+# exclude src/recur/bin/iqtree2
+# exclude badge-status.json
+

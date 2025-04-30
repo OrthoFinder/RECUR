@@ -100,7 +100,19 @@ include = [
 #"bin" = ["recur.bin.iqtree2"]
 
 [tool.setuptools.exclude-package-data]
-recur = ["**/__pycache__", "**/*.pyc", "tests"]
+recur = [
+    "**/__pycache__",
+    "**/*.pyc",
+    # "src/bin/iqtree2"
+]
+"*" = [
+    ".github/**",
+    ".dockerignore",
+    "Dockerfile",
+    "tests/**",
+    # "*.png",
+    # "*.svg",
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov=recur"

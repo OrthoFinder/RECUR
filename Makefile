@@ -306,7 +306,10 @@ clean_recur:
 	@echo "Remove RECUR and it's environment and dependencies..."
 	rm -rf $(ENV_NAME) 
 	rm -rf **/__pycache__
-	rm -rf ./build ./dist ./recur.egg-info
+	rm -rf ./src/recur/__pycache__
+	rm -rf ./src/recur/utils/__pycache__
+	rm -rf ./src/recur/run/__pycache__
+	rm -rf ./build ./dist **/recur*.egg-info
 
 	if [ -f "$(RECUR_DIR)/recur" ]; then \
 		rm -f "$(RECUR_DIR)/recur"
