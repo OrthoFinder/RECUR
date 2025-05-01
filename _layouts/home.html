@@ -3,12 +3,14 @@ layout: base
 ---
 
 <div class="page">
-  {%- if page.title -%}
+  <!-- {%- if page.title -%}
   <h1 class="page-heading">{{ page.title }}</h1>
-  {%- endif -%}
+  {%- endif -%} -->
 
-  {{ content }}
-
+  <!-- {{ content }} -->
+  <div class="post-content">
+    {{ content }}
+  </div>
 
   {% if site.paginate %}
   {% assign posts = paginator.posts %}

@@ -39,6 +39,8 @@ github_username: OrthoFinder/RECUR
 repository: OrthoFinder/RECUR
 show_downloads: true
 future: false
+show_excerpts: true
+excerpt_separator: "<!--more-->"
 
 # Build settings
 theme: minima
@@ -53,8 +55,8 @@ plugins:
 # - jekyll-github-metadata
 
 github:
-  zip_url: "https://github.com/OrthoFinder/RECUR/archive/refs/heads/main.zip"
-  tar_url: "https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-1.0.0.tar.gz"
+  # zip_url: "https://github.com/OrthoFinder/RECUR/archive/refs/heads/main.zip"
+  # tar_url: "https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-intel-1.0.0.tar.gz"
   repository_url: "https://github.com/OrthoFinder/RECUR"
 
 minima:

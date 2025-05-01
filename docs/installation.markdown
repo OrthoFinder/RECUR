@@ -14,16 +14,14 @@ permalink: /installation/
     - [Conventional Installation](#conventional-installation)
   - [Run RECUR in a Docker Container](#run-recur-in-a-docker-container)
 
-  The recurrence analysis implemented by RECUR utilises IQ-TREE (v2.4.0) phylogenomic software package to infer a phylogeny, the ancestral node sequences and to generate simulated alignments. Although IQ-TREE comes with three versions, i.e., Linux, MacOS and Windows, the prefered OS for RECUR is Linux. RECUR can be run with or without installation. In either case, it is recommended that it is run inside a virtual environment. If you wish to run RECUR on a Windows or a MacOS machine, you need to install IQ-TREE before you can run RECUR. You can download the IQ-TREE [here](http://www.iqtree.org/#download). 
+  The recurrence analysis implemented by RECUR utilises IQ-TREE (v2.4.0) phylogenomic software package to infer a phylogeny, the ancestral node sequences and to generate simulated alignments. Although IQ-TREE comes with three versions, i.e., Linux, MacOS and Windows, the prefered OS for RECUR is Linux. RECUR can be run with or without installation. In either case, it is recommended that it is run inside a virtual environment. If you wish to run RECUR on a Windows or a MacOS machine, you can either install [IQ-TREE](http://www.iqtree.org/#download) before launching RECUR, or download the source package of RECUR (bundled with a matching IQ-TREE2 build) from the [RECUR release page](https://github.com/OrthoFinder/RECUR/releases/)  or [Download page](https://orthofinder.github.io/RECUR/download/). 
 
   >**⚠️ Note: RECUR requires IQ-TREE version 2.0 or higher to function correctly. Ensure that your environment meets this requirement before proceeding.**
 
 
 ### Run RECUR in conda
 
-  The simplest way to use RECUR is to install it via conda. RECUR is available on the bioconda channel (**# ADD LINK**).
-
-#### Install RECUR via bioconda  (**NOT AVAILABLE at the momemnt**) 
+  The simplest way to use RECUR is to install it via conda. RECUR is available on the [bioconda channel](https://anaconda.org/bioconda/recur).
 
   I you have miniconda installed, you can simply run the following commands to create a `recur_env` namespace, install RECUR in that namespace, then print out the version and test it on the `ExampleData` dataset.
 
@@ -34,38 +32,6 @@ permalink: /installation/
   recur --version
   recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
-
-#### Run RECUR in conda via Scoure Code
-
-  An IQ-TREE binary is shipped with RECUR, however this precompiled binary might not be compatable with your underlying OS. Therefore, you might want to install IQ-TREE separately inside a conda namespace, then download the [scoure code of RECUR from GitHub](https://github.com/OrthoFinder/RECUR) and run it with or without installaton.
-
-  The commands to install IQ-TREE and run RECUR via scoure code installation is shown as follows.
-
-  ```bash
-  conda create -n recur_env python=3.12
-  conda activate recur_env
-  conda install bioconda::iqtree
-  git clone https://github.com/OrthoFinder/RECUR.git
-  cd RECUR 
-  pip install .
-  recur --version
-  recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
-  ```
-  Please note that the above commands require you to have `git` installed. If `git` is unavailable, please go to our [release page](https://github.com/OrthoFinder/RECUR/releases) or [download page](https://orthofinder.github.io/RECUR/download/), use other methods such as `wget` or `curl` to download the source code. 
-
-  Having downloaded the RECUR scoure code, if you do not wish to install RECUR, you can simply pass `recur.py` with the your relevant options to Python and run RECUR without installation. For example,  
-
-  ```bash
-  conda create -n recur_env python=3.12
-  conda activate recur_env
-  conda install bioconda::iqtree
-  git clone https://github.com/OrthoFinder/RECUR.git
-  cd RECUR 
-  pip install -r requirements.txt 
-  python3 recur.py --version # running RECUR without installing it
-  python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
-  ```
-
   Once you've finished your analysis and want to exit the current environment, simply run:
   ```bash
   conda deactivate
@@ -78,8 +44,67 @@ permalink: /installation/
   The first command deactivates the environment, and the second one deletes it entirely. If you want to use RECUR again in the future, you’ll need to recreate the environment and reinstall the package.
 
 ### Run RECUR on Linux 
+#### Conventional Installation
 
-  If you are working on a Linux machine or WSL2, running RECUR is straightforward. A separate installation of IQ-TREE is not necessary. 
+  **Download the source code directly**
+  Pre-compiled RECUR v1.0.0 archives are available for all major operating systems and CPU architectures. For the full list of files and step-by-step installation instructions, visit the [RECUR v1.0.0](https://orthofinder.github.io/RECUR/release/31/03/2025/RECUR-v1.0.0.html)
+
+  **Install directly from GitHub**
+
+  ```bash
+  python3 -m venv recur_env 
+  . recur_env/bin/activate
+  pip install git+https://github.com/OrthoFinder/RECUR.git
+  recur --version
+  recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
+  ```
+
+  To remove RECUR, you can simply deactivate the virtual environment and remove it. 
+  ```bash
+  deactivate
+  rm -rf recur_env
+  ```
+
+  **Clone the repository and install locally**
+
+  ```bash
+  git clone https://github.com/OrthoFinder/RECUR.git
+  cd RECUR 
+  python3 -m venv recur_env 
+  . recur_env/bin/activate
+  pip install .
+  recur --version
+  recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
+  ```
+ **Clone the repository and without installation**
+
+  Again, if you do not wish to install RECUR please run 
+  ```bash
+  git clone https://github.com/OrthoFinder/RECUR.git
+  cd RECUR 
+  python3 -m venv recur_env 
+  . recur_env/bin/activate
+  pip install -r requirements.txt 
+  python3 recur.py --version # running RECUR without installing it
+  python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
+  ```
+  
+  >Please note that the GitHub release of RECUR includes IQ-TREE v2.4.0 compiled for 64-bit Linux. If your system uses a different OS or CPU architecture, that binary won’t run and RECUR will fail to start. In that case, either install the appropriate IQ-TREE build for your platform from the official [IQ-TREE download page](http://www.iqtree.org/#download) before launching RECUR, or download the source package of RECUR (bundled with a matching IQ-TREE build) from the [RECUR release page](https://github.com/OrthoFinder/RECUR/releases/) or [Download page](https://orthofinder.github.io/RECUR/download/).
+
+  To deactivate the virtual environment, please run:
+  ```bash
+  deactivate
+  ```
+
+  If you followed the above instructions and cloned the repo locally, you can run the following command to remove RECUR 
+  ```bash
+  deactivate
+  cd ..
+  rm -rf RECUR
+  ```
+  This will delete both the environment and all files related to RECUR. If you plan to use RECUR again in the future, you’ll need to recreate the environment and reinstall the package.
+
+  > Note: If python3 doesn't work, try using python instead, or check your `/usr/bin` directory to determine which version of Python is installed on your system. Please note that the current version of RECUR requires Python version 3.9 or higher, but no greater than 3.13.
 
 #### Installation via make/gmake
 
@@ -119,70 +144,6 @@ permalink: /installation/
 
   > You can also run `make conda_install` to install RECUR inside the `recur_env` namespace inside conda (**NOT AVAILABEL at the moment**). 
   > To remove the `recur_env` namespace, you can simply run `make clean_conda_env`
-
-#### Conventional Installation
-
-  If you are unsure about the make/gmake method, you can use the conventional method to install RECUR. 
-
-  **Install directly from GitHub**
-
-  ```bash
-  python3 -m venv recur_env 
-  . recur_env/bin/activate
-  pip install git+https://github.com/OrthoFinder/RECUR.git
-  ```
-
-  To remove RECUR, you can simply deactivate the virtual environment and remove it. 
-  ```bash
-  deactivate
-  rm -rf recur_env
-  ```
-
-  **Clone the repository and install locally**
-
-  ```bash
-  git clone https://github.com/OrthoFinder/RECUR.git
-  cd RECUR 
-  python3 -m venv recur_env 
-  . recur_env/bin/activate
-  pip install .
-  recur --version
-  recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
-  ```
-
- **Clone the repository and without installation**
-
-  Again, if you do not wish to install RECUR please run 
-  ```bash
-  git clone https://github.com/OrthoFinder/RECUR.git
-  cd RECUR 
-  python3 -m venv recur_env 
-  . recur_env/bin/activate
-  pip install -r requirements.txt 
-  python3 recur.py --version # running RECUR without installing it
-  python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
-  ```
-  
-  To deactivate the virtual environment, please run:
-  ```bash
-  deactivate
-  ```
-
-  If you followed the above instructions and cloned the repo locally, you can run the following command to remove RECUR 
-  ```bash
-  deactivate
-  cd ..
-  rm -rf RECUR
-  ```
-  This will delete both the environment and all files related to RECUR. If you plan to use RECUR again in the future, you’ll need to recreate the environment and reinstall the package.
-
-  > Note: If python3 doesn't work, try using python instead, or check your `/usr/bin` directory to determine which version of Python is installed on your system. Please note that the current version of RECUR requires Python version 3.9 or higher, but no greater than 3.13.
-  > If you are running RECUR on Windows, please note that activating and deactivating the virtual enviroment work slightly different. 
-  ```bash 
-  python -m venv win_venv # create the virtual environment
-  win_venv\Scripts\activate.bat # activate the virtual enviroment 
-  win_venv\Scripts\deactivate.bat # deactivate the virtual environment
-  ```
 
 ### Run RECUR in a Docker Container
 

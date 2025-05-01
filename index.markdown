@@ -6,10 +6,9 @@ layout: home
 title: Home
 ---
 
-<!-- ## Home -->
+## Home
 
-
-## RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments
+### RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments
 <br>
 
 ![RECUR method workflow](./assets/images/RECUR_workflow_figure.png)
@@ -17,8 +16,6 @@ title: Home
 <div align="center" style="font-size: 18px; font-weight: bold;">
   Figure 1: The RECUR workflow
 </div>
-<br>
-
 
 
 The required input is either a protein or codon multiple sequence alignment (in FASTA format) and a defined outgroup species or clade. The output of RECUR is a list of recurrent amino acid substitutions, that have occurred in the inferred phylogeny (file suffix: `.recur.tsv`). Outputs of intermediate steps, i.e. model selection, tree inference, ancestral state reconstruction and site substitution matrices, can be found in the .recur output directory.
@@ -26,11 +23,11 @@ The required input is either a protein or codon multiple sequence alignment (in 
 
 ## How to Cite?
 
-
 To cite RECUR, please cite both the following:
 
-[1] recur ref
- 
+[1] *Elizabeth HJ Robbins, Yi Liu, Steven Kelly. 2025*. **RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments** bioRxiv. [![DOI:10.1101/2025.04.29.651261](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1101/2025.04.29.651261)
+
+
 [2] *Minh BQ, Schmidt HA, Chernomor O, Schrempf D, Woodhams MD, von Haeseler A, Lanfear R.* 2020. **IQ-TREE 2: New Models and Efficient Methods for Phylogenetic Inference in the Genomic Era.** Molecular Biology and Evolution 37:1530-1534. [![DOI:10.1093/molbev/msaa015](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1093/molbev/msaa015)
 
 
