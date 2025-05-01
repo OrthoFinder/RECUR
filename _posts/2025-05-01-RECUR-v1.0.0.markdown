@@ -1,0 +1,189 @@
+---
+layout: post
+title:  "RECUR-v1.0.0"
+date:   2025-05-01 09:16:16 +0000
+categories: release
+permalink: /:categories/:day/:month/:year/:title.html
+---
+
+<div class="download-item">
+    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-intel-1.0.0.tar.gz" class="btn">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
+        </svg>
+        recur-iqtree2-linux-intel-1.0.0.tar.gz
+    </a>
+</div>
+<div class="download-item">
+    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-arm-1.0.0.tar.gz" class="btn">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
+        </svg>
+        recur-iqtree2-linux-arm-1.0.0.tar.gz
+    </a>
+</div>
+<div class="download-item">
+    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-arm-1.0.0.tar.gz" class="btn">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
+        </svg>
+        recur-iqtree2-macos-arm-1.0.0.tar.gz
+    </a>
+</div>
+<div class="download-item">
+    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-intel-1.0.0.tar.gz" class="btn">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
+        </svg>
+        recur-iqtree2-macos-intel-1.0.0.tar.gz
+    </a>
+</div>
+<div class="download-item">
+    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-universal-1.0.0.tar.gz" class="btn">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
+        </svg>
+        recur-iqtree2-macos-universal-1.0.0.tar.gz
+    </a>
+</div>
+<div class="download-item">
+    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-windows-1.0.0.tar.gz" class="btn">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
+        </svg>
+        recur-iqtree2-windows-1.0.0.tar.gz
+    </a>
+</div>
+<!--more-->
+
+
+### 🧬 Input
+- Protein or codon MSA (FASTA format)
+- Defined outgroup species or clade
+- *(Optional)* Species tree in Newick format — used to constrain phylogenetic inference if provided
+
+---
+
+### 📤 Output
+- `*.recur.tsv` — list of recurrent amino acid substitutions inferred from the tree
+- `.recur/` — directory containing intermediate files:
+  - Model selection output
+  - Inferred phylogenetic tree
+  - Ancestral state reconstructions
+  - Site substitution matrices
+
+---
+
+### ⚙️ Dependencies
+- RECUR v1.0.0 includes the **IQ-TREE2** binary (bundled in `recur/bin/`) and uses it for:
+  - Phylogenetic tree inference
+  - Ancestral sequence reconstruction
+  - Simulation of alignments for null models
+
+No external installation of **IQ-TREE2** is required.
+
+---
+### ⬇️  Dowload 
+
+- recur-iqtree2-linux-intel-1.0.0.tar.gz
+```bash
+mkdir RECUR && \
+    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-intel-1.0.0.tar.gz | \
+    tar -xz --strip-components=1 -C RECUR
+```
+
+- recur-iqtree2-linux-arm-1.0.0.tar.gz
+```bash
+mkdir RECUR && \
+    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-arm-1.0.0.tar.gz | \
+    tar -xz --strip-components=1 -C RECUR
+```
+
+- recur-iqtree2-macos-arm-1.0.0.tar.gz
+```bash
+mkdir RECUR && \
+    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-arm-1.0.0.tar.gz | \
+    tar -xz --strip-components=1 -C RECUR
+```
+
+- recur-iqtree2-macos-intel-1.0.0.tar.gz
+```bash
+mkdir RECUR && \
+    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-intel-1.0.0.tar.gz | \
+    tar -xz --strip-components=1 -C RECUR
+```
+
+- recur-iqtree2-macos-universal-1.0.0.tar.gz
+```bash
+mkdir RECUR && \
+    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-universal-1.0.0.tar.gz | \
+    tar -xz --strip-components=1 -C RECUR
+```
+
+- recur-iqtree2-windows-1.0.0.tar.gz
+
+  - Command Prompt
+
+    ```bash
+    mkdir RECUR && \
+        curl -L -o recur.tar.gz https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-windows-1.0.0.tar.gz && \
+        tar -xzf recur.tar.gz -C RECUR --strip-components=1 && \
+        del recur.tar.gz
+    ```
+  - PowerShell
+    ```bash
+    New-Item -ItemType Directory -Force -Path '\RECUR'
+    Invoke-WebRequest -Uri 'https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-windows-1.0.0.tar.gz' -OutFile 'recur.tar.gz'
+    tar -xzf 'recur.tar.gz' -C 'RECUR' --strip-components=1
+    Remove-Item 'recur.tar.gz'
+    ```
+
+### 📦 Install 
+
+- Linux and MacOS
+    ```bash
+    cd RECUR
+    python3 -m venv recur_env 
+    . recur_env/bin/activate
+    pip install .
+    recur --version
+    recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt 
+    ```
+
+    To deactivate the virtual environment, run
+    ```bash
+    deactivate
+    ```
+    Having deactivated the virtual environment, to remove RECUR, please run
+    ```bash
+    cd ..
+    rm -rf RECUR
+    ```
+    
+ 
+- Windows
+
+    ```bash
+    cd RECUR
+    python -m venv recur_env
+    .\recur_env\Scripts\activate.bat
+    pip install .
+    recur --version
+    recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt 
+    ```
+
+    To deactivate the virtual environment, run
+    ```bash
+    .\recur_env\Scripts\deactivate.bat
+    ```
+    Having deactivated the virtual environment, to remove RECUR, please run
+    - Command Prompt
+    ```bash
+    cd ..
+    rmdir /s /q RECUR
+    ```
+    - PowerShell 
+    ```bash
+    cd ..
+    Remove-Item -Recurse -Force .\RECUR
+    ```
