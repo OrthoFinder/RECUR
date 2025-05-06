@@ -23,15 +23,28 @@ permalink: /installation/
 
   The simplest way to use RECUR is to install it via conda. RECUR is available on the [bioconda channel](https://anaconda.org/bioconda/recur).
 
-  I you have miniconda installed, you can simply run the following commands to create a `recur_env` namespace, install RECUR in that namespace, then print out the version and test it on the `ExampleData` dataset.
+  I you have miniconda installed, you can simply run the following commands to create a `recur_env` namespace, install RECUR in that namespace, then print out the version.
 
   ```bash
   conda create -n recur_env python=3.12
   conda activate recur_env
   conda install bioconda::recur 
   recur --version
+  ```
+  To test your installation, you can download an example dataset from our [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.0.0), or run the following command to download the example dataset directly via a command line first.
+
+  ```bash
+  mkdir ExampleData && \
+      wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/ExampleData.tar.gz | \
+      tar -xz --strip-components=1 -C ExampleData
+
+  ```
+  Then run the following command to test RECUR in your conda environment on the `ExampleData` dataset.
+
+  ```bash
   recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
+
   Once you've finished your analysis and want to exit the current environment, simply run:
   ```bash
   conda deactivate
