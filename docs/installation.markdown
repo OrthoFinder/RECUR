@@ -38,7 +38,7 @@ permalink: /installation/
       wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/ExampleData.tar.gz | \
       tar -xz --strip-components=1 -C ExampleData
   ```
-  Then run the following command to test RECUR in your conda environment on the `ExampleData` dataset.
+  Having downloaded the example dataset, you can run the following command to test RECUR in your conda environment on the `ExampleData` dataset.
 
   ```bash
   recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
@@ -68,8 +68,9 @@ permalink: /installation/
   . recur_env/bin/activate
   pip install git+https://github.com/OrthoFinder/RECUR.git
   recur --version
-  recur -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
+  To test your installation via this method, you can download an example dataset from the 
+  [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.0.0). Please checkout the **Run RECUR in conda** section for more information.
 
   To remove RECUR, you can simply deactivate the virtual environment and remove it. 
   ```bash
