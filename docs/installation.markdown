@@ -31,13 +31,12 @@ permalink: /installation/
   conda install bioconda::recur 
   recur --version
   ```
-  To test your installation, you can download an example dataset from our [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.0.0), or run the following command to download the example dataset directly via a command line first.
+  To test your installation, you can download an example dataset from our [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.0.0), or run the following command to download the example dataset directly into a directory called `ExampleData` in your current working directory via a command line first.
 
   ```bash
   mkdir ExampleData && \
       wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/ExampleData.tar.gz | \
       tar -xz --strip-components=1 -C ExampleData
-
   ```
   Then run the following command to test RECUR in your conda environment on the `ExampleData` dataset.
 
