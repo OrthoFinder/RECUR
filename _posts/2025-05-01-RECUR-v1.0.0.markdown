@@ -7,52 +7,58 @@ permalink: /:categories/:day/:month/:year/:title.html
 ---
 
 <div class="download-item">
-    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-intel-1.0.0.tar.gz" class="btn">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
-        </svg>
-        recur-iqtree2-linux-intel-1.0.0.tar.gz
-    </a>
+  📦 
+  <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-intel-1.0.0.tar.gz" class="btn">
+    recur-iqtree2-linux-intel-1.0.0.tar.gz
+  </a>
+    <span class="download-count" data-asset="recur-iqtree2-linux-intel-1.0.0.tar.gz">
+    <i class="fa fa-download" aria-hidden="true"></i>
+    </span>
 </div>
 <div class="download-item">
-    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-arm-1.0.0.tar.gz" class="btn">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
-        </svg>
-        recur-iqtree2-linux-arm-1.0.0.tar.gz
-    </a>
+  📦 
+  <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-arm-1.0.0.tar.gz" class="btn">
+    recur-iqtree2-linux-arm-1.0.0.tar.gz
+  </a>
+    <span class="download-count" data-asset="recur-iqtree2-linux-arm-1.0.0.tar.gz">
+    <i class="fa fa-download" aria-hidden="true"></i>
+    </span>
 </div>
 <div class="download-item">
-    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-arm-1.0.0.tar.gz" class="btn">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
-        </svg>
-        recur-iqtree2-macos-arm-1.0.0.tar.gz
-    </a>
+  📦 
+  <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-arm-1.0.0.tar.gz" class="btn">
+    recur-iqtree2-macos-arm-1.0.0.tar.gz
+  </a>
+    <span class="download-count" data-asset="recur-iqtree2-macos-arm-1.0.0.tar.gz">
+    <i class="fa fa-download" aria-hidden="true"></i>
+    </span>
 </div>
 <div class="download-item">
+  📦 
     <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-intel-1.0.0.tar.gz" class="btn">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
-        </svg>
         recur-iqtree2-macos-intel-1.0.0.tar.gz
     </a>
+    <span class="download-count" data-asset="recur-iqtree2-macos-intel-1.0.0.tar.gz">
+    <i class="fa fa-download" aria-hidden="true"></i>
+    </span>
 </div>
 <div class="download-item">
+  📦 
     <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-universal-1.0.0.tar.gz" class="btn">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
-        </svg>
         recur-iqtree2-macos-universal-1.0.0.tar.gz
     </a>
+    <span class="download-count" data-asset="recur-iqtree2-macos-universal-1.0.0.tar.gz">
+    <i class="fa fa-download" aria-hidden="true"></i>
+    </span>
 </div>
 <div class="download-item">
-    <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-windows-1.0.0.tar.gz" class="btn">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-            <path d="M12 16l4-4H8l4 4zm1-13h2v6h-2V3zm-4 6h8v2H9V9zM4 22h16v-2H4v2z" />
-        </svg>
-        recur-iqtree2-windows-1.0.0.tar.gz
-    </a>
+  📦 
+  <a href="https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-windows-1.0.0.tar.gz" class="btn">
+    recur-iqtree2-windows-1.0.0.tar.gz
+  </a>
+  <span class="download-count" data-asset="recur-iqtree2-windows-1.0.0.tar.gz">
+    <i class="fa fa-download" aria-hidden="true"></i>
+  </span>
 </div>
 <!--more-->
 
