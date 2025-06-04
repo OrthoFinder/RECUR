@@ -25,10 +25,10 @@ The required input is either a protein or codon multiple sequence alignment (in 
 
 To cite RECUR, please cite both the following:
 
-[1] *Elizabeth HJ Robbins, Yi Liu, Steven Kelly. 2025*. **RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments** bioRxiv. [![DOI:10.1101/2025.04.29.651261](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1101/2025.04.29.651261)
+[1] *Elizabeth HJ Robbins, Yi Liu, Steven Kelly. 2025*. **RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments** bioRxiv. [![DOI:10.1101/2025.04.29.651261](https://img.shields.io/badge/DOI-10.1101%2F2025.04.29.651261-blue)](https://doi.org/10.1101/2025.04.29.651261)
 
 
-[2] *Minh BQ, Schmidt HA, Chernomor O, Schrempf D, Woodhams MD, von Haeseler A, Lanfear R.* 2020. **IQ-TREE 2: New Models and Efficient Methods for Phylogenetic Inference in the Genomic Era.** Molecular Biology and Evolution 37:1530-1534. [![DOI:10.1093/molbev/msaa015](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1093/molbev/msaa015)
+[2] *Minh BQ, Schmidt HA, Chernomor O, Schrempf D, Woodhams MD, von Haeseler A, Lanfear R.* 2020. **IQ-TREE 2: New Models and Efficient Methods for Phylogenetic Inference in the Genomic Era.** Molecular Biology and Evolution 37:1530-1534. [![DOI:10.1093/molbev/msaa015](https://img.shields.io/badge/DOI-10.1093%2Fmolbev%2Fmsaa015-blue)](https://doi.org/10.1093/molbev/msaa015)
 
 
 <p style="font-size: 18px;">
@@ -36,5 +36,5 @@ To cite RECUR, please cite both the following:
 </p>
 
 
-[3] *Robbins EHJ, Kelly S.* 2024. **Widespread adaptive evolution in angiosperm photosystems provides insight into the evolution of photosystem II repair.** The Plant Cell 37. [![ DOI: 10.1093/plcell/koae281](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1093/plcell/koae281)
+[3] *Robbins EHJ, Kelly S.* 2024. **Widespread adaptive evolution in angiosperm photosystems provides insight into the evolution of photosystem II repair.** The Plant Cell 37. [![DOI:10.1093/plcell/koae281](https://img.shields.io/badge/DOI-10.1093%2Fplcell%2Fkoae281-blue)](https://doi.org/10.1093/plcell/koae281)
 
