@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "wheel", "packaging"]
+requires = ["setuptools>=77", "setuptools_scm>=8", "wheel", "packaging>=24.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,10 +10,10 @@ authors = [
 ]
 description = "recurrant evolution"
 readme = "README.md"
-version = "1.0.0"
+dynamic = ["version"]
 requires-python = ">=3.9"
 keywords = ["Reccurant Evolution", "Monte-Carlo", "Phylogeneticrelationships"]
-license = { file = "LICENSE" }
+license = "LGPL-3.0-only"
 classifiers = [
     # How mature is this project? Common values are
     #   3 - Alpha
@@ -25,8 +25,8 @@ classifiers = [
     'Intended Audience :: Science/Research',
     'Topic :: Scientific/Engineering :: Bio-Informatics',
 
-    # Pick your license as you wish (should match "license" above)
-    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+    # # Pick your license as you wish (should match "license" above)
+    # 'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
 
     # Specify the Python versions you support here.
     'Programming Language :: Python :: 3.9',  #
@@ -53,9 +53,9 @@ build = [
     "build",
     "twine",
     "wheel",
-    "setuptools>=64",
+    "setuptools>=77",
     "setuptools_scm>=8",
-    "packaging",
+    "packaging>=24.2",
 ]
 dev = [
     "python-semantic-release",
@@ -140,10 +140,8 @@ no_implicit_reexport = true
 [tool.setuptools_scm]
 version_file = "src/recur/_version.py"
 version_scheme = "no-guess-dev"
-root = "."
-tag_regex = "^(?P<prefix>v)?(?P<version>[^\\+]+)(?P<suffix>.*)?$"
+local_scheme = "no-local-version" 
 fallback_version = "1.0.0"
-local_scheme = "dirty"
 
 [tool.black]
 line-length = 119

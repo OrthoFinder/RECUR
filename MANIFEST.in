@@ -12,9 +12,18 @@ prune .github
 
 exclude Dockerfile
 exclude .dockerignore
-# global-exclude *.png *.svg
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude CHANGELOG.md
+exclude DEVNOTES.md
 
-## uncoment the next line if you wish to include iqtree2 when you build the package
 # exclude src/recur/bin/iqtree2
 # exclude badge-status.json
+# global-exclude *.png *.svg
 
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+global-exclude .DS_Store
+global-exclude *~
+global-exclude *Zone.Identifier
