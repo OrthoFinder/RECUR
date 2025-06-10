@@ -920,6 +920,7 @@ def main(args: Optional[List[str]] = None):
                             gene_tree=gene_tree,
                             bootstrap=options.bootstrap,
                             sh_alrt=options.bootstrap,
+                            branch_test=options.branch_test,
                             fix_branch_length=fix_branch_length,
                             iqtree_version=options.iqtree_version,
                             iqtree_cmd_dict=options.iqtree_cmd_dict
@@ -1058,7 +1059,7 @@ def main(args: Optional[List[str]] = None):
                         binary_tree_commands = run_commands.GetGeneTreeBuildCommands(
                             [binary_aln_path],
                             filehandler.GetBinaryPhylogenyDir(),
-                            "GTR2",
+                            options.binary_model,
                             options.iqtree_nthreads,
                             phy_seed=options.seed,
                             gene_tree=treefile,

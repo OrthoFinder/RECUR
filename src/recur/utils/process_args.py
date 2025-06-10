@@ -79,6 +79,8 @@ class Options(object):
         self.project_dir = None
         self.continue_on_error = False
         self.iqtree_cmd_dict = {}
+        self.branch_test = True
+        self.binary_model = "GTR2"
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -240,6 +242,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-bblfix":
             options.binary_blfix = True
+
+        elif arg == "-nbt" or arg == "--no-branch-test":
+            options.branch_test = False
 
         elif arg == "-si" or arg == "--system-info":
             options.system_info = True
@@ -426,6 +431,19 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 util.Fail()
             try:
                 options.evolution_model = args.pop(0).upper()
+            except:
+                print("The substitution models follow the convetion in IQ-TREE2")
+                print("For more information please refer to: http://www.iqtree.org/doc/Substitution-Models")
+                util.Fail()
+
+        elif arg == "-b" or arg == "--binary-model":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+            try:
+                
+                options.binary_model = args.pop(0).upper()
+                print(options.binary_model)
             except:
                 print("The substitution models follow the convetion in IQ-TREE2")
                 print("For more information please refer to: http://www.iqtree.org/doc/Substitution-Models")

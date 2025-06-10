@@ -21,6 +21,7 @@ def GetGeneTreeBuildCommands(
         gene_tree: Optional[str] = None,
         bootstrap: Optional[int] = None,
         sh_alrt: Optional[int] = None,
+        branch_test: bool = True,
         fix_branch_length: bool = False,
         iqtree_version: str = "iqtree2",
         iqtree_cmd_dict: Dict[str, Dict[str, str]] = {}
@@ -45,6 +46,7 @@ def GetGeneTreeBuildCommands(
             gene_tree=gene_tree,
             bootstrap=bootstrap,
             sh_alrt=sh_alrt,
+            branch_test=branch_test,
             fix_branch_length=fix_branch_length,
             iqtree_version=iqtree_version,
             iqtree_cmd_dict=iqtree_cmd_dict,
@@ -64,6 +66,7 @@ def GetGeneTreeBuildCommand(
         gene_tree: Optional[str] = None,
         bootstrap: Optional[int] = None,
         sh_alrt: Optional[int] = None,
+        branch_test: bool = True,
         fix_branch_length: bool = False,
         iqtree_version: str = "iqtree2",
         iqtree_cmd_dict: Dict[str, Dict[str, str]] = {}
@@ -101,7 +104,7 @@ def GetGeneTreeBuildCommand(
         if "-alrt" in command:
             command.remove("-alrt")
 
-    if not gene_tree:
+    if not gene_tree and branch_test: 
         if bootstrap:
             command.extend(["-bb", str(bootstrap)])
         if sh_alrt:
