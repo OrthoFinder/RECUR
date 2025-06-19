@@ -42,6 +42,8 @@ dependencies = [
     "resource",
     "psutil",
     "rich",
+    "statsmodels",
+    "scipy",
 ]
 
 [project.urls]
@@ -140,7 +142,7 @@ no_implicit_reexport = true
 [tool.setuptools_scm]
 version_file = "src/recur/_version.py"
 version_scheme = "no-guess-dev"
-local_scheme = "no-local-version" 
+local_scheme = "no-local-version"
 fallback_version = "1.0.0"
 
 [tool.black]

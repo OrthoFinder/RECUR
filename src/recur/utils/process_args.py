@@ -81,6 +81,8 @@ class Options(object):
         self.iqtree_cmd_dict = {}
         self.branch_test = True
         self.binary_model = "GTR2"
+        self.significance_level = 0.05
+        self.pval_adjust_method = None
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -410,6 +412,20 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 util.Fail()
 
             options.mcs_batch_size = int(args.pop(0))
+
+        elif arg == "-sl" or arg == "--significance-level":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+
+            options.significance_level = float(args.pop(0))
+
+        elif arg == "-pvm" or arg == "--pval-adjust-method":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+
+            options.pval_adjust_method = args.pop(0)      
 
         elif arg == "-bb":
             if len(args) == 0:

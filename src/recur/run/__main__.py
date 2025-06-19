@@ -27,6 +27,7 @@ from rich import print, progress
 from recur import __version__, __location__, helpinfo
 from recur.run import run_commands
 from recur.utils import files, process_args, util
+from recur.utils import analytic_tools as at
 
 
 # warnings.filterwarnings("ignore", module='dendropy')
@@ -561,11 +562,13 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
 
     return results
 
-def compute_p_values(mcs_results: List[Dict[Tuple[int, int, int], int]],
-                     recurrence_list: List[List[Union[str, int, float]]],
-                     residue_dict: Dict[str, int],
-                     nalign: int) -> List[List[Union[str, int, float]]]:
+def mcs_count_greater(
+        mcs_results: List[Dict[Tuple[int, int, int], int]],
+        recurrence_list: List[List[Union[str, int, float]]],
+        residue_dict: Dict[str, int],
+    ) -> List[int]:
     try:
+        count_greater_list = []
         for rec_list in recurrence_list:
             rec_loc = int(rec_list[0])
             parent = str(rec_list[1])
@@ -578,9 +581,11 @@ def compute_p_values(mcs_results: List[Dict[Tuple[int, int, int], int]],
                 if mcs_rec is not None:
                     if mcs_rec >= recurrence:
                         count_greater += 1
-
-            p_value = (count_greater + 1) / (nalign + 1)
-            rec_list.append(np.round(p_value, len(str(nalign))))
+            
+            count_greater_list.append(count_greater)
+            # mc_p_value = at.mc_pvalues(count_greater, nalign)
+            # lower, upper = at.pvalue_ci(recurrence, nalign, alpha)
+            # rec_list.append(np.round(mc_p_value, len(str(nalign))))
             # print(f"{rec_list} - {count_greater}")
 
     except Exception as e:
@@ -588,7 +593,8 @@ def compute_p_values(mcs_results: List[Dict[Tuple[int, int, int], int]],
         print(error_msg)
         print(traceback.format_exc())
     finally:
-        return recurrence_list
+        return count_greater_list
+    
 
 def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
                             recurrence_list: List[List[Union[str, int, float]]],
@@ -706,11 +712,12 @@ def main(args: Optional[List[str]] = None):
                 print()
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 print(prepend + "Starting compute p values.")
-                recurrence_list_pvalue = compute_p_values(
+                count_greater_list = mcs_count_greater(
                     mcs_results,
                     recurrence_list,
                     residue_dict,
-                    len(mcs_results)
+                    len(mcs_results),
+                    options.significance_level
                 )
 
                 recurrence_list_updated = update_recurrence_list(
@@ -1315,10 +1322,13 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(prepend + "Starting to compute p values.")
 
 
-                    recurrence_list_pvalue = compute_p_values(mcs_results,
-                                                            recurrence_list,
-                                                            residue_dict,
-                                                            options.nalign)
+                    count_greater_list = mcs_count_greater(
+                        mcs_results,
+                        recurrence_list,
+                        residue_dict,
+                        # options.nalign,
+                        # options.significance_level
+                    )
 
                     recurrence_list_updated = update_recurrence_list(rec_loc_count_dict,
                                                                     recurrence_list_pvalue,
