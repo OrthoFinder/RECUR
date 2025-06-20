@@ -596,24 +596,50 @@ def mcs_count_greater(
         return count_greater_list
     
 
-def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
-                            recurrence_list: List[List[Union[str, int, float]]],
-                            combined_prot_seqs_dict: Dict[str, str],
-                            species_of_interest: List[str],
-                            residue_dict_flip: Dict[int, str],
-                            protein_len: int) -> List[List[Union[str, int, float]]]:
+def update_recurrence_list(
+        R: List[int],
+        B: int,
+        res_loc_count_dict: Dict[Tuple[int, int, int], int],
+        recurrence_list: List[List[Union[str, int, float]]],
+        combined_prot_seqs_dict: Dict[str, str],
+        species_of_interest: List[str],
+        residue_dict_flip: Dict[int, str],
+        protein_len: int,
+        alpha: float = 0.05,
+        q: float = 0.05,
+        method: Optional[str] = "fdr_bh",
+        pval_stats: bool = False,
+    ) -> List[List[Union[str, int, float]]]:
 
     extant_seq = {species: seq for species, seq in combined_prot_seqs_dict.items() if species in species_of_interest}
     ident_dict = {}
+    
+    p_hat, p_adj, ci_lo_adj, ci_hi_adj, decision_sig, robust_sig = \
+        at.sitewise_decision(R, B, alpha=alpha, q=q, method=method)
 
     res_loc_info_dict= util.get_sorted_res_loc_info(res_loc_count_dict, protein_len)
     for rec_loc, res in enumerate(zip(*extant_seq.values())):
         ident_dict[rec_loc] = res
-
-    for rec_list in recurrence_list:
+    
+    precsion = len(str(B))
+    for i, rec_list in enumerate(recurrence_list):
         res_loc = int(rec_list[0])
         parent_child = []
         counts = []
+
+        rec_list.append(np.round(p_hat[i], precsion))
+        rec_list.append(np.round(p_adj[i], precsion))
+
+        if pval_stats:
+            lower_ci = np.round(ci_lo_adj[i], precsion)
+            upper_ci = np.round(ci_hi_adj[i], precsion)
+            rec_list.append(lower_ci)
+            rec_list.append(upper_ci)
+            decision = "Reject" if decision_sig[i] == 1 else "Accept"
+            rec_list.append(decision)
+            robust = "Yes" if robust_sig[i] == 1 else "No"
+            rec_list.append(robust)
+
         for parent_id, child_id, recurrence in res_loc_info_dict[res_loc]:
             parent = residue_dict_flip[parent_id]
             child = residue_dict_flip[child_id]
@@ -630,7 +656,7 @@ def update_recurrence_list(res_loc_count_dict: Dict[Tuple[int, int, int], int],
         res_freq_str = ",".join([":".join((res, str(freq))) for res, freq in res_freq])
         rec_list.append(res_freq_str)
 
-    recurrence_list.sort(key=lambda x: (-float(x[5]), float(x[3])), reverse=True)
+    recurrence_list.sort(key=lambda x: (-float(x[6]), float(x[3])), reverse=True)
 
     return recurrence_list
 
@@ -698,7 +724,7 @@ def main(args: Optional[List[str]] = None):
                 filereader = files.FileReader()
                 filewriter = files.FileWriter()
                 filehandler.gene_of_interest = alnFN
-                mcs_results = filereader.ReadMCSRecurrenceCount(base_dir)
+                mcs_results, B = filereader.ReadMCSRecurrenceCount(base_dir)
                 recurrence_count_file = filehandler.GetRecurrenceCountPhylogenyFN(options.project_dir)
                 rec_loc_count_dict = filereader.ReadRecurrenceCount(recurrence_count_file)
                 combined_prot_seqs_fn = os.path.join(base_dir, filehandler.GetCombinedProtSeqsFN())
@@ -709,24 +735,33 @@ def main(args: Optional[List[str]] = None):
                 
                 recurrence_list_fn = filehandler.GetRecurrenceListRealPhylogenyFN(options.project_dir)
                 recurrence_list = filereader.ReadRecurrenceList(recurrence_list_fn)
+                M = len(recurrence_list)
                 print()
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 print(prepend + "Starting compute p values.")
-                count_greater_list = mcs_count_greater(
+                R = mcs_count_greater(
                     mcs_results,
                     recurrence_list,
                     residue_dict,
                     len(mcs_results),
                     options.significance_level
                 )
+                if options.pval_adjust_method is None:
+                    options.pval_adjust_method = at.method_selection(M, options.site_dependence)
 
                 recurrence_list_updated = update_recurrence_list(
+                    R, 
+                    B,
                     rec_loc_count_dict,
-                    recurrence_list_pvalue,
+                    recurrence_list,
                     combined_prot_seqs_dict,
                     species_of_interest,
                     residue_dict_flip,
-                    protein_len
+                    protein_len,
+                    alpha=options.significance_level, # needs be provided by the user, if they don't use the default setting
+                    q=options.fdr_level, # needs be provided by the user, if they don't use the default setting
+                    method=options.pval_adjust_method, # needs be provided by the user, if they don't use the default setting
+                    pval_stats=options.pval_stats
                 )
 
                 filewriter.WriteRecurrenceList(
@@ -734,6 +769,7 @@ def main(args: Optional[List[str]] = None):
                     filehandler.GetRecurrenceListFN(options.project_dir),
                     options
                     )
+    
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 print(prepend + "p values computing complete.")
 
@@ -1159,13 +1195,16 @@ def main(args: Optional[List[str]] = None):
                         rec_loc_count_dict, 
                         residue_dict_flip
                     )
-                    
+
+                    # T_obs = np.asarray([item[3] for item in recurrence_list])
+                    M = len(recurrence_list)
+
                     if not options.recDir:
                         recurrenceDir = alnDir
                     else:
                         recurrenceDir = options.recDir
 
-                    if options.disk_save and options.multi_stage:
+                    if (options.disk_save and options.multi_stage) or options.just_recurrence:
                         filewriter.WriteRecurrenceListRealPhylogeny(
                             recurrence_list, 
                             filehandler.GetRecurrenceListRealPhylogenyFN(recurrenceDir)
@@ -1175,9 +1214,12 @@ def main(args: Optional[List[str]] = None):
                             rec_loc_count_dict,
                             filehandler.GetRecurrenceCountPhylogenyFN(recurrenceDir)
                         )
-
-                        print("NOTE: You are running one the multistage and disk saving mode!")
-                        print("You need to run `recur -f project_dir -cr` to obtain the recurrence list.", end="\n"*2)
+                        if not options.just_recurrence:
+                            print("NOTE: You are running one the multistage and disk saving mode!")
+                            print("You need to run `recur -f project_dir -cr` to obtain the recurrence list.", end="\n"*2)
+                        else:
+                            print("Done computing recurrence for real phylogeny.\n")
+                            sys.exit(0)
 
                     if len(recurrence_list) == 0:
                         production_logger.info(f"ATTENTION: No recurrence has identified for gene {gene}! Monte-Carlo Simiatlion will be SKIPPED!\n",
@@ -1185,6 +1227,25 @@ def main(args: Optional[List[str]] = None):
                         continue
 
                     res_loc_list = [int(res_list[0]) for res_list in recurrence_list]
+                    
+                    if options.nalign is None:
+                        mcp_method, B = at.min_mcs(
+                                M,
+                                method=options.pval_adjust_method,
+                                alpha=options.significance_level,
+                                q=options.fdr_level,
+                                rel_tol=options.relative_tolerance,
+                                extra_grid_cushion=options.grid_cushion,
+                                suspect_dependence=options.site_dependence
+                            )
+                        
+                        options.nalign = B
+                        options.pval_adjust_method = mcp_method
+                    else:
+                        options.pval_adjust_method = at.method_selection(M, options.site_dependence)
+                    
+                    mcs_info = f"With {M} recurrence test, {options.nalign} Monte Carlo Simulations will be conducted based on {options.pval_adjust_method} (i.e., {at.METHODS_AVAILABLE[options.pval_adjust_method]}) adjustment method to adjust the p-values in multipletests.\n"
+                    production_logger.info(mcs_info, extra={'to_file': True, 'to_console': True})
 
                     if gene_tree is None:
                         step2_info = f"Step3: Simulating Sequence Evolution with {options.nalign} replicates"
@@ -1212,6 +1273,7 @@ def main(args: Optional[List[str]] = None):
                                 fn_root_node = ",".join((node_dna_seqs_fn, root_node))
                         else:
                             raise ValueError("Root node of interest is None.")
+                        
 
                         mcs_commands = run_commands.GetMCsimulationCommand(
                             output_prefix,
@@ -1321,21 +1383,26 @@ def main(args: Optional[List[str]] = None):
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Starting to compute p values.")
 
-
-                    count_greater_list = mcs_count_greater(
+                    R = mcs_count_greater(
                         mcs_results,
                         recurrence_list,
                         residue_dict,
-                        # options.nalign,
-                        # options.significance_level
                     )
 
-                    recurrence_list_updated = update_recurrence_list(rec_loc_count_dict,
-                                                                    recurrence_list_pvalue,
-                                                                    combined_prot_seqs_dict,
-                                                                    species_of_interest,
-                                                                    residue_dict_flip,
-                                                                    protein_len)
+                    recurrence_list_updated = update_recurrence_list(
+                        R, 
+                        options.nalign,
+                        rec_loc_count_dict,
+                        recurrence_list,
+                        combined_prot_seqs_dict,
+                        species_of_interest,
+                        residue_dict_flip,
+                        protein_len,
+                        alpha=options.significance_level,
+                        q=options.fdr_level,
+                        method=options.pval_adjust_method,
+                        pval_stats=options.pval_stats
+                    )
 
                     filewriter.WriteRecurrenceList(
                         recurrence_list_updated, 
@@ -1350,7 +1417,7 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info("\nResults:\n    %s\n" % rec_results, extra={'to_file': True, 'to_console': True})
 
                     del parent_list, child_list, combined_prot_seqs_dict, alignment_dict, rec_loc_count_dict, recurrence_list
-                    del recurrence_list_pvalue, recurrence_list_updated
+                    del recurrence_list_updated
                     gc.collect()
 
                     # util.log_memory_usage(f"after processing gene {gene}", production_logger)

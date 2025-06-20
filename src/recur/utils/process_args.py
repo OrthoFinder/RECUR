@@ -53,7 +53,7 @@ class Options(object):
         self.output_prefix = None
         self.gene_tree = None
         self.root_node = None
-        self.nalign = 1000
+        self.nalign = None
         self.mcs_batch_size = None
         self.outgroups = None
         self.bootstrap = 1000
@@ -83,6 +83,12 @@ class Options(object):
         self.binary_model = "GTR2"
         self.significance_level = 0.05
         self.pval_adjust_method = None
+        self.grid_cushion = False
+        self.relative_tolerance = 0.1
+        self.fdr_level = 0.05
+        self.site_dependence = False
+        self.pval_stats = False
+        self.just_recurrence = False
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -236,6 +242,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         elif arg == "-kp" or arg == "--keep-prev-results":
             options.keepprev = True
 
+        elif arg == "-jr" or arg == "--just-recurrence":
+            options.just_recurrence = True
+
         elif arg == "-cr" or arg == "--compute-recurrence":
             options.compute_recurrence = True
 
@@ -247,6 +256,15 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-nbt" or arg == "--no-branch-test":
             options.branch_test = False
+
+        elif arg == "-gc" or arg == "--grid-cushion":
+            options.grid_cushion = True
+
+        elif arg == "-sd" or arg == "--site-dependence":
+            options.site_dependence = True
+
+        elif arg == "-ps" or arg == "--pval-stats":
+            options.pval_stats = True
 
         elif arg == "-si" or arg == "--system-info":
             options.system_info = True
@@ -420,12 +438,33 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
             options.significance_level = float(args.pop(0))
 
-        elif arg == "-pvm" or arg == "--pval-adjust-method":
+        elif arg == "-q" or arg == "--fdr-level":
             if len(args) == 0:
                 print("Missing option for command line argument %s\n" % arg)
                 util.Fail()
 
-            options.pval_adjust_method = args.pop(0)      
+            options.fdr_level = float(args.pop(0))
+
+        elif arg == "-ret" or arg == "--relative-tolerance":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+
+            options.relative_tolerance = float(args.pop(0))
+
+        elif arg == "-pam" or arg == "--pval-adjust-method":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+            
+            pval_adjust_method = args.pop(0)
+
+            if pval_adjust_method not in ["bonferroni", "holm", "fdr_bh", "fdr_by", "fdr_tsbh"]:
+                pval_adjust_method = None
+                raise ValueError("Method must be bonferroni, holm, fdr_bh, "
+                             "fdr_by, or fdr_tsbh")
+
+            options.pval_adjust_method = pval_adjust_method
 
         elif arg == "-bb":
             if len(args) == 0:
@@ -517,7 +556,7 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 util.Fail()
             options.root_node = args.pop(0)
 
-        elif arg == "--num-alignments":
+        elif arg == "-na" or arg == "--num-alignments":
             if len(args) == 0:
                 print("Missing option for command line argument %s\n" % arg)
                 util.Fail()

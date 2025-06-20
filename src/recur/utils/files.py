@@ -411,7 +411,7 @@ class FileReader(object):
                     mcs_count_dict[(res_loc, parent, child)] = count
             mcs_results.append(mcs_count_dict)
 
-        return mcs_results
+        return mcs_results, len(mcs_count_files)
     
     @staticmethod    
     def ReadRecurrenceCount(recurrence_count_file: str) -> Dict[Tuple[int, int, int], int]:
@@ -562,9 +562,20 @@ class FileWriter(object):
                             outFilename: str,
                             options: process_args.Options,
                             ) -> None:
+        if options.pval_stats:
+            colname = [
+                'Site', 'Parent', 'Child', 'Recurrence',
+                "Reversion", "P-Value", "Adjusted P-Value",
+                f"CI {100 - options.significance_level*100:.0f} Lower", 
+                f"CI {100 - options.significance_level*100:.0f} Upper",
+                "Decision", "Robust", 
+                "AllSiteSubs",  "SiteComposition"
+            ]
 
-        colname = ['Site', 'Parent', 'Child', 'Recurrence',
-                   "Reversion", "P-Value", "AllSiteSubs",  "SiteComposition"]
+        else:
+            colname = ['Site', 'Parent', 'Child', 'Recurrence',
+                    "Reversion", "P-Value", "Adjusted P-Value",
+                    "AllSiteSubs",  "SiteComposition"]
 
         baseFileName = outFilename.rsplit(".", 1)[0] 
         if options.name == "":
