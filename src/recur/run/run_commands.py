@@ -157,7 +157,7 @@ def RunCommand(
         delete_files: bool = False,
         files_to_keep: Optional[List[str]] = None,
         files_to_remove: Optional[List[str]] = None,
-        fd_limit: Optional[int] = None
+        fd_limit: Optional[int] = None,
     ) -> None:
 
     parallel_task_manager.RunParallelCommands(
@@ -170,5 +170,5 @@ def RunCommand(
         files_to_remove=files_to_remove,
         q_print_on_error=True,
         q_always_print_stderr=False,
-        fd_limit=fd_limit
+        fd_limit=fd_limit,
     )

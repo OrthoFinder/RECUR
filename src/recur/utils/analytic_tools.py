@@ -185,13 +185,22 @@ def cp_ci_vec(R: List[int], B: int, alpha=0.05) -> Tuple[float, float]:
     After you adjust p-values (Bonferroni, BH, …), 
     compare both ends of the interval to the family-wise or FDR threshold.
     If the whole interval is below the threshold, the conclusion is robust to MC error.
-    
+
     """
     R = np.asarray(R)
-    lower = beta.ppf(alpha/2, R, B - R + 1)
-    upper = beta.ppf(1-alpha/2, R+1, B - R)
+    lower = np.where(
+        R == 0,
+        0.0,                                     # CI lower bound is exactly 0
+        beta.ppf(alpha / 2,  R,     B - R + 1),
+    )
 
-    return  lower, upper
+    upper = np.where(
+        R == B,
+        1.0,                                     # CI upper bound is exactly 1
+        beta.ppf(1 - alpha / 2, R + 1, B - R),
+    )
+
+    return lower, upper
 
 def sitewise_decision(R, B, alpha=0.05, q=0.05, method="fdr_bh"):
     """
@@ -229,15 +238,19 @@ def sitewise_decision(R, B, alpha=0.05, q=0.05, method="fdr_bh"):
     ci_lo, ci_hi = cp_ci_vec(R_vec, B, alpha)
 
     if method == "bonferroni":
-        p_adj = np.minimum(1, M * p_hat)
-        ci_lo_adj = np.minimum(1, M * ci_lo)
-        ci_hi_adj = np.minimum(1, M * ci_hi)
+        p_adj = np.minimum(1.0, M * p_hat)
+        ci_lo_adj = np.minimum(1.0, M * ci_lo)
+        ci_hi_adj = np.minimum(1.0, M * ci_hi)
         thresh = alpha
     else:
         thresh = q 
-        _, p_adj, *_ = multipletests(p_hat, thresh, method=method)
-        _, ci_lo_adj, *_ = multipletests(ci_lo, thresh, method=method)
-        _, ci_hi_adj, *_ = multipletests(ci_hi, thresh, method=method)
+        pvals      = np.clip(p_hat,  0.0, 1.0)
+        lo_clipped = np.clip(ci_lo,   0.0, 1.0)
+        hi_clipped = np.clip(ci_hi,   0.0, 1.0)
+
+        _, p_adj,  *_ = multipletests(pvals,      alpha=thresh, method=method)
+        _, ci_lo_adj, *_ = multipletests(lo_clipped, alpha=thresh, method=method)
+        _, ci_hi_adj, *_ = multipletests(hi_clipped, alpha=thresh, method=method)
 
     decision_sig = p_adj <= thresh  # point-estimate verdict
 
@@ -275,7 +288,7 @@ def min_mcs(
         rel_tol=0.1,
         extra_grid_cushion=False,
         suspect_dependence=False,
-        # return_details=False,
+        mc_error_control=False,
     ):
     
     """
@@ -539,16 +552,19 @@ def min_mcs(
 
     # grid-resolution
     B_grid = math.ceil(1 / threshold) - 1
-
-    # Monte-Carlo standard-error requirement (optional)
-    if p_expected is None:
-        p_expected = threshold 
+    B_required = B_grid
     
-    if eps is None:                  
-        eps = rel_tol * p_expected 
+    if mc_error_control:
+        # Monte-Carlo standard-error requirement (optional)
+        if p_expected is None:
+            p_expected = threshold 
+        
+        if eps is None:                  
+            eps = rel_tol * p_expected 
 
-    B_error = math.ceil(p_expected * (1 - p_expected) / eps**2) - 1
-    B_error = max(B_error, 0)      # just in case
+        B_error = math.ceil(p_expected * (1 - p_expected) / eps**2) - 1
+        B_error = max(B_error, 0)      # just in case
 
-    B_required = max(B_grid, B_error)
+        B_required = max(B_grid, B_error)
+
     return selected, B_required

@@ -15,8 +15,8 @@ import time
 import traceback
 import warnings
 from collections import Counter
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from functools import partial
+# from concurrent.futures import ProcessPoolExecutor, as_completed
+# from functools import partial
 from typing import Dict, List, Optional, Tuple, Union
 
 import dendropy
@@ -26,7 +26,7 @@ from rich import print, progress
 
 from recur import __version__, __location__, helpinfo
 from recur.run import run_commands
-from recur.utils import files, process_args, util
+from recur.utils import files, process_args, util, parallel_task_manager
 from recur.utils import analytic_tools as at
 
 
@@ -375,192 +375,192 @@ def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
 
     return recurrence_list
 
-def WorkerProcessAndCount(file: str,
-                          mcs_alnDir: str,
-                          parent_list: List[str],
-                          child_list: List[str],
-                          isnuc_fasta: bool,
-                          sequence_type: str,
-                          residue_dict: Dict[str, int],
-                          res_loc_list: List[int],
-                          production_logger: logging.Logger,
-                          dash_exist: bool = False,
-                          binary_sequence_dict: Dict[str, str] = {},
-                          ) -> Tuple[Dict[Tuple[int, int, int], int], str]:
+# def WorkerProcessAndCount(file: str,
+#                           mcs_alnDir: str,
+#                           parent_list: List[str],
+#                           child_list: List[str],
+#                           isnuc_fasta: bool,
+#                           sequence_type: str,
+#                           residue_dict: Dict[str, int],
+#                           res_loc_list: List[int],
+#                           production_logger: logging.Logger,
+#                           dash_exist: bool = False,
+#                           binary_sequence_dict: Dict[str, str] = {},
+#                           ) -> Tuple[Dict[Tuple[int, int, int], int], str]:
 
-    rec_loc_count_dict: Dict[Tuple[int, int, int], int] = {}
-    error_msg = ""
+#     rec_loc_count_dict: Dict[Tuple[int, int, int], int] = {}
+#     error_msg = ""
 
-    try:
-        file_path = os.path.join(mcs_alnDir, file)
-        mcs_combined_prot_seqs_dict, _, _ = files.FileReader.ReadAlignment(file_path)
+#     try:
+#         file_path = os.path.join(mcs_alnDir, file)
+#         mcs_combined_prot_seqs_dict, _, _ = files.FileReader.ReadAlignment(file_path)
 
-        if isnuc_fasta:
-            mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
+#         if isnuc_fasta:
+#             mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
 
-        parent_num_list = [
-            [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[parent]]
-            for parent in parent_list
-        ]
-        child_num_list = [
-            [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[child]]
-            for child in child_list
-        ]
+#         parent_num_list = [
+#             [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[parent]]
+#             for parent in parent_list
+#         ]
+#         child_num_list = [
+#             [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[child]]
+#             for child in child_list
+#         ]
 
-        parent_array = np.array(parent_num_list)
-        child_array = np.array(child_num_list)
+#         parent_array = np.array(parent_num_list)
+#         child_array = np.array(child_num_list)
 
-        del mcs_combined_prot_seqs_dict, parent_num_list, child_num_list
+#         del mcs_combined_prot_seqs_dict, parent_num_list, child_num_list
 
-        if dash_exist:
-            binary_parent_num_list = [
-                [1 if res == "1" else 0 for res in binary_sequence_dict[parent]]
-                for parent in parent_list
-            ]
-            binary_child_num_list = [
-                [1 if res == "1" else 0 for res in binary_sequence_dict[child]]
-                for child in child_list
-            ]
+#         if dash_exist:
+#             binary_parent_num_list = [
+#                 [1 if res == "1" else 0 for res in binary_sequence_dict[parent]]
+#                 for parent in parent_list
+#             ]
+#             binary_child_num_list = [
+#                 [1 if res == "1" else 0 for res in binary_sequence_dict[child]]
+#                 for child in child_list
+#             ]
 
-            binary_parent_array = np.array(binary_parent_num_list)
-            binary_child_array = np.array(binary_child_num_list)
+#             binary_parent_array = np.array(binary_parent_num_list)
+#             binary_child_array = np.array(binary_child_num_list)
 
-            parent_array = parent_array * binary_parent_array
-            child_array = child_array * binary_child_array
+#             parent_array = parent_array * binary_parent_array
+#             child_array = child_array * binary_child_array
 
-            del binary_parent_num_list, binary_child_num_list, \
-                binary_parent_array, binary_child_array
+#             del binary_parent_num_list, binary_child_num_list, \
+#                 binary_parent_array, binary_child_array
 
-        parent_child_diff = parent_array != child_array
-        row_indices, col_indices = np.where(parent_child_diff)
+#         parent_child_diff = parent_array != child_array
+#         row_indices, col_indices = np.where(parent_child_diff)
 
-        mask = np.isin(col_indices, res_loc_list)
-        col_idx = col_indices[mask]
-        row_idx = row_indices[mask]
+#         mask = np.isin(col_indices, res_loc_list)
+#         col_idx = col_indices[mask]
+#         row_idx = row_indices[mask]
 
-        parent_res_id = parent_array[row_idx, col_idx]
-        child_res_id = child_array[row_idx, col_idx]
+#         parent_res_id = parent_array[row_idx, col_idx]
+#         child_res_id = child_array[row_idx, col_idx]
 
-        # parent_mask = np.isin(parent_res_id, util.reserved_chars_index, invert=True)
-        parent_mask = np.where(parent_res_id != 0)
-        parent_res_id = parent_res_id[parent_mask]
-        child_res_id = child_res_id[parent_mask]
-        col_idx = col_idx[parent_mask]
+#         # parent_mask = np.isin(parent_res_id, util.reserved_chars_index, invert=True)
+#         parent_mask = np.where(parent_res_id != 0)
+#         parent_res_id = parent_res_id[parent_mask]
+#         child_res_id = child_res_id[parent_mask]
+#         col_idx = col_idx[parent_mask]
 
-        # child_mask = np.isin(child_res_id, util.reserved_chars_index, invert=True)
-        child_mask = np.where(child_res_id != 0)
-        parent_res_id = parent_res_id[child_mask]
-        child_res_id = child_res_id[child_mask]
-        col_idx = col_idx[child_mask]
+#         # child_mask = np.isin(child_res_id, util.reserved_chars_index, invert=True)
+#         child_mask = np.where(child_res_id != 0)
+#         parent_res_id = parent_res_id[child_mask]
+#         child_res_id = child_res_id[child_mask]
+#         col_idx = col_idx[child_mask]
 
-        parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
-        rec_loc_count_dict = Counter(parent_child_tuples)
-        del parent_child_diff, mask, row_idx, col_idx, row_indices, col_indices, \
-            parent_res_id, child_res_id, parent_child_tuples, parent_array, child_array
+#         parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
+#         rec_loc_count_dict = Counter(parent_child_tuples)
+#         del parent_child_diff, mask, row_idx, col_idx, row_indices, col_indices, \
+#             parent_res_id, child_res_id, parent_child_tuples, parent_array, child_array
 
-    except BrokenPipeError:
-        error_msg = "Broken pipe error while processing file."
-        print(error_msg)
+#     except BrokenPipeError:
+#         error_msg = "Broken pipe error while processing file."
+#         print(error_msg)
 
-    except Exception as e:
-        error_msg = f"ERROR in WorkerProcessAndCount for mcs task {file}: {e}"
-        print(error_msg)
-        print(traceback.format_exc())
-        production_logger.error(error_msg)
+#     except Exception as e:
+#         error_msg = f"ERROR in WorkerProcessAndCount for mcs task {file}: {e}"
+#         print(error_msg)
+#         print(traceback.format_exc())
+#         production_logger.error(error_msg)
 
-    return rec_loc_count_dict, error_msg
-
-
-def process_mcs_files_in_chunks(mcs_alnDir: str,
-                                parent_list: List[str],
-                                child_list: List[str],
-                                residue_dict: Dict[str, int],
-                                nthreads: int,
-                                isnuc_fasta: bool,
-                                sequence_type: str,
-                                res_loc_list: List[int],
-                                production_logger: logging.Logger,
-                                window_width: int,
-                                dash_exist: bool = False,
-                                binary_sequence_dict: Optional[Dict[str, str]] = None,
-                                update_cycle: Optional[int] = None,
-                                mcs_batch_size: Optional[int] = None
-                                ) -> List[Dict[Tuple[int, int, int], int]]:
-
-    mcs_files = os.listdir(mcs_alnDir)
-    total_file_count = len(mcs_files)
-
-    results = []
-    worker = partial(WorkerProcessAndCount,
-                     mcs_alnDir=mcs_alnDir,
-                     parent_list=parent_list,
-                     child_list=child_list,
-                     isnuc_fasta=isnuc_fasta,
-                     sequence_type=sequence_type,
-                     residue_dict=residue_dict,
-                     res_loc_list=res_loc_list,
-                     production_logger=production_logger,
-                     dash_exist=dash_exist,
-                     binary_sequence_dict=binary_sequence_dict,
-                     )
-    if mcs_batch_size is not None:
-        batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
-
-    if update_cycle is not None:
-        mcs_progress = progress.Progress(
-        progress.TextColumn("[progress.description]{task.description}"),
-        progress.BarColumn(bar_width=window_width // 2),
-        progress.SpinnerColumn(),
-        progress.MofNCompleteColumn(),
-        progress.TimeElapsedColumn(),
-        transient=False,
-        # progress.TextColumn("{task.completed}/{task.total}")
-        )
-        task = mcs_progress.add_task("[magenta]Processing...", total=total_file_count)
-
-        mcs_progress.start()
-    try:
-        with ProcessPoolExecutor(max_workers=nthreads) as executor:
-
-            if mcs_batch_size is not None:
-                futures = [executor.submit(worker, file_data) for batch in batches for file_data in batch]
-            else:
-                futures = [executor.submit(worker, file_data) for file_data in mcs_files]
+#     return rec_loc_count_dict, error_msg
 
 
-            for i, future in enumerate(as_completed(futures)):
-                try:
-                    result, error_msg = future.result()
-                    if error_msg:
-                        print(error_msg)
-                        production_logger.error(error_msg)
-                        break
+# def process_mcs_files_in_chunks(mcs_alnDir: str,
+#                                 parent_list: List[str],
+#                                 child_list: List[str],
+#                                 residue_dict: Dict[str, int],
+#                                 nthreads: int,
+#                                 isnuc_fasta: bool,
+#                                 sequence_type: str,
+#                                 res_loc_list: List[int],
+#                                 production_logger: logging.Logger,
+#                                 window_width: int,
+#                                 dash_exist: bool = False,
+#                                 binary_sequence_dict: Optional[Dict[str, str]] = None,
+#                                 update_cycle: Optional[int] = None,
+#                                 mcs_batch_size: Optional[int] = None
+#                                 ) -> List[Dict[Tuple[int, int, int], int]]:
 
-                    if result:
-                        results.append(result)
+#     mcs_files = os.listdir(mcs_alnDir)
+#     total_file_count = len(mcs_files)
 
-                except Exception as e:
-                    error_msg = f"ERROR during processing: {e}"
-                    print(error_msg)
-                    print(traceback.format_exc())
-                    production_logger.error(error_msg)
-                    break
+#     results = []
+#     worker = partial(WorkerProcessAndCount,
+#                      mcs_alnDir=mcs_alnDir,
+#                      parent_list=parent_list,
+#                      child_list=child_list,
+#                      isnuc_fasta=isnuc_fasta,
+#                      sequence_type=sequence_type,
+#                      residue_dict=residue_dict,
+#                      res_loc_list=res_loc_list,
+#                      production_logger=production_logger,
+#                      dash_exist=dash_exist,
+#                      binary_sequence_dict=binary_sequence_dict,
+#                      )
+#     if mcs_batch_size is not None:
+#         batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
 
-                finally:
-                    if update_cycle is not None:
-                        if (i + 1) % update_cycle == 0:
-                            mcs_progress.update(task, advance=update_cycle)
+#     if update_cycle is not None:
+#         mcs_progress = progress.Progress(
+#         progress.TextColumn("[progress.description]{task.description}"),
+#         progress.BarColumn(bar_width=window_width // 2),
+#         progress.SpinnerColumn(),
+#         progress.MofNCompleteColumn(),
+#         progress.TimeElapsedColumn(),
+#         transient=False,
+#         # progress.TextColumn("{task.completed}/{task.total}")
+#         )
+#         task = mcs_progress.add_task("[magenta]Processing...", total=total_file_count)
 
-            if update_cycle is not None:
-                mcs_progress.stop()
+#         mcs_progress.start()
+#     try:
+#         with ProcessPoolExecutor(max_workers=nthreads) as executor:
 
-    except Exception as e:
-        error_msg = f"ERROR during processing files: {e}"
-        print(error_msg)
-        print(traceback.format_exc())
-        production_logger.error(error_msg)
+#             if mcs_batch_size is not None:
+#                 futures = [executor.submit(worker, file_data) for batch in batches for file_data in batch]
+#             else:
+#                 futures = [executor.submit(worker, file_data) for file_data in mcs_files]
 
-    return results
+
+#             for i, future in enumerate(as_completed(futures)):
+#                 try:
+#                     result, error_msg = future.result()
+#                     if error_msg:
+#                         print(error_msg)
+#                         production_logger.error(error_msg)
+#                         break
+
+#                     if result:
+#                         results.append(result)
+
+#                 except Exception as e:
+#                     error_msg = f"ERROR during processing: {e}"
+#                     print(error_msg)
+#                     print(traceback.format_exc())
+#                     production_logger.error(error_msg)
+#                     break
+
+#                 finally:
+#                     if update_cycle is not None:
+#                         if (i + 1) % update_cycle == 0:
+#                             mcs_progress.update(task, advance=update_cycle)
+
+#             if update_cycle is not None:
+#                 mcs_progress.stop()
+
+#     except Exception as e:
+#         error_msg = f"ERROR during processing files: {e}"
+#         print(error_msg)
+#         print(traceback.format_exc())
+#         production_logger.error(error_msg)
+
+#     return results
 
 def mcs_count_greater(
         mcs_results: List[Dict[Tuple[int, int, int], int]],
@@ -743,8 +743,6 @@ def main(args: Optional[List[str]] = None):
                     mcs_results,
                     recurrence_list,
                     residue_dict,
-                    len(mcs_results),
-                    options.significance_level
                 )
                 if options.pval_adjust_method is None:
                     options.pval_adjust_method = at.method_selection(M, options.site_dependence)
@@ -1204,22 +1202,25 @@ def main(args: Optional[List[str]] = None):
                     else:
                         recurrenceDir = options.recDir
 
-                    if (options.disk_save and options.multi_stage) or options.just_recurrence:
-                        filewriter.WriteRecurrenceListRealPhylogeny(
-                            recurrence_list, 
-                            filehandler.GetRecurrenceListRealPhylogenyFN(recurrenceDir)
+                    # if (options.disk_save and options.multi_stage) or options.just_recurrence:
+                    filewriter.WriteRecurrenceListRealPhylogeny(
+                        recurrence_list, 
+                        filehandler.GetRecurrenceListRealPhylogenyFN(recurrenceDir)
+                    )
+
+                    filewriter.WriteRecurrenceCountToFile(
+                        rec_loc_count_dict,
+                        filehandler.GetRecurrenceCountPhylogenyFN(recurrenceDir)
+                    )
+
+                    if (options.disk_save and options.multi_stage) :
+                        print("NOTE: You are running one the disk saving mode!")
+                        print(
+                            "If you don't wish to use `multi-stage-recur.sh`, "
+                            "you need to run `recur -f project_dir -cr -pam pval_adjust_method` "
+                            "to obtain the recurrence list.\n"
                         )
 
-                        filewriter.WriteRecurrenceCountToFile(
-                            rec_loc_count_dict,
-                            filehandler.GetRecurrenceCountPhylogenyFN(recurrenceDir)
-                        )
-                        if not options.just_recurrence:
-                            print("NOTE: You are running one the multistage and disk saving mode!")
-                            print("You need to run `recur -f project_dir -cr` to obtain the recurrence list.", end="\n"*2)
-                        else:
-                            print("Done computing recurrence for real phylogeny.\n")
-                            sys.exit(0)
 
                     if len(recurrence_list) == 0:
                         production_logger.info(f"ATTENTION: No recurrence has identified for gene {gene}! Monte-Carlo Simiatlion will be SKIPPED!\n",
@@ -1228,24 +1229,104 @@ def main(args: Optional[List[str]] = None):
 
                     res_loc_list = [int(res_list[0]) for res_list in recurrence_list]
                     
-                    if options.nalign is None:
-                        mcp_method, B = at.min_mcs(
-                                M,
-                                method=options.pval_adjust_method,
-                                alpha=options.significance_level,
-                                q=options.fdr_level,
-                                rel_tol=options.relative_tolerance,
-                                extra_grid_cushion=options.grid_cushion,
-                                suspect_dependence=options.site_dependence
-                            )
+                    if not restart_step3:
+                        if options.nalign is None:
+                            mcp_method, B = at.min_mcs(
+                                    M,
+                                    method=options.pval_adjust_method,
+                                    alpha=options.significance_level,
+                                    q=options.fdr_level,
+                                    rel_tol=options.relative_tolerance,
+                                    extra_grid_cushion=options.grid_cushion,
+                                    suspect_dependence=options.site_dependence,
+                                    mc_error_control=options.mc_error_control
+                                )
+                            
+                            options.nalign = B
+                            options.pval_adjust_method = mcp_method
+                        else:
+                            options.pval_adjust_method = at.method_selection(M, options.site_dependence)
                         
-                        options.nalign = B
-                        options.pval_adjust_method = mcp_method
-                    else:
-                        options.pval_adjust_method = at.method_selection(M, options.site_dependence)
+                        # mcs_info = (
+                        #     f"With {M} recurrence test, "
+                        #     f"{options.nalign} Monte Carlo Simulations will be conducted based on {options.pval_adjust_method} "
+                        #     f"(i.e., {at.METHODS_AVAILABLE[options.pval_adjust_method]}) adjustment method to adjust the p-values in multipletests.\n"
+                        # )
+                        # production_logger.info(mcs_info, extra={'to_file': False, 'to_console': True})
+                        
+
+                        plural_rec  = "test" if M == 1 else "tests"
+                        plural_sims = "simulation" if options.nalign == 1 else "simulations"
+
+                        mcs_info = (
+                            "Monte-Carlo Recurrence Analysis Parameters\n"
+                            "- Recurrence {label:<10} : {rec:,d} {plural_rec}\n"
+                            "- Monte-Carlo           : {sims:,d} {plural_sims}\n"
+                            "- P-value adjust method : {method_key} (i.e., {method_readable})\n"
+                        ).format(
+                            label="tests",
+                            rec=M,
+                            plural_rec=plural_rec,
+                            sims=options.nalign,
+                            plural_sims=plural_sims,
+                            method_readable=at.METHODS_AVAILABLE[options.pval_adjust_method],
+                            method_key=options.pval_adjust_method,
+                        )
+                        production_logger.info(
+                            mcs_info,
+                            extra={"to_file": False, "to_console": True},
+                        )
+
+                        msg = (
+                            f"MCS Parameters | num_rec_tests={M} | num_mc_sims={options.nalign} | "
+                            f"pval_adj_method={options.pval_adjust_method}"
+                            "\n"
+                        )
+                        production_logger.info(
+                            msg,
+                            extra={
+                                "to_file": True,
+                                "to_console": False,
+                                "num_rec_tests":   M,
+                                "num_mc_sims":     options.nalign,
+                                "pval_adj_method": options.pval_adjust_method,
+                            },
+                        )
+
+                        if options.nalign > options.recur_limit and not options.just_recurrence:
+                            warning_msg = (
+                                f"\n"
+                                f"  WARNING: Requested {options.nalign} alignments exceeds the current limit ({options.recur_limit}).\n"
+                                f"\n"
+                                f"   To save disk space and avoid performance issues, please use the multi-stage batch runner:\n"
+                                f"     ./multi-stage-recur.sh -n {options.nalign} -d {aln_path} -b <batch_size> [optional: -m <pval_adjust_method>]\n"
+                                f"\n"
+                                f"   This will perform {options.nalign} Monte Carlo simulations "
+                                f"using the p-value adjustment method: {options.pval_adjust_method}\n"
+                                f"\n"
+                                f"   If you still want to run everything in one stage, you can override the limit with:\n"
+                                f"     --recur-limit {options.nalign} or -rl {options.nalign}\n"
+                                f"\n"
+                                f"  RECUR will now exit safely without running the simulation.\n"
+                            )
+
+                            production_logger.warning(
+                                warning_msg,
+                                extra={
+                                    "to_file": True,
+                                    "to_console": True,
+                                    "num_rec_tests":   M,
+                                    "num_mc_sims":     options.nalign,
+                                    "pval_adj_method": options.pval_adjust_method,
+                                },
+                            )
+                            sys.exit(0)
+
                     
-                    mcs_info = f"With {M} recurrence test, {options.nalign} Monte Carlo Simulations will be conducted based on {options.pval_adjust_method} (i.e., {at.METHODS_AVAILABLE[options.pval_adjust_method]}) adjustment method to adjust the p-values in multipletests.\n"
-                    production_logger.info(mcs_info, extra={'to_file': True, 'to_console': True})
+                    if options.just_recurrence:
+                        print("Done Computing Recurrence for Real Phylogeny.")
+                        util.PrintCitation()
+                        sys.exit(0)
 
                     if gene_tree is None:
                         step2_info = f"Step3: Simulating Sequence Evolution with {options.nalign} replicates"
@@ -1263,6 +1344,23 @@ def main(args: Optional[List[str]] = None):
 
                         if len(os.listdir(mcs_faDir)) != options.nalign and len(os.listdir(mcs_faDir)) > 0:
                             util.delete_files_in_directory(mcs_faDir)
+
+
+                        msg = (
+                            f"MCS Parameters | num_rec_tests={M} | num_mc_sims={options.nalign} | "
+                            f"pval_adj_method={options.pval_adjust_method}"
+                            "\n"
+                        )
+                        production_logger.info(
+                            msg,
+                            extra={
+                                "to_file": True,
+                                "to_console": False,
+                                "num_rec_tests":   M,
+                                "num_mc_sims":     options.nalign,
+                                "pval_adj_method": options.pval_adjust_method,
+                            },
+                        )
 
                         identifier = "rooted_" + gene + "_alisim"
                         output_prefix = os.path.join(mcs_faDir, identifier)
@@ -1286,6 +1384,28 @@ def main(args: Optional[List[str]] = None):
                             iqtree_version=options.iqtree_version,
                             iqtree_cmd_dict=options.iqtree_cmd_dict
                         )
+                        
+                        # mcs_seed_loc = int(mcs_commands[0].split().index("--seed")) + 1
+                        # mcs_nalign_loc = int(mcs_commands[0].split().index("--num-alignments")) + 1
+                        # if options.multi_stage:
+                        #     mcs_commands[0].replace(mcs_commands[0][mcs_nalign_loc], str(options.nalign_batch))
+                            
+                        #     base_seed = int(mcs_commands[0].split()[mcs_seed_loc])
+
+                        #     nbatch = options.nalign // options.nalign_batch
+                        #     res_nbatch = options.nalign - nbatch * options.nalign_batch
+
+                        #     for i in range(nbatch):
+                        #         cmd_copy = mcs_commands[0][:]
+                        #         cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + i + 1))
+                        #         mcs_commands.append(cmd_copy)
+
+                        #     if res_nbatch != 0:
+                        #         cmd_copy = mcs_commands[0][:]
+                        #         cmd_copy.replace(cmd_copy.split()[mcs_nalign_loc], str(res_nbatch))
+                        #         cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + nbatch + 1))
+                        #         mcs_commands.append(cmd_copy)
+
                         if restart_step3:
                             if gene_tree is None and not restart_step2:
                                 production_logger.info("### Restart RECUR from Step3 ###\n", extra={'to_file': True, 'to_console': True})
@@ -1298,14 +1418,16 @@ def main(args: Optional[List[str]] = None):
                                             extra={'to_file': True, 'to_console': False})
                         production_logger.info("step2 iqtrees command: ", extra={'to_file': True, 'to_console': False})
                         production_logger.info(f"{mcs_commands[0]}\n", extra={'to_file': True, 'to_console': False})
-
-                        run_commands.RunCommand(mcs_commands,
-                                                mcs_faDir,
-                                                env=my_env,
-                                                nthreads=options.recur_nthreads,
-                                                delete_files=True,
-                                                files_to_keep=["fasta", "fa"],
-                                                fd_limit=options.fd_limit)
+                        
+                        run_commands.RunCommand(
+                            mcs_commands,
+                            mcs_faDir,
+                            env=my_env,
+                            nthreads=options.recur_nthreads,
+                            delete_files=True,
+                            files_to_keep=["fasta", "fa"],
+                            fd_limit=options.fd_limit,
+                        )
                         prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                         production_logger.info(prepend + "Monte-Carlo Simulation complete.\n", extra={'to_file': True, 'to_console': True})
                     else:
@@ -1343,7 +1465,7 @@ def main(args: Optional[List[str]] = None):
                     production_logger.info(prepend + "Starting substitution matrices calculation for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
                     production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
 
-                    mcs_results = process_mcs_files_in_chunks(
+                    mcs_results = parallel_task_manager.process_mcs_files_in_chunks(
                         mcs_alnDir,
                         parent_list,
                         child_list,
@@ -1375,9 +1497,13 @@ def main(args: Optional[List[str]] = None):
                             filehandler.mcs_dir
                         )
                         print("NOTE: You are running one the disk saving mode!")
-                        print("You need to run `recur -f project_dir -cr` to obtain the recurrence list.")
                         
                         if options.multi_stage:
+                            print(
+                                "If you don't wish to use `multi-stage-recur.sh`, "
+                                "you need to run `recur -f project_dir -cr -pam pval_adjust_method` "
+                                "to obtain the recurrence list.\n"
+                            )
                             sys.exit(0)
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
@@ -1408,7 +1534,7 @@ def main(args: Optional[List[str]] = None):
                         recurrence_list_updated, 
                         filehandler.GetRecurrenceListFN(recurrenceDir),
                         options
-                        )
+                    )
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "p values computing complete.", extra={'to_file': True, 'to_console': True})
 

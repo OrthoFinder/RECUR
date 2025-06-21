@@ -89,6 +89,9 @@ class Options(object):
         self.site_dependence = False
         self.pval_stats = False
         self.just_recurrence = False
+        self.nalign_batch = 1000
+        self.recur_limit = 1000
+        self.mc_error_control = False
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -266,6 +269,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         elif arg == "-ps" or arg == "--pval-stats":
             options.pval_stats = True
 
+        elif arg == "-mce" or arg == "--mc-error-control":
+            options.mc_error_control = True
+
         elif arg == "-si" or arg == "--system-info":
             options.system_info = True
 
@@ -280,6 +286,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-uc" or arg == "--update-cycle":
             options.update_cycle = int(args.pop(0))
+
+        elif arg == "-rl" or arg == "--recur-limit":
+            options.recur_limit = int(args.pop(0))
 
         elif arg == "--seed":
             options.seed = int(args.pop(0))
@@ -561,6 +570,12 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 print("Missing option for command line argument %s\n" % arg)
                 util.Fail()
             options.nalign = int(args.pop(0))
+
+        elif arg == "-nb" or arg == "--alignments-batch-size":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+            options.nalign_batch = int(args.pop(0))
 
         elif arg == "-t" or arg == "--nthreads":
             if len(args) == 0:
