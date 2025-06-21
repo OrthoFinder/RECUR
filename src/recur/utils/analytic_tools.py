@@ -42,132 +42,6 @@ METHODS_AVAILABLE = {
 METHODS_FWER = {"bonferroni", "holm"}
 METHODS_FDR  = {"fdr_bh", "fdr_by", "fdr_tsbh"}   # alias for Storey
 
-def mc_pvalues(R: int, B: int) -> float:
-    
-    """
-    The Phipson & Smyth method is used for adjustment
-    R = #simulated statistics >= observed
-
-    The +1 in numerator and denominator is a bias correction 
-    (ensures p_hat >0) and is standard (see Davison & Hinkley 1997).
-
-    """
-    p_hat = (R + 1) / (B + 1)
-
-    return p_hat
-
-
-def adjusted_pvalue_test(pvals, alpha, method: str = "bonferroni"):
-
-    """
-    alpha: family-wise significance level (0.05, 0.1, 0.001)
-    M = len(pvals): test size
-    H0i: the i-th null hypothesis 
-    q: the target False Discovery Rate (FDR) level you wish to control.
-       It bounds the expected proportion of mistakes rather than the chance of any mistake
-       It's the the FDR-analogue of the familiar family-wise significance level alpha.
-       (0.05, 0.1, 0.001)
-
-    M0: true null
-    M1: true alternative, M1 = M- M0
-    pi0 = M0 / M: 
-    pi1 = M1 / M: 
-
-    1. Family-Wise Error Rate (FWER):
-    Probability of making even one false positive in the entire family of tests.
-
-        A. Bonferroni (classic)
-        Reject the null hypothesis if p-value <= alpha / M
-        Very conservative; power drops quickly asMgrows.
-        You only have a handful of tests or a false positive is very costly (e.g., clinical trial safety).
-        
-        B. Holm-Bonferroni (step-down Bonferroni)
-        sorted_idx = np.argsort(pvals)
-        p_sorted = pvals[sorted_idx]
-
-        reject = np.zeros(M, dtype=bool)
-        for i in range(M):
-            threshold = alpha / (M - i)
-            if p_sorted[i] > threshold:
-                break
-            reject[i] = True
-
-        reject_final = np.zeros(M, dtype=bool)
-        reject_final[sorted_idx[:np.sum(reject)]] = True
-
-        Stop at the first non-significant, declare none beyond it. 
-        Uniformly more powerful than plain Bonferroni; still works under any dependence.
-        Still conservative for large m; sequential procedure slightly more work.
-        Use it when you need FWER control but want a power boost over Bonferroni.
-
-        Early (small) p-values are compared to a stricter threshold, 
-        but as you move down the list the denominator shrinks, 
-        so later tests get looser cut-offs.
-
-    2. 	False Discovery Rate (FDR):
-    Expected proportion of false positives among the discoveries you call significant.
-
-        A. Benjamini-Hochberg (BH, "step-up FDR")
-        sorted_idx = np.argsort(pvals)
-        p_sorted = pvals[sorted_idx]
-        thresholds = np.arange(1, M + 1) / M * q
-
-        below = p_sorted <= thresholds
-        if not np.any(below):
-            return np.zeros(M, dtype=bool) 
-
-        k_max = np.max(np.where(below)[0])
-        cutoff_p = p_sorted[k_max]
-
-        Much higher power for large-scale studies; simple to implement. 
-        Formal FDR guarantee assumes independent or positively dependent tests (still robust in practice). 
-        Use it anytimeMis big and you can tolerate a few false calls.
-        
-        B. Storey's q-value method (adaptive BH)
-        thresholds = np.arange(1, M + 1) / M* (q / pi0) 
-        For each test, the minimum FDR at which it becomes significant. 
-        Gains extra power when many tests are truly null (common in genomics). 
-        Provides a per-test q-value you can treat like an FDR-based p-value. 
-        Slightly more complex.
-        pi0 can be unstable in small samples.
-        Same dependence caveats as BH.
-
-    FWER control is stricter. it tries to keep any false positive from slipping through.
-    FDR control relaxes that to "some mistakes are fine, as long as the proportion is small," which gives you more power (i.e., you keep more true signals).
-    
-    - Need almost zero risk of any false positive?
-      Bonferroni (small M) or Holm (medium-large M).
-
-    - Large-scale study where a few false hits are acceptable if you keep lots of true ones?
-      BH 
-
-      if you believe the vast majority of tests are null and want maximum power,
-      use Storey's q-values.
-
-    M <= 50: Bonferroni
-    You need to avoid any false positive at all costs.
-
-    50 < M <= 500: Holm
-    You still want strong FWER control, but Bonferroni is too harsh.
-
-    500 < M <= 5000: BH
-    You're running many tests (e.g. microarrays), and FDR is acceptable.
-
-    M > 5000 and you believe most hypothesis are null: Storey's q-values
-    You want maximum power and don't mind a small number of false positives.
-    """
-
-    reject, padj, *_ = multipletests(pvals, alpha, method=method)
-
-    return reject, padj
-
-# def p_value_confidence_interval():
-
-# def p_value_relative_error():
-
-
-def grid_resolution(B: int):
-    return 1 / (B + 1)
 
 def cp_ci_vec(R: List[int], B: int, alpha=0.05) -> Tuple[float, float]:
     """
@@ -204,18 +78,48 @@ def cp_ci_vec(R: List[int], B: int, alpha=0.05) -> Tuple[float, float]:
 
 def sitewise_decision(R, B, alpha=0.05, q=0.05, method="fdr_bh"):
     """
+    Perform site-wise hypothesis testing with Monte Carlo p-values,
+    multiple testing correction, and confidence interval analysis.
+
     Parameters
     ----------
-    R_vec  : array-like  counts of exceedances (length M)
-    B      : int         number of Monte-Carlo draws
-    alpha  : float       FWER threshold for Bonferroni / Holm
-    q      : float       FDR threshold for BH / Storey
-    method : {"bonferroni","holm","fdr_bh","fdr_tsbh"}
+    R : array-like of int
+        Vector of exceedance counts per site. Each R[i] is the number of
+        Monte Carlo statistics ≥ observed at site i.
+
+    B : int
+        Number of Monte Carlo simulations. Each p-value is estimated as (R + 1) / (B + 1).
+
+    alpha : float, default=0.05
+        Family-wise error rate (FWER) threshold used for Bonferroni and Holm correction.
+
+    q : float, default=0.05
+        False discovery rate (FDR) threshold used for FDR-based methods like BH, BY, etc.
+
+    method : str, default="fdr_bh"
+        Multiple testing correction method. One of:
+        {"bonferroni", "holm", "fdr_bh", "fdr_by", "fdr_tsbh"}.
 
     Returns
     -------
-    dict  with keys p_hat, p_adj, ci_lo_adj, ci_hi_adj,
-          decision, robust, unstable
+    p_hat : ndarray of float
+        Monte Carlo p-value estimates: (R + 1) / (B + 1).
+
+    p_adj : ndarray of float
+        Multiple-testing adjusted p-values.
+
+    ci_lo_adj : ndarray of float
+        Adjusted lower bounds of the Clopper–Pearson confidence intervals for p_hat.
+
+    ci_hi_adj : ndarray of float
+        Adjusted upper bounds of the Clopper–Pearson confidence intervals for p_hat.
+
+    decision_sig : ndarray of bool
+        Boolean mask indicating which hypotheses are significant after adjustment.
+
+    robust : ndarray of bool
+        Boolean mask indicating which decisions are robust to Monte Carlo error
+        (i.e., the entire CI is either above or below the threshold).
 
     The Phipson & Smyth method is used for adjustment
     R = #simulated statistics >= observed
@@ -292,22 +196,58 @@ def min_mcs(
     ):
     
     """
+    Estimate the minimum number of Monte Carlo simulations (B) required to control
+    Monte Carlo standard error (MC-SE) or to ensure grid resolution is fine enough
+    for multiple-testing correction under various methods.
+
     Parameters
     ----------
-    M         : int      total hypotheses
-    method     : str      {"bonferroni","holm","bh","storey"}
-    alpha      : float    family-wise α (Bonferroni/Holm)
-    q          : float    target FDR q  (BH/Storey)
-    pi0        : float    π₀ estimate   (Storey; default 1 = worst-case)
-    p_expected : float    p-value level you want the MC-SE control for
-    eps        : float    maximum allowed Monte-Carlo SE at p_expected
-    return_details : bool if True, also return the two individual B's
-    extra_grid_cushion : bool if True, 
-    
+    M : int
+        Total number of hypothesis tests.
+
+    method : str, default="fdr_bh"
+        Multiple testing correction method. One of:
+        {"bonferroni", "holm", "fdr_bh", "fdr_by", "fdr_tsbh", "storey"}
+
+    alpha : float, default=0.05
+        Family-wise error rate (FWER) threshold. Used for "bonferroni" and "holm".
+
+    q : float, default=0.05
+        False discovery rate (FDR) threshold. Used for FDR methods.
+
+    pi0 : float, default=1.0
+        Estimate of the proportion of true null hypotheses (π₀). Used in Storey-type methods.
+        Set to 1.0 for a conservative (worst-case) estimate.
+
+    p_expected : float or None, default=None
+        The p-value level where MC error should be tightly controlled.
+        Required if `eps` is provided.
+
+    eps : float or None, default=None
+        Desired maximum standard error of the Monte Carlo p-value estimate at `p_expected`.
+        If provided, the function will ensure MC-SE(p̂) ≤ eps.
+        You must also supply `p_expected`.
+
+    rel_tol : float, default=0.1
+        Relative tolerance when determining the minimum B for grid resolution or
+        MC error control. A value of 0.1 allows 10% slack over the strict minimum.
+
+    extra_grid_cushion : bool, default=False
+        If True, adds a small cushion to the estimated B to ensure stable
+        multiple-testing correction thresholds (useful in threshold-sensitive procedures).
+
+    suspect_dependence : bool, default=False
+        If True, switches from "fdr_bh" to "fdr_by", or from "storey" to a conservative variant,
+        to account for potentially dependent test statistics.
+
+    mc_error_control : bool, default=False
+        If True, enforces Monte Carlo standard error (MC-SE) control using `p_expected` and `eps`.
+
     Returns
     -------
-    B_required : int                minimum simulations
-    details    : dict  (optional)   {"grid_B":…, "error_B":…, "threshold":…}
+    B_required : int
+        Minimum number of Monte Carlo simulations needed to meet the grid and/or
+        MC error criteria under the specified correction method.
     
     ===========================================================================================
     Importance concepts:
