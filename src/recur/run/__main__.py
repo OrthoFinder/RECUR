@@ -617,19 +617,20 @@ def update_recurrence_list(
     for rec_loc, res in enumerate(zip(*extant_seq.values())):
         ident_dict[rec_loc] = res
     
-    precsion = len(str(B))
-    print()
+    precsion = len(str(B)) + 2
+
     for i, rec_list in enumerate(recurrence_list):
         res_loc = int(rec_list[0])
         parent_child = []
         counts = []
 
-        rec_list.append(np.round(p_hat[i], precsion))
-        rec_list.append(np.round(p_adj[i], precsion))
+        rec_list.append(float(str(p_hat[i])[:precsion]))
+        rec_list.append(float(str(p_adj[i])[:precsion]))
 
         if pval_stats:
-            lower_ci = np.round(ci_lo_adj[i], precsion)
-            upper_ci = np.round(ci_hi_adj[i], precsion)
+            lower_ci = float(str(ci_lo_adj[i])[:precsion])
+            upper_ci = float(str(ci_hi_adj[i])[:precsion])
+
             rec_list.append(lower_ci)
             rec_list.append(upper_ci)
             decision = "Reject" if decision_sig[i] == 1 else "Accept"

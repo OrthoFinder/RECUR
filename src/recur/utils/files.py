@@ -401,12 +401,13 @@ class FileReader(object):
 
         mcs_results = []
         for file in mcs_count_files:
+            if not file.endswith(".tsv"):
+                continue
             mcs_count_dict = {}
             with open(file) as reader:
                 for i, line in enumerate(reader):
                     if i == 0:
                         continue
-
                     res_loc, parent, child, count = map(int, line.strip().split("\t"))
                     mcs_count_dict[(res_loc, parent, child)] = count
             mcs_results.append(mcs_count_dict)
