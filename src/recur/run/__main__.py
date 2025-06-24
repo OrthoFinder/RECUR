@@ -583,10 +583,6 @@ def mcs_count_greater(
                         count_greater += 1
             
             count_greater_list.append(count_greater)
-            # mc_p_value = at.mc_pvalues(count_greater, nalign)
-            # lower, upper = at.pvalue_ci(recurrence, nalign, alpha)
-            # rec_list.append(np.round(mc_p_value, len(str(nalign))))
-            # print(f"{rec_list} - {count_greater}")
 
     except Exception as e:
         error_msg = f"ERROR during compute_p_values: {e}"
@@ -622,6 +618,7 @@ def update_recurrence_list(
         ident_dict[rec_loc] = res
     
     precsion = len(str(B))
+    print()
     for i, rec_list in enumerate(recurrence_list):
         res_loc = int(rec_list[0])
         parent_child = []
@@ -1193,7 +1190,7 @@ def main(args: Optional[List[str]] = None):
                         rec_loc_count_dict, 
                         residue_dict_flip
                     )
-
+                    
                     # T_obs = np.asarray([item[3] for item in recurrence_list])
                     M = len(recurrence_list)
 
@@ -1201,7 +1198,7 @@ def main(args: Optional[List[str]] = None):
                         recurrenceDir = alnDir
                     else:
                         recurrenceDir = options.recDir
-
+                    
                     # if (options.disk_save and options.multi_stage) or options.just_recurrence:
                     filewriter.WriteRecurrenceListRealPhylogeny(
                         recurrence_list, 
@@ -1220,7 +1217,6 @@ def main(args: Optional[List[str]] = None):
                             "you need to run `recur -f project_dir -cr -pam pval_adjust_method` "
                             "to obtain the recurrence list.\n"
                         )
-
 
                     if len(recurrence_list) == 0:
                         production_logger.info(f"ATTENTION: No recurrence has identified for gene {gene}! Monte-Carlo Simiatlion will be SKIPPED!\n",
@@ -1483,7 +1479,7 @@ def main(args: Optional[List[str]] = None):
                     )
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + "Substitution matrices complete.\n")
+                    production_logger.info(prepend + "Substitution matrices complete.")
                     
                     if options.disk_save:
                         for file in util.iter_dir(mcs_alnDir):

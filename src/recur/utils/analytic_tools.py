@@ -156,7 +156,7 @@ def sitewise_decision(R, B, alpha=0.05, q=0.05, method="fdr_bh"):
         _, ci_lo_adj, *_ = multipletests(lo_clipped, alpha=thresh, method=method)
         _, ci_hi_adj, *_ = multipletests(hi_clipped, alpha=thresh, method=method)
 
-    decision_sig = p_adj <= thresh  # point-estimate verdict
+    decision_sig = p_adj < thresh  # point-estimate verdict
 
     robust_sig = ci_hi_adj < thresh  # always significant
     robust_nonsig= ci_lo_adj > thresh    # always non-significant
@@ -491,7 +491,7 @@ def min_mcs(
         threshold = q / (M * c_m)
 
     # grid-resolution
-    B_grid = math.ceil(1 / threshold) - 1
+    B_grid = math.ceil(1 / threshold)
     B_required = B_grid
     
     if mc_error_control:
@@ -502,7 +502,7 @@ def min_mcs(
         if eps is None:                  
             eps = rel_tol * p_expected 
 
-        B_error = math.ceil(p_expected * (1 - p_expected) / eps**2) - 1
+        B_error = math.ceil(p_expected * (1 - p_expected) / eps**2)
         B_error = max(B_error, 0)      # just in case
 
         B_required = max(B_grid, B_error)

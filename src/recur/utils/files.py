@@ -556,6 +556,7 @@ class FileWriter(object):
                 if isinstance(rec_list[0], int):
                     rec_list[0] += 1
                 writer.write("\t".join(map(str, rec_list)) + "\n")
+                rec_list[0] -= 1
 
     @staticmethod
     def WriteRecurrenceList(recurrence_list: List[List[Union[str, int, float]]],
@@ -596,3 +597,4 @@ class FileWriter(object):
                 if isinstance(rec_list[0], int):
                     rec_list[0] += 1
                 writer.write("\t".join(map(str, rec_list)) + "\n")
+                rec_list[0] -= 1
