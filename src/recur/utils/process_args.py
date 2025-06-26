@@ -664,6 +664,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-h" or arg == "--help":
             helpinfo.PrintHelp()
+        
+        elif arg == "-hv" or arg == "--help-verbose":
+            helpinfo.PrintHelp(True)
 
         elif arg == "-efn" or arg == "--extended-filename":
             options.extended_filename = True

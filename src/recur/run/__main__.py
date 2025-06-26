@@ -666,14 +666,19 @@ def main(args: Optional[List[str]] = None):
 
     if not args:
         args = sys.argv[1:]
-
+    
     if not args or len(args) == 0 or args[0] == "--help" or args[0] == "help" or args[0] == "-h":
         helpinfo.PrintHelp()
+        sys.exit()
+
+    elif args[0] == "--help-verbose" or args[0] == "-hv" or args[0] == "-ho":
+        helpinfo.PrintHelp(True)
         sys.exit()
 
     elif args[0] == "-v" or args[0] == "--version":
         print(f"[dark_goldenrod]RECUR[/dark_goldenrod]:v[deep_sky_blue2]{__version__}[/deep_sky_blue2]")
         sys.exit()
+    
 
     start_main = time.perf_counter()
 
