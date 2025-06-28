@@ -727,7 +727,15 @@ def main(args: Optional[List[str]] = None):
                 filereader = files.FileReader()
                 filewriter = files.FileWriter()
                 filehandler.gene_of_interest = alnFN
-                mcs_results, B = filereader.ReadMCSRecurrenceCount(base_dir)
+                B, mcs_count_file, mcs_fa_file, mcs_files, mcs_dirs = filereader.CheckMCSDir(base_dir)
+                if not mcs_count_file:
+                    print(
+                        "No Monte Carlo Simulation recurrence count files were found! "
+                        "Please rerun the Monte Carlo Simulation step to generate those files!"
+                    )
+
+                    sys.exit(1)
+                mcs_results = filereader.ReadMCSRecurrenceCount(mcs_files)
                 recurrence_count_file = filehandler.GetRecurrenceCountPhylogenyFN(options.project_dir)
                 rec_loc_count_dict = filereader.ReadRecurrenceCount(recurrence_count_file)
                 combined_prot_seqs_fn = os.path.join(base_dir, filehandler.GetCombinedProtSeqsFN())
@@ -742,6 +750,7 @@ def main(args: Optional[List[str]] = None):
                 print()
                 prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                 print(prepend + "Starting compute p values.")
+
                 R = mcs_count_greater(
                     mcs_results,
                     recurrence_list,
@@ -819,7 +828,7 @@ def main(args: Optional[List[str]] = None):
                     #     os.mkdir(base_dir)
 
                     filehandler.CreateOutputDirectories(options, base_dir)
-                    filehandler.CreateMCSDirectories(options)
+                    # filehandler.CreateMCSDirectories(options)
                     results_dir = filehandler.GetResultsDirectory()
                     production_logger = util.setup_logging(results_dir, "w", "brief")
 
@@ -1199,30 +1208,26 @@ def main(args: Optional[List[str]] = None):
                     
                     # T_obs = np.asarray([item[3] for item in recurrence_list])
                     M = len(recurrence_list)
-
-                    if not options.recDir:
-                        recurrenceDir = alnDir
-                    else:
-                        recurrenceDir = options.recDir
+                    recurrenceDir = alnDir if not options.recDir else options.recDir
                     
                     # if (options.disk_save and options.multi_stage) or options.just_recurrence:
-                    filewriter.WriteRecurrenceListRealPhylogeny(
-                        recurrence_list, 
-                        filehandler.GetRecurrenceListRealPhylogenyFN(recurrenceDir)
-                    )
+                    # filewriter.WriteRecurrenceListRealPhylogeny(
+                    #     recurrence_list, 
+                    #     filehandler.GetRecurrenceListRealPhylogenyFN(recurrenceDir)
+                    # )
 
-                    filewriter.WriteRecurrenceCountToFile(
-                        rec_loc_count_dict,
-                        filehandler.GetRecurrenceCountPhylogenyFN(recurrenceDir)
-                    )
+                    # filewriter.WriteRecurrenceCountToFile(
+                    #     rec_loc_count_dict,
+                    #     filehandler.GetRecurrenceCountPhylogenyFN(recurrenceDir)
+                    # )
 
-                    if (options.disk_save and options.multi_stage) :
-                        print("NOTE: You are running one the disk saving mode!")
-                        print(
-                            "If you don't wish to use `multi-stage-recur.sh`, "
-                            "you need to run `recur -f project_dir -cr -pam pval_adjust_method` "
-                            "to obtain the recurrence list.\n"
-                        )
+                    # if (options.disk_save and options.multi_stage) :
+                    #     print("NOTE: You are running one the disk saving mode!")
+                    #     print(
+                    #         "If you don't wish to use `multi-stage-recur.sh`, "
+                    #         "you need to run `recur -f project_dir -cr -pam pval_adjust_method` "
+                    #         "to obtain the recurrence list.\n"
+                    #     )
 
                     if len(recurrence_list) == 0:
                         production_logger.info(f"ATTENTION: No recurrence has identified for gene {gene}! Monte-Carlo Simiatlion will be SKIPPED!\n",
@@ -1300,16 +1305,12 @@ def main(args: Optional[List[str]] = None):
                                 f"\n"
                                 f"  WARNING: Requested {options.nalign} alignments exceeds the current limit ({options.recur_limit}).\n"
                                 f"\n"
-                                f"   To save disk space and avoid performance issues, please use the multi-stage batch runner:\n"
-                                f"     ./multi-stage-recur.sh -n {options.nalign} -d {aln_path} -b <batch_size> [optional: -m <pval_adjust_method>]\n"
-                                f"\n"
-                                f"   This will perform {options.nalign} Monte Carlo simulations "
+                                f"   To save disk space and avoid performance issues, RECUR will run your request in batches "
                                 f"using the p-value adjustment method: {options.pval_adjust_method}\n"
                                 f"\n"
                                 f"   If you still want to run everything in one stage, you can override the limit with:\n"
                                 f"     --recur-limit {options.nalign} or -rl {options.nalign}\n"
                                 f"\n"
-                                f"  RECUR will now exit safely without running the simulation.\n"
                             )
 
                             production_logger.warning(
@@ -1322,11 +1323,28 @@ def main(args: Optional[List[str]] = None):
                                     "pval_adj_method": options.pval_adjust_method,
                                 },
                             )
-                            sys.exit(0)
+                            # sys.exit(0)
+                            options.multi_stage = True if not options.user_multi_stage else False
+                            options.disk_save = True if not options.user_disk_save else False
 
-                    
                     if options.just_recurrence:
-                        print("Done Computing Recurrence for Real Phylogeny.")
+
+                        # recurrence_count_file = filehandler.GetRecurrenceCountPhylogenyFN(recurrenceDir)
+                        # filewriter.WriteRecurrenceCountToFile(
+                        #     rec_loc_count_dict,
+                        #     recurrence_count_file
+                        # )
+
+                        recurrence_list_fn = filehandler.GetRecurrenceListRealPhylogenyFN(recurrenceDir)
+                        filewriter.WriteRecurrenceListRealPhylogeny(
+                            recurrence_list, 
+                            recurrence_list_fn
+                        )
+
+                        prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                        production_logger.info(prepend + "Done Computing Recurrence for Real Phylogeny.", extra={'to_file': True, 'to_console': True})
+                        production_logger.info(f"Recurrence for Real Phylogeny output: {recurrence_list_fn}", extra={'to_file': True, 'to_console': True})
+                    
                         util.PrintCitation()
                         sys.exit(0)
 
@@ -1334,19 +1352,27 @@ def main(args: Optional[List[str]] = None):
                         step2_info = f"Step3: Simulating Sequence Evolution with {options.nalign} replicates"
                     else:
                         step2_info = f"Step2: Simulating Sequence Evolution with {options.nalign} replicates"
+                    
+                    filehandler.CreateMCSDirectories(options)
+                    mcs_faDir = filehandler.mcs_dir
+                    mcs_alnDir = options.usr_mcs_alnDir if options.usr_mcs_alnDir else mcs_faDir
+                    
 
                     production_logger.info(step2_info, extra={'to_file': True, 'to_console': True})
                     production_logger.info("="*len(step2_info), extra={'to_file': True, 'to_console': True})
-                    step2_results_info = f"Results Directory: {filehandler.mcs_dir}\n"
+                    
+                    step2_results_info = f"Results Directory: {mcs_faDir[:-1]}_*" + os.sep + "\n" if options.multi_stage \
+                                         else f"Results Directory: {mcs_faDir}\n"
                     production_logger.info(step2_results_info, extra={'to_file': True, 'to_console': True})
 
-                    mcs_faDir = filehandler.mcs_dir
-                    if len(os.listdir(mcs_faDir)) != options.nalign or \
+
+                    num_mcs_files, mcs_count_file, mcs_fa_file, mcs_files, mcs_dirs = filereader.CheckMCSDir(base_dir)
+
+                    if num_mcs_files != options.nalign or \
                         (restart_step1 or restart_step2 or restart_step3) or override:
 
-                        if len(os.listdir(mcs_faDir)) != options.nalign and len(os.listdir(mcs_faDir)) > 0:
+                        if num_mcs_files != options.nalign and num_mcs_files > 0:
                             util.delete_files_in_directory(mcs_faDir)
-
 
                         msg = (
                             f"MCS Parameters | num_rec_tests={M} | num_mc_sims={options.nalign} | "
@@ -1374,7 +1400,6 @@ def main(args: Optional[List[str]] = None):
                         else:
                             raise ValueError("Root node of interest is None.")
                         
-
                         mcs_commands = run_commands.GetMCsimulationCommand(
                             output_prefix,
                             options.iqtree_nthreads,
@@ -1387,58 +1412,257 @@ def main(args: Optional[List[str]] = None):
                             iqtree_cmd_dict=options.iqtree_cmd_dict
                         )
                         
-                        # mcs_seed_loc = int(mcs_commands[0].split().index("--seed")) + 1
-                        # mcs_nalign_loc = int(mcs_commands[0].split().index("--num-alignments")) + 1
-                        # if options.multi_stage:
-                        #     mcs_commands[0].replace(mcs_commands[0][mcs_nalign_loc], str(options.nalign_batch))
+                        if options.multi_stage:
+                            mcs_seed_loc = int(mcs_commands[0].split().index("--seed")) + 1
+                            mcs_nalign_loc = int(mcs_commands[0].split().index("--num-alignments")) + 1
                             
-                        #     base_seed = int(mcs_commands[0].split()[mcs_seed_loc])
+                            mcs_commands[0] = mcs_commands[0].replace(mcs_commands[0].split()[mcs_nalign_loc], str(options.nalign_batch))
+                            base_seed = int(mcs_commands[0].split()[mcs_seed_loc])
 
-                        #     nbatch = options.nalign // options.nalign_batch
-                        #     res_nbatch = options.nalign - nbatch * options.nalign_batch
+                            nbatch = options.nalign // options.nalign_batch
+                            res_nbatch = options.nalign - nbatch * options.nalign_batch
 
-                        #     for i in range(nbatch):
-                        #         cmd_copy = mcs_commands[0][:]
-                        #         cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + i + 1))
-                        #         mcs_commands.append(cmd_copy)
+                            for i in range(nbatch):
+                                cmd_copy = mcs_commands[0][:]
+                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_nalign_loc], str(options.nalign_batch))
+                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + i + 1))
+                                mcs_commands.append(cmd_copy)
 
-                        #     if res_nbatch != 0:
-                        #         cmd_copy = mcs_commands[0][:]
-                        #         cmd_copy.replace(cmd_copy.split()[mcs_nalign_loc], str(res_nbatch))
-                        #         cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + nbatch + 1))
-                        #         mcs_commands.append(cmd_copy)
+                            if res_nbatch != 0:
+                                cmd_copy = mcs_commands[0][:]
+                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_nalign_loc], str(res_nbatch))
+                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + nbatch + 1))
+                                mcs_commands.append(cmd_copy)
 
                         if restart_step3:
                             if gene_tree is None and not restart_step2:
                                 production_logger.info("### Restart RECUR from Step3 ###\n", extra={'to_file': True, 'to_console': True})
                             elif gene_tree is not None and not restart_step1:
                                 production_logger.info("### Restart RECUR from Step2 ###\n", extra={'to_file': True, 'to_console': True})
+                        
+                        restart_step3 = True
 
                         prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                        production_logger.info(prepend + "Starting Monte-Carlo Simulation.", extra={'to_file': True, 'to_console': True})
+                        total_simulations = len(mcs_commands)
+                        if total_simulations > 1:
+                            mcs_start_msg = prepend + f"Starting Monte-Carlo Simulation in {total_simulations} batches."
+                        else:
+                            mcs_start_msg = prepend + "Starting Monte-Carlo Simulation."
+                        production_logger.info(mcs_start_msg, extra={'to_file': True, 'to_console': True})
+                        if len(mcs_commands) > 1 :
+                            production_logger.info("-" * len(mcs_start_msg) + "\n", extra={'to_file': True, 'to_console': True})
+                            
                         production_logger.info("Using %d RECUR thread(s), %d IQ-TREE thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads),
                                             extra={'to_file': True, 'to_console': False})
-                        production_logger.info("step2 iqtrees command: ", extra={'to_file': True, 'to_console': False})
-                        production_logger.info(f"{mcs_commands[0]}\n", extra={'to_file': True, 'to_console': False})
                         
-                        run_commands.RunCommand(
-                            mcs_commands,
-                            mcs_faDir,
-                            env=my_env,
-                            nthreads=options.recur_nthreads,
-                            delete_files=True,
-                            files_to_keep=["fasta", "fa"],
-                            fd_limit=options.fd_limit,
-                        )
-                        prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                        production_logger.info(prepend + "Monte-Carlo Simulation complete.\n", extra={'to_file': True, 'to_console': True})
+                        production_logger.info("step2 iqtrees command: ", extra={'to_file': True, 'to_console': False})
+
+                        for imcs, mcs_cmd in enumerate(mcs_commands):
+
+                            # mcs_nalign_loc = int(mcs_cmd.split().index("--num-alignments")) + 1
+                            # mcs_nalign = int(mcs_cmd.split()[mcs_nalign_loc])
+                            if imcs != 0:
+                                filehandler.CreateMCSDirectories(options)
+                                mcs_faDir = filehandler.mcs_dir
+                                mcs_alnDir = mcs_faDir
+                               
+                                output_prefix = os.path.join(mcs_faDir, identifier)
+                                mcs_cmd = mcs_cmd.replace(mcs_cmd.split()[2], output_prefix)
+                            
+                            production_logger.info(f"{mcs_cmd}", extra={'to_file': True, 'to_console': False})
+                       
+                            run_commands.RunCommand(
+                                [mcs_cmd],
+                                mcs_faDir,
+                                env=my_env,
+                                nthreads=options.recur_nthreads,
+                                delete_files=True,
+                                files_to_keep=["aln", "fasta", "fa", "faa"],
+                                fd_limit=options.fd_limit,
+                            )
+
+                            prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                            if len(mcs_commands) > 1:
+                                mcs_cmd_msg = prepend + f"Monte-Carlo Simulation the {imcs}th complete."
+                            else:
+                                mcs_cmd_msg = prepend + f"Monte-Carlo Simulation complete."
+
+                            # print(f"\r{mcs_cmd_msg}", end="", flush=True)
+                            # print()
+                            # if imcs == total_simulations - 1:
+                            production_logger.info(mcs_cmd_msg, extra={'to_file': True, 'to_console': True})
+                            
+                            if options.disk_save:
+                                
+                                afasta = random.choice(os.listdir(mcs_faDir))
+                                fasta_dict, _, _ = filereader.ReadAlignment(os.path.join(mcs_faDir, afasta))
+                                isnuc_fasta = util.CheckSequenceType([*fasta_dict.values()])
+
+                                # if not gene_tree:
+                                #     if len(mcs_commands) > 1:
+                                #         step3_info = f"Step4: Analysing recurrent substitutions for {imcs}th MCS"
+                                #     else:
+                                #         step3_info = f"Step4: Analysing recurrent substitutions"
+                                # else:
+                                #     if len(mcs_commands) > 1:
+                                #         step3_info = f"Step3: Analysing recurrent substitutions for {imcs}th MCS"
+                                #     else:
+                                #         step3_info = f"Step3: Analysing recurrent substitutions"
+
+                                # production_logger.info(step3_info, extra={'to_file': True, 'to_console': True})
+                                # production_logger.info("="*len(step3_info), extra={'to_file': True, 'to_console': True})
+                                # production_logger.info(f"Results Directory: {mcs_faDir}\n", extra={'to_file': True, 'to_console': True})
+
+                                imcs_results = parallel_task_manager.process_mcs_files_in_chunks(
+                                    mcs_alnDir,
+                                    parent_list,
+                                    child_list,
+                                    residue_dict,
+                                    options.nthreads,
+                                    isnuc_fasta,
+                                    options.sequence_type,
+                                    res_loc_list,
+                                    production_logger,
+                                    width,
+                                    dash_exist=dash_exist,
+                                    binary_sequence_dict=binary_combined_seq_dict,
+                                    update_cycle=options.update_cycle,
+                                    mcs_batch_size=options.mcs_batch_size
+                                )
+
+                                prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                                if len(mcs_commands) > 1:
+                                    mcs_recur_msg = prepend + f"Starting substitution matrices calculation for the {imcs}th simulated phylogeny."
+                                else:
+                                    mcs_recur_msg = prepend + "Starting substitution matrices calculation for simulated phylogeny."
+                                
+                                # print(f"\r{mcs_recur_msg}", end="", flush=True)
+                                # print()
+                                # if imcs == total_simulations - 1:
+                                production_logger.info(mcs_recur_msg, extra={'to_file': True, 'to_console': True})
+                                production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
+
+                                for file in util.iter_dir(mcs_alnDir):
+                                    file_path = os.path.join(mcs_alnDir, file)
+                                    if os.path.exists(file_path):
+                                        file_extension = file.rsplit(".")[-1]
+                                        if file_extension in {"aln", "fasta", "fa", "faa"}:
+                                            os.remove(file_path)
+                            
+                                filewriter.WriteMCSRecurrenceCountToFile(
+                                    imcs_results,
+                                    filehandler.mcs_dir
+                                )
+                                # print("NOTE: You are running one the disk saving mode!")
+
+                            prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                            if len(mcs_commands) > 1:
+                                smc_msg = prepend + f"Substitution matrices for the {imcs}th complete.\n"
+                            # else:
+                            #     smc_msg = prepend + f"Substitution matrices complete."
+                            
+                                # print(f"\r{smc_msg}", end="", flush=True)
+                                # print()
+                                # if imcs == total_simulations - 1:
+                                production_logger.info(smc_msg, extra={'to_file': True, 'to_console': True})
+
                     else:
-                        if gene_tree is None:
-                            production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip Step3.\n",
-                                                extra={'to_file': True, 'to_console': True})
+                            
+                        production_logger.info("NOTE: With the existing Monte-Carlo simulated files, RECUR will skip the MCS step.\n",
+                                                extra={'to_file': True, 'to_console': True})   
+                        
+                        if mcs_count_file and not mcs_fa_file:
+                            mcs_results = filereader.ReadMCSRecurrenceCount(mcs_files)
+
+                        elif not mcs_count_file and mcs_fa_file:
+
+                            afasta = random.choice(os.listdir(mcs_faDir))
+                            fasta_dict, _, _ = filereader.ReadAlignment(os.path.join(mcs_faDir, afasta))
+                            isnuc_fasta = util.CheckSequenceType([*fasta_dict.values()])
+
+                            if not gene_tree:
+                                step3_info = f"\nStep4: Analysing recurrent substitutions"
+                            else:
+                                step3_info = f"\nStep3: Analysing recurrent substitutions"
+                            production_logger.info(step3_info, extra={'to_file': True, 'to_console': True})
+                            production_logger.info("="*len(step3_info), extra={'to_file': True, 'to_console': True})
+                            production_logger.info(f"Results Directory: {recurrenceDir}\n", extra={'to_file': True, 'to_console': True})
+
+                            prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                            production_logger.info(prepend + "Starting substitution matrices calculation for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
+                            production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
+                            
+                            mcs_results = []
+                            for mcs_faDir in mcs_dirs:
+                                mcs_alnDir = options.usr_mcs_alnDir if options.usr_mcs_alnDir else mcs_faDir
+                                imcs_results = parallel_task_manager.process_mcs_files_in_chunks(
+                                    mcs_alnDir,
+                                    parent_list,
+                                    child_list,
+                                    residue_dict,
+                                    options.nthreads,
+                                    isnuc_fasta,
+                                    options.sequence_type,
+                                    res_loc_list,
+                                    production_logger,
+                                    width,
+                                    dash_exist=dash_exist,
+                                    binary_sequence_dict=binary_combined_seq_dict,
+                                    update_cycle=options.update_cycle,
+                                    mcs_batch_size=options.mcs_batch_size
+                                )
+                                mcs_results.extend(imcs_results)
+
+                    if restart_step3:
+                        _, _, _, mcs_files, mcs_dirs = filereader.CheckMCSDir(base_dir)
+
+                        if not gene_tree:
+                            step3_info = f"\nStep4: Analysing recurrent substitutions"
                         else:
-                            production_logger.info("NOTE: With the existing Monte-Carlo simulated *.fa files, RECUR will skip Step2.\n",
-                                                extra={'to_file': True, 'to_console': True})
+                            step3_info = f"\nStep3: Analysing recurrent substitutions"
+                    
+                        production_logger.info(step3_info, extra={'to_file': True, 'to_console': True})
+                        production_logger.info("="*len(step3_info), extra={'to_file': True, 'to_console': True})
+                        production_logger.info(f"Results Directory: {recurrenceDir}\n", extra={'to_file': True, 'to_console': True})
+
+                        if options.disk_save:
+
+                            mcs_results = filereader.ReadMCSRecurrenceCount(mcs_files)
+
+                        else:
+                            prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                            production_logger.info(prepend + "Starting substitution matrices calculation for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
+                            production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
+
+                            mcs_results = []
+                            for mcs_alnDir in mcs_dirs:
+                                mcs_alnDir = options.usr_mcs_alnDir if options.usr_mcs_alnDir else mcs_faDir
+                                
+                                afasta = random.choice(os.listdir(mcs_faDir))
+                                fasta_dict, _, _ = filereader.ReadAlignment(os.path.join(mcs_faDir, afasta))
+                                isnuc_fasta = util.CheckSequenceType([*fasta_dict.values()])
+                                
+                                imcs_results = parallel_task_manager.process_mcs_files_in_chunks(
+                                    mcs_alnDir,
+                                    parent_list,
+                                    child_list,
+                                    residue_dict,
+                                    options.nthreads,
+                                    isnuc_fasta,
+                                    options.sequence_type,
+                                    res_loc_list,
+                                    production_logger,
+                                    width,
+                                    dash_exist=dash_exist,
+                                    binary_sequence_dict=binary_combined_seq_dict,
+                                    update_cycle=options.update_cycle,
+                                    mcs_batch_size=options.mcs_batch_size
+                                )
+
+                                mcs_results.extend(imcs_results)
+                            
+                            prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                            production_logger.info(prepend + "Substitution matrices complete.")
 
                     for file in util.iter_dir(real_phyDir):
                         file_path = os.path.join(real_phyDir, file)
@@ -1446,67 +1670,30 @@ def main(args: Optional[List[str]] = None):
                             if file.endswith(".treefile.txt") or file.endswith(".treefile.log"):
                                 os.remove(file_path)
 
-                    afasta = random.choice(os.listdir(mcs_faDir))
-                    fasta_dict, _, _ = filereader.ReadAlignment(os.path.join(mcs_faDir, afasta))
-                    isnuc_fasta = util.CheckSequenceType([*fasta_dict.values()])
 
-                    if options.usr_mcs_alnDir:
-                        mcs_alnDir = options.usr_mcs_alnDir
-                    else:
-                        mcs_alnDir = mcs_faDir
-
-                    if not gene_tree:
-                        step3_info = f"Step4: Analysing recurrent substitutions"
-                    else:
-                        step3_info = f"Step3: Analysing recurrent substitutions"
-                    production_logger.info(step3_info, extra={'to_file': True, 'to_console': True})
-                    production_logger.info("="*len(step3_info), extra={'to_file': True, 'to_console': True})
-                    production_logger.info(f"Results Directory: {recurrenceDir}\n", extra={'to_file': True, 'to_console': True})
-
-                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + "Starting substitution matrices calculation for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
-                    production_logger.info("Using %d thread(s) for RECUR analysis" % options.nthreads, extra={'to_file': True, 'to_console': True})
-
-                    mcs_results = parallel_task_manager.process_mcs_files_in_chunks(
-                        mcs_alnDir,
-                        parent_list,
-                        child_list,
-                        residue_dict,
-                        options.nthreads,
-                        isnuc_fasta,
-                        options.sequence_type,
-                        res_loc_list,
-                        production_logger,
-                        width,
-                        dash_exist=dash_exist,
-                        binary_sequence_dict=binary_combined_seq_dict,
-                        update_cycle=options.update_cycle,
-                        mcs_batch_size=options.mcs_batch_size
-                    )
-
-                    prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                    production_logger.info(prepend + "Substitution matrices complete.")
+                    # prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                    # production_logger.info(prepend + "Substitution matrices complete.")
                     
-                    if options.disk_save:
-                        for file in util.iter_dir(mcs_alnDir):
-                            file_path = os.path.join(mcs_alnDir, file)
-                            if os.path.exists(file_path):
-                                if file.endswith(".fasta") or file.endswith(".fa"):
-                                    os.remove(file_path)
+                    # if options.disk_save:
+                    #     for file in util.iter_dir(mcs_alnDir):
+                    #         file_path = os.path.join(mcs_alnDir, file)
+                    #         if os.path.exists(file_path):
+                    #             if file.endswith(".fasta") or file.endswith(".fa"):
+                    #                 os.remove(file_path)
                     
-                        filewriter.WriteMCSRecurrenceCountToFile(
-                            mcs_results,
-                            filehandler.mcs_dir
-                        )
-                        print("NOTE: You are running one the disk saving mode!")
+                    #     filewriter.WriteMCSRecurrenceCountToFile(
+                    #         mcs_results,
+                    #         filehandler.mcs_dir
+                    #     )
+                    #     print("NOTE: You are running one the disk saving mode!")
                         
-                        if options.multi_stage:
-                            print(
-                                "If you don't wish to use `multi-stage-recur.sh`, "
-                                "you need to run `recur -f project_dir -cr -pam pval_adjust_method` "
-                                "to obtain the recurrence list.\n"
-                            )
-                            sys.exit(0)
+                    #     if options.multi_stage:
+                    #         print(
+                    #             "If you don't wish to use `multi-stage-recur.sh`, "
+                    #             "you need to run `recur -f project_dir -cr -pam pval_adjust_method` "
+                    #             "to obtain the recurrence list.\n"
+                    #         )
+                    #         sys.exit(0)
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Starting to compute p values.")
@@ -1539,6 +1726,13 @@ def main(args: Optional[List[str]] = None):
                     )
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "p values computing complete.", extra={'to_file': True, 'to_console': True})
+
+
+                    recurrence_count_file = filehandler.GetRecurrenceCountPhylogenyFN(base_dir)
+                    recurrence_list_fn = filehandler.GetRecurrenceListRealPhylogenyFN(base_dir)
+                    # os.remove(recurrence_count_file)
+                    # os.remove(recurrence_count_file)
+                
 
                     d_results = os.path.normpath(filehandler.GetResultsDirectory()) + os.path.sep
                     rec_results = os.path.normpath(filehandler.GetRecurrenceListFN(recurrenceDir))

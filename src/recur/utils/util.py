@@ -281,8 +281,8 @@ def CreateNewWorkingDirectory(baseDirectoryName: str,
                                         sequence_type,
                                         extended_filename)
     if keepprev:
-        dateStr = datetime.date.today().strftime("%b%d") if qDate else ""
-        baseDirectoryName = baseDirectoryName  + "." + dateStr
+        dateStr = "." + datetime.date.today().strftime("%b%d") if qDate else ""
+        baseDirectoryName = baseDirectoryName  + dateStr
         while os.path.exists(newDirectoryName):
             iAppend += 1
             newDirectoryName = GetDirectoryName(baseDirectoryName,

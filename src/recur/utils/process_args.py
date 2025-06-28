@@ -49,6 +49,8 @@ class Options(object):
         self.extended_filename = False
         self.disk_save = False
         self.multi_stage = False
+        self.user_disk_save = False
+        self.user_multi_stage = False
         self.compute_recurrence = False
         self.output_prefix = None
         self.gene_tree = None
@@ -92,6 +94,7 @@ class Options(object):
         self.nalign_batch = 1000
         self.recur_limit = 1000
         self.mc_error_control = False
+
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -674,8 +677,14 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         elif arg == "-ds" or arg == "--disk-save":
             options.disk_save = True
 
+        elif arg == "-uds" or arg == "--user-disk-save":
+            options.user_disk_save = True
+
         elif arg == "-ms" or arg == "--multi-stage":
             options.multi_stage = True
+
+        elif arg == "-ums" or arg == "--user-multi-stage":
+            options.user_multi_stage = True
 
         elif arg == "-coe" or arg == "--continue-on-error":
             options.continue_on_error = True
