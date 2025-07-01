@@ -39,7 +39,8 @@ class FileHandler(object):
             os.makedirs(self.wd_current, exist_ok=True)
 
     def CreateMCSDirectories(self, options: process_args.Options) -> None:
-        mcs_dir = self.rd1 + "Monte_Carlo_Similation"
+
+        mcs_dir = self.rd1 + "Monte_Carlo_Simulation"
         
         if options.disk_save:
             mcs_dir = util.CreateNewWorkingDirectory(mcs_dir,
@@ -387,26 +388,46 @@ class FileReader(object):
                 msa_binary[accession] = seq
 
         return msa_binary
-    
-    @staticmethod    
-    def ReadMCSRecurrenceCount(base_dir: str) -> List[Dict[Tuple[int, int, int], int]]:
-        mcs_count_files = []
+
+
+    @staticmethod
+    def CheckMCSDir(base_dir: str) -> Tuple[int, bool, bool, List[str], List[str]]:
+        
+        mcs_count_file = False
+        mcs_fa_file = False
+        mcs_files = []
+        mcs_dirs = []
+
         with os.scandir(base_dir) as entries:
             for entry in entries:
-                if entry.is_dir():
-                    if "Monte_Carlo_Similation" in entry.name:
-                        for file in os.listdir(entry):
-                            file_path = os.path.join(entry, file)
-                            mcs_count_files.append(file_path)
+                if entry.is_dir() and "Monte_Carlo_Simulation" in entry.name:
+                    mcs_dirs.append(entry.path)
+                    for file in os.listdir(entry.path):
+                        file_path = os.path.join(entry.path, file)
+
+                        if os.path.isfile(file_path):
+                            file_extension = file.rsplit(".", 1)[-1].lower()
+                            if file_extension == "tsv":
+                                mcs_count_file = True
+                            elif file_extension in {"aln", "fasta", "fa", "faa"}:
+                                mcs_fa_file = True 
+                            mcs_files.append(file_path)
+
+        return len(mcs_files), mcs_count_file, mcs_fa_file, mcs_files, mcs_dirs
+
+    
+    @staticmethod    
+    def ReadMCSRecurrenceCount(mcs_count_files: List[str]) -> List[Dict[Tuple[int, int, int], int]]:
 
         mcs_results = []
         for file in mcs_count_files:
+            if not file.endswith(".tsv"):
+                continue
             mcs_count_dict = {}
             with open(file) as reader:
                 for i, line in enumerate(reader):
                     if i == 0:
                         continue
-
                     res_loc, parent, child, count = map(int, line.strip().split("\t"))
                     mcs_count_dict[(res_loc, parent, child)] = count
             mcs_results.append(mcs_count_dict)
@@ -556,15 +577,27 @@ class FileWriter(object):
                 if isinstance(rec_list[0], int):
                     rec_list[0] += 1
                 writer.write("\t".join(map(str, rec_list)) + "\n")
+                rec_list[0] -= 1
 
     @staticmethod
     def WriteRecurrenceList(recurrence_list: List[List[Union[str, int, float]]],
                             outFilename: str,
                             options: process_args.Options,
                             ) -> None:
+        if options.pval_stats:
+            colname = [
+                'Site', 'Parent', 'Child', 'Recurrence',
+                "Reversion", "P-Value", "Adjusted P-Value",
+                f"CI {100 - options.significance_level*100:.0f} Lower", 
+                f"CI {100 - options.significance_level*100:.0f} Upper",
+                "Decision", "Robust", 
+                "AllSiteSubs",  "SiteComposition"
+            ]
 
-        colname = ['Site', 'Parent', 'Child', 'Recurrence',
-                   "Reversion", "P-Value", "AllSiteSubs",  "SiteComposition"]
+        else:
+            colname = ['Site', 'Parent', 'Child', 'Recurrence',
+                    "Reversion", "P-Value", "Adjusted P-Value",
+                    "AllSiteSubs",  "SiteComposition"]
 
         baseFileName = outFilename.rsplit(".", 1)[0] 
         if options.name == "":
@@ -585,3 +618,4 @@ class FileWriter(object):
                 if isinstance(rec_list[0], int):
                     rec_list[0] += 1
                 writer.write("\t".join(map(str, rec_list)) + "\n")
+                rec_list[0] -= 1

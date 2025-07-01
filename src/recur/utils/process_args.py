@@ -49,11 +49,13 @@ class Options(object):
         self.extended_filename = False
         self.disk_save = False
         self.multi_stage = False
+        self.user_disk_save = False
+        self.user_multi_stage = False
         self.compute_recurrence = False
         self.output_prefix = None
         self.gene_tree = None
         self.root_node = None
-        self.nalign = 1000
+        self.nalign = None
         self.mcs_batch_size = None
         self.outgroups = None
         self.bootstrap = 1000
@@ -81,6 +83,18 @@ class Options(object):
         self.iqtree_cmd_dict = {}
         self.branch_test = True
         self.binary_model = "GTR2"
+        self.significance_level = 0.05
+        self.pval_adjust_method = None
+        self.grid_cushion = False
+        self.relative_tolerance = 0.1
+        self.fdr_level = 0.05
+        self.site_dependence = False
+        self.pval_stats = False
+        self.just_recurrence = False
+        self.nalign_batch = 1000
+        self.recur_limit = 1000
+        self.mc_error_control = False
+
 
     def what(self) -> None:
         for k, v in self.__dict__.items():
@@ -234,6 +248,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         elif arg == "-kp" or arg == "--keep-prev-results":
             options.keepprev = True
 
+        elif arg == "-jr" or arg == "--just-recurrence":
+            options.just_recurrence = True
+
         elif arg == "-cr" or arg == "--compute-recurrence":
             options.compute_recurrence = True
 
@@ -245,6 +262,18 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-nbt" or arg == "--no-branch-test":
             options.branch_test = False
+
+        elif arg == "-gc" or arg == "--grid-cushion":
+            options.grid_cushion = True
+
+        elif arg == "-sd" or arg == "--site-dependence":
+            options.site_dependence = True
+
+        elif arg == "-ps" or arg == "--pval-stats":
+            options.pval_stats = True
+
+        elif arg == "-mce" or arg == "--mc-error-control":
+            options.mc_error_control = True
 
         elif arg == "-si" or arg == "--system-info":
             options.system_info = True
@@ -260,6 +289,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-uc" or arg == "--update-cycle":
             options.update_cycle = int(args.pop(0))
+
+        elif arg == "-rl" or arg == "--recur-limit":
+            options.recur_limit = int(args.pop(0))
 
         elif arg == "--seed":
             options.seed = int(args.pop(0))
@@ -411,6 +443,41 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
             options.mcs_batch_size = int(args.pop(0))
 
+        elif arg == "-sl" or arg == "--significance-level":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+
+            options.significance_level = float(args.pop(0))
+
+        elif arg == "-q" or arg == "--fdr-level":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+
+            options.fdr_level = float(args.pop(0))
+
+        elif arg == "-ret" or arg == "--relative-tolerance":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+
+            options.relative_tolerance = float(args.pop(0))
+
+        elif arg == "-pam" or arg == "--pval-adjust-method":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+            
+            pval_adjust_method = args.pop(0)
+
+            if pval_adjust_method not in ["bonferroni", "holm", "fdr_bh", "fdr_by", "fdr_tsbh"]:
+                pval_adjust_method = None
+                raise ValueError("Method must be bonferroni, holm, fdr_bh, "
+                             "fdr_by, or fdr_tsbh")
+
+            options.pval_adjust_method = pval_adjust_method
+
         elif arg == "-bb":
             if len(args) == 0:
                 print("Missing option for command line argument %s\n" % arg)
@@ -501,11 +568,17 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 util.Fail()
             options.root_node = args.pop(0)
 
-        elif arg == "--num-alignments":
+        elif arg == "-na" or arg == "--num-alignments":
             if len(args) == 0:
                 print("Missing option for command line argument %s\n" % arg)
                 util.Fail()
             options.nalign = int(args.pop(0))
+
+        elif arg == "-nb" or arg == "--alignments-batch-size":
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+            options.nalign_batch = int(args.pop(0))
 
         elif arg == "-t" or arg == "--nthreads":
             if len(args) == 0:
@@ -594,6 +667,9 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-h" or arg == "--help":
             helpinfo.PrintHelp()
+        
+        elif arg == "-hv" or arg == "--help-verbose":
+            helpinfo.PrintHelp(True)
 
         elif arg == "-efn" or arg == "--extended-filename":
             options.extended_filename = True
@@ -601,8 +677,14 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         elif arg == "-ds" or arg == "--disk-save":
             options.disk_save = True
 
+        elif arg == "-uds" or arg == "--user-disk-save":
+            options.user_disk_save = True
+
         elif arg == "-ms" or arg == "--multi-stage":
             options.multi_stage = True
+
+        elif arg == "-ums" or arg == "--user-multi-stage":
+            options.user_multi_stage = True
 
         elif arg == "-coe" or arg == "--continue-on-error":
             options.continue_on_error = True
