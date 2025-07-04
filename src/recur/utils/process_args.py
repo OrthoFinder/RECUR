@@ -464,7 +464,7 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
             options.relative_tolerance = float(args.pop(0))
 
-        elif arg == "-pam" or arg == "--pval-adjust-method":
+        elif arg == "-pam" or arg == "--pval-adj-method":
             if len(args) == 0:
                 print("Missing option for command line argument %s\n" % arg)
                 util.Fail()
@@ -503,7 +503,7 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 print("For more information please refer to: http://www.iqtree.org/doc/Substitution-Models")
                 util.Fail()
 
-        elif arg == "-b" or arg == "--binary-model":
+        elif arg == "-bm" or arg == "--binary-model":
             if len(args) == 0:
                 print("Missing option for command line argument %s\n" % arg)
                 util.Fail()
