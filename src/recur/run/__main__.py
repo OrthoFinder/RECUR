@@ -1413,26 +1413,30 @@ def main(args: Optional[List[str]] = None):
                         )
                         
                         if options.multi_stage:
-                            mcs_seed_loc = int(mcs_commands[0].split().index("--seed")) + 1
-                            mcs_nalign_loc = int(mcs_commands[0].split().index("--num-alignments")) + 1
-                            
-                            mcs_commands[0] = mcs_commands[0].replace(mcs_commands[0].split()[mcs_nalign_loc], str(options.nalign_batch))
-                            base_seed = int(mcs_commands[0].split()[mcs_seed_loc])
+                            cmd_tokens = mcs_commands[0].split()
+                            mcs_seed_loc = cmd_tokens.index("--seed") + 1
+                            mcs_nalign_loc = cmd_tokens.index("--num-alignments") + 1
 
+                            cmd_tokens[mcs_nalign_loc] = str(options.nalign_batch)
+                            base_seed = int(cmd_tokens[mcs_seed_loc])
+
+                            mcs_commands[0] = " ".join(cmd_tokens)
                             nbatch = options.nalign // options.nalign_batch
                             res_nbatch = options.nalign - nbatch * options.nalign_batch
-
+                            
                             for i in range(1, nbatch):
-                                cmd_copy = mcs_commands[0][:]
-                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_nalign_loc], str(options.nalign_batch))
-                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + i))
-                                mcs_commands.append(cmd_copy)
+                                cmd_tokens_copy = cmd_tokens[:]
+                                cmd_tokens_copy[mcs_nalign_loc] = str(options.nalign_batch)
+                                cmd_tokens_copy[mcs_seed_loc] = str(base_seed + i)
+                                cmd_str_copy = " ".join(cmd_tokens_copy)
+                                mcs_commands.append(cmd_str_copy)
 
                             if res_nbatch != 0:
-                                cmd_copy = mcs_commands[0][:]
-                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_nalign_loc], str(res_nbatch))
-                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + nbatch))
-                                mcs_commands.append(cmd_copy)
+                                cmd_tokens_copy = cmd_tokens[:]
+                                cmd_tokens_copy[mcs_nalign_loc] = str(res_nbatch)
+                                cmd_tokens_copy[mcs_seed_loc] = str(base_seed + nbatch)
+                                cmd_str_copy = " ".join(cmd_tokens_copy)
+                                mcs_commands.append(cmd_str_copy)
 
                         if restart_step3:
                             if gene_tree is None and not restart_step2:
