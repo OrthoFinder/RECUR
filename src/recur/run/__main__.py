@@ -1236,96 +1236,69 @@ def main(args: Optional[List[str]] = None):
 
                     res_loc_list = [int(res_list[0]) for res_list in recurrence_list]
                     
-                    if not restart_step3:
-                        if options.nalign is None:
-                            mcp_method, B = at.min_mcs(
-                                    M,
-                                    method=options.pval_adjust_method,
-                                    alpha=options.significance_level,
-                                    q=options.fdr_level,
-                                    rel_tol=options.relative_tolerance,
-                                    extra_grid_cushion=options.grid_cushion,
-                                    suspect_dependence=options.site_dependence,
-                                    mc_error_control=options.mc_error_control
-                                )
-                            
-                            options.nalign = B
-                            options.pval_adjust_method = mcp_method
-                        else:
-                            options.pval_adjust_method = at.method_selection(M, options.site_dependence)
-                        
-                        # mcs_info = (
-                        #     f"With {M} recurrence test, "
-                        #     f"{options.nalign} Monte Carlo Simulations will be conducted based on {options.pval_adjust_method} "
-                        #     f"(i.e., {at.METHODS_AVAILABLE[options.pval_adjust_method]}) adjustment method to adjust the p-values in multipletests.\n"
-                        # )
-                        # production_logger.info(mcs_info, extra={'to_file': False, 'to_console': True})
-                        
-
-                        plural_rec  = "substitution" if M == 1 else "substitutions"
-                        plural_sims = "simulation" if options.nalign == 1 else "simulations"
-
-                        mcs_info = (
-                            "Monte-Carlo Recurrence Analysis Parameters\n"
-                            "- Recurrence {label:<12} : {rec:,d} {plural_rec}\n"
-                            "- Monte-Carlo {plural_sims} : {sims:,d}\n"
-                            "- P-value adjust method   : {method_key} (i.e., {method_readable})\n"
-                        ).format(
-                            label="tests",
-                            rec=M,
-                            plural_rec=plural_rec,
-                            sims=options.nalign,
-                            plural_sims=plural_sims,
-                            method_readable=at.METHODS_AVAILABLE[options.pval_adjust_method],
-                            method_key=options.pval_adjust_method,
-                        )
-                        production_logger.info(
-                            mcs_info,
-                            extra={"to_file": False, "to_console": True},
-                        )
-
-                        msg = (
-                            f"MCS Parameters | num_rec_tests={M} | num_mc_sims={options.nalign} | "
-                            f"pval_adj_method={options.pval_adjust_method}"
-                            "\n"
-                        )
-                        production_logger.info(
-                            msg,
-                            extra={
-                                "to_file": True,
-                                "to_console": False,
-                                "num_rec_tests": M,
-                                "num_mc_sims": options.nalign,
-                                "pval_adj_method": options.pval_adjust_method,
-                            },
-                        )
-
-                        if options.nalign > options.recur_limit and not options.just_recurrence:
-                            warning_msg = (
-                                f"\n"
-                                f"  WARNING: Requested {options.nalign} alignments exceeds the current limit ({options.recur_limit}).\n"
-                                f"\n"
-                                f"   To save disk space and avoid performance issues, RECUR will run your request in batches "
-                                f"using the p-value adjustment method: {options.pval_adjust_method}\n"
-                                f"\n"
-                                f"   If you still want to run everything in one stage, you can override the limit with:\n"
-                                f"     --recur-limit {options.nalign} or -rl {options.nalign}\n"
-                                f"\n"
+                    # if not restart_step3:
+                    if options.nalign is None:
+                        mcp_method, B = at.min_mcs(
+                                M,
+                                method=options.pval_adjust_method,
+                                alpha=options.significance_level,
+                                q=options.fdr_level,
+                                rel_tol=options.relative_tolerance,
+                                extra_grid_cushion=options.grid_cushion,
+                                suspect_dependence=options.site_dependence,
+                                mc_error_control=options.mc_error_control
                             )
+                        
+                        options.nalign = B
+                        options.pval_adjust_method = mcp_method
+                    else:
+                        options.pval_adjust_method = at.method_selection(M, options.site_dependence)
+                    
+                    # mcs_info = (
+                    #     f"With {M} recurrence test, "
+                    #     f"{options.nalign} Monte Carlo Simulations will be conducted based on {options.pval_adjust_method} "
+                    #     f"(i.e., {at.METHODS_AVAILABLE[options.pval_adjust_method]}) adjustment method to adjust the p-values in multipletests.\n"
+                    # )
+                    # production_logger.info(mcs_info, extra={'to_file': False, 'to_console': True})
+                    
 
-                            production_logger.warning(
-                                warning_msg,
-                                extra={
-                                    "to_file": True,
-                                    "to_console": True,
-                                    "num_rec_tests":   M,
-                                    "num_mc_sims":     options.nalign,
-                                    "pval_adj_method": options.pval_adjust_method,
-                                },
-                            )
-                            # sys.exit(0)
-                            options.multi_stage = True if not options.user_multi_stage else False
-                            options.disk_save = True if not options.user_disk_save else False
+                    plural_rec  = "substitution" if M == 1 else "substitutions"
+                    plural_sims = "simulation" if options.nalign == 1 else "simulations"
+
+                    mcs_info = (
+                        "Monte-Carlo Recurrence Analysis Parameters\n"
+                        "- Recurrence {label:<12} : {rec:,d} {plural_rec}\n"
+                        "- Monte-Carlo {plural_sims} : {sims:,d}\n"
+                        "- P-value adjust method   : {method_key} (i.e., {method_readable})\n"
+                    ).format(
+                        label="tests",
+                        rec=M,
+                        plural_rec=plural_rec,
+                        sims=options.nalign,
+                        plural_sims=plural_sims,
+                        method_readable=at.METHODS_AVAILABLE[options.pval_adjust_method],
+                        method_key=options.pval_adjust_method,
+                    )
+                    production_logger.info(
+                        mcs_info,
+                        extra={"to_file": False, "to_console": True},
+                    )
+
+                    msg = (
+                        f"MCS Parameters | num_rec_tests={M} | num_mc_sims={options.nalign} | "
+                        f"pval_adj_method={options.pval_adjust_method}"
+                        "\n"
+                    )
+                    production_logger.info(
+                        msg,
+                        extra={
+                            "to_file": True,
+                            "to_console": False,
+                            "num_rec_tests": M,
+                            "num_mc_sims": options.nalign,
+                            "pval_adj_method": options.pval_adjust_method,
+                        },
+                    )
 
                     if options.just_recurrence:
 
@@ -1352,11 +1325,38 @@ def main(args: Optional[List[str]] = None):
                         step2_info = f"Step3: Simulating Sequence Evolution with {options.nalign} replicates"
                     else:
                         step2_info = f"Step2: Simulating Sequence Evolution with {options.nalign} replicates"
-                    
+
+                    if options.nalign > options.recur_limit and not options.just_recurrence:
+                        warning_msg = (
+                            f"\n"
+                            f"  WARNING: Requested {options.nalign} alignments exceeds the current limit ({options.recur_limit}).\n"
+                            f"\n"
+                            f"   To save disk space and avoid performance issues, RECUR will run your request in batches "
+                            f"using the p-value adjustment method: {options.pval_adjust_method}\n"
+                            f"\n"
+                            f"   If you still want to run everything in one stage, you can override the limit with:\n"
+                            f"     --recur-limit {options.nalign} or -rl {options.nalign}\n"
+                            f"\n"
+                        )
+
+                        production_logger.warning(
+                            warning_msg,
+                            extra={
+                                "to_file": True,
+                                "to_console": True,
+                                "num_rec_tests":   M,
+                                "num_mc_sims":     options.nalign,
+                                "pval_adj_method": options.pval_adjust_method,
+                            },
+                        )
+                        # sys.exit(0)
+                        options.multi_stage = True if not options.user_multi_stage else False
+                        options.disk_save = True if not options.user_disk_save else False
+
+
                     filehandler.CreateMCSDirectories(options)
                     mcs_faDir = filehandler.mcs_dir
                     mcs_alnDir = options.usr_mcs_alnDir if options.usr_mcs_alnDir else mcs_faDir
-                    
 
                     production_logger.info(step2_info, extra={'to_file': True, 'to_console': True})
                     production_logger.info("="*len(step2_info), extra={'to_file': True, 'to_console': True})
@@ -1374,21 +1374,21 @@ def main(args: Optional[List[str]] = None):
                         if num_mcs_files != options.nalign and num_mcs_files > 0:
                             util.delete_files_in_directory(mcs_faDir)
 
-                        msg = (
-                            f"MCS Parameters | num_rec_tests={M} | num_mc_sims={options.nalign} | "
-                            f"pval_adj_method={options.pval_adjust_method}"
-                            "\n"
-                        )
-                        production_logger.info(
-                            msg,
-                            extra={
-                                "to_file": True,
-                                "to_console": False,
-                                "num_rec_tests":   M,
-                                "num_mc_sims":     options.nalign,
-                                "pval_adj_method": options.pval_adjust_method,
-                            },
-                        )
+                        # msg = (
+                        #     f"MCS Parameters | num_rec_tests={M} | num_mc_sims={options.nalign} | "
+                        #     f"pval_adj_method={options.pval_adjust_method}"
+                        #     "\n"
+                        # )
+                        # production_logger.info(
+                        #     msg,
+                        #     extra={
+                        #         "to_file": True,
+                        #         "to_console": False,
+                        #         "num_rec_tests":   M,
+                        #         "num_mc_sims":     options.nalign,
+                        #         "pval_adj_method": options.pval_adjust_method,
+                        #     },
+                        # )
 
                         identifier = "rooted_" + gene + "_alisim"
                         output_prefix = os.path.join(mcs_faDir, identifier)
@@ -1425,13 +1425,13 @@ def main(args: Optional[List[str]] = None):
                             for i in range(1, nbatch):
                                 cmd_copy = mcs_commands[0][:]
                                 cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_nalign_loc], str(options.nalign_batch))
-                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + i + 1))
+                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + i))
                                 mcs_commands.append(cmd_copy)
 
                             if res_nbatch != 0:
                                 cmd_copy = mcs_commands[0][:]
                                 cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_nalign_loc], str(res_nbatch))
-                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + nbatch + 1))
+                                cmd_copy = cmd_copy.replace(cmd_copy.split()[mcs_seed_loc], str(base_seed + nbatch))
                                 mcs_commands.append(cmd_copy)
 
                         if restart_step3:
