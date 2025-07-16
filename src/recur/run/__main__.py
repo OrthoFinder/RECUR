@@ -15,6 +15,7 @@ import time
 import traceback
 import warnings
 from collections import Counter
+from collections import defaultdict
 # from concurrent.futures import ProcessPoolExecutor, as_completed
 # from functools import partial
 from typing import Dict, List, Optional, Tuple, Union
@@ -562,27 +563,58 @@ def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
 
 #     return results
 
+# def mcs_count_greater(
+#         mcs_results: List[Dict[Tuple[int, int, int], int]],
+#         recurrence_list: List[List[Union[str, int, float]]],
+#         residue_dict: Dict[str, int],
+#     ) -> List[int]:
+#     try:
+#         count_greater_list = []
+#         for rec_list in recurrence_list:
+#             rec_loc = int(rec_list[0])
+#             parent = str(rec_list[1])
+#             child = str(rec_list[2])
+#             recurrence = int(rec_list[3])
+
+#             count_greater = 0
+#             for mcs_count_dict in mcs_results:
+#                 mcs_rec = mcs_count_dict.get((rec_loc, residue_dict[parent], residue_dict[child]))
+#                 if mcs_rec is not None:
+#                     if mcs_rec >= recurrence:
+#                         count_greater += 1
+            
+#             count_greater_list.append(count_greater)
+
+#     except Exception as e:
+#         error_msg = f"ERROR during compute_p_values: {e}"
+#         print(error_msg)
+#         print(traceback.format_exc())
+#     finally:
+#         return count_greater_list
+    
+
 def mcs_count_greater(
         mcs_results: List[Dict[Tuple[int, int, int], int]],
         recurrence_list: List[List[Union[str, int, float]]],
         residue_dict: Dict[str, int],
     ) -> List[int]:
-    try:
-        count_greater_list = []
-        for rec_list in recurrence_list:
-            rec_loc = int(rec_list[0])
-            parent = str(rec_list[1])
-            child = str(rec_list[2])
-            recurrence = int(rec_list[3])
 
-            count_greater = 0
-            for mcs_count_dict in mcs_results:
-                mcs_rec = mcs_count_dict.get((rec_loc, residue_dict[parent], residue_dict[child]))
-                if mcs_rec is not None:
-                    if mcs_rec >= recurrence:
-                        count_greater += 1
-            
-            count_greater_list.append(count_greater)
+    try:
+        key2counts: Dict[Tuple[int, int, int], List[int]] = defaultdict(list)
+        for d in mcs_results:
+            for key, value in d.items():
+                key2counts[key].append(value)
+
+        count_greater_list: List[int] = []
+        for rec_list in recurrence_list:
+            key = (
+                int(rec_list[0]),
+                residue_dict[str(rec_list[1])],
+                residue_dict[str(rec_list[2])],
+            )
+            counts = key2counts.get(key, [])
+            count_greater_list.append(sum(c >= int(rec_list[3]) for c in counts))
+        return count_greater_list
 
     except Exception as e:
         error_msg = f"ERROR during compute_p_values: {e}"
@@ -1632,7 +1664,6 @@ def main(args: Optional[List[str]] = None):
                         if options.disk_save:
 
                             mcs_results = filereader.ReadMCSRecurrenceCount(mcs_files)
-
                         else:
                             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                             production_logger.info(prepend + "Starting substitution matrices calculation for simulated phylogeny.", extra={'to_file': True, 'to_console': True})
