@@ -6,6 +6,7 @@ import logging.config
 import os
 import re
 import sys
+import shutil
 import traceback
 from importlib import resources as impresources
 from typing import Dict, Iterator, List, Optional, Tuple
@@ -96,15 +97,16 @@ def log_memory_usage(tag: str = "", production_logger: Optional[logging.Logger] 
     else:
         print(f"Memory usage {tag}: {mem:.2f} GB\n")
 
-def delete_files_in_directory(dirpath: str) -> None:
-   try:
-     with os.scandir(dirpath) as entries:
-       for entry in entries:
-         if entry.is_file():
-            os.unlink(entry.path)
-   except OSError:
-     print("ERROR occurred while deleting files.")
-     raise
+def delete_mcs_files_in_directory(dirpath: str) -> None:
+    try:
+        with os.scandir(dirpath) as entries:
+            for entry in entries:
+                if "Monte_Carlo_Simulation" in entry.name and entry.is_dir():
+                    shutil.rmtree(entry.path)  # Recursively delete the directory
+                    print(f"Deleted directory: {entry.path}")
+    except OSError as e:
+        print(f"ERROR occurred while deleting files: {e}")
+        raise
 
 def print_centered_text(width: int, text: str) -> None:
     text_length = len(text)
@@ -270,25 +272,31 @@ def GetDirectoryName(baseDirName: str,
         else:
             return baseDirName + ("_%d" % i) + "_" + extension + os.sep
 
-def CreateNewWorkingDirectory(baseDirectoryName: str,
-                              sequence_type: str,
-                              qDate: bool = True,
-                              extended_filename: bool = False,
-                              keepprev: bool = False) -> str:
+def CreateNewWorkingDirectory(
+        baseDirectoryName: str,
+        sequence_type: str,
+        qDate: bool = True,
+        extended_filename: bool = False,
+        keepprev: bool = False
+    ) -> str:
     iAppend = 0
-    newDirectoryName = GetDirectoryName(baseDirectoryName,
-                                        iAppend,
-                                        sequence_type,
-                                        extended_filename)
+    newDirectoryName = GetDirectoryName(
+        baseDirectoryName,
+        iAppend,
+        sequence_type,
+        extended_filename
+    )
     if keepprev:
         dateStr = "." + datetime.date.today().strftime("%b%d") if qDate else ""
         baseDirectoryName = baseDirectoryName  + dateStr
         while os.path.exists(newDirectoryName):
             iAppend += 1
-            newDirectoryName = GetDirectoryName(baseDirectoryName,
-                                                iAppend,
-                                                sequence_type,
-                                                extended_filename)
+            newDirectoryName = GetDirectoryName(
+                baseDirectoryName,
+                iAppend,
+                sequence_type,
+                extended_filename
+            )
 
     os.makedirs(newDirectoryName, exist_ok=True)
 

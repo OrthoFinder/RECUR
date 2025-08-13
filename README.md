@@ -15,8 +15,7 @@ Comprehensive installation and usage documentation is available on the [RECUR ho
 
 ## Citations
 
-*Elizabeth HJ Robbins, Yi Liu, Steven Kelly. 2025*. **RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments** bioRxiv. [![DOI:10.1101/2025.04.29.651261](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1101/2025.04.29.651261)
-
+*Elizabeth HJ Robbins, Yi Liu, Steven Kelly. 2025*. **RECUR: Identifying recurrent amino acid substitutions from multiple sequence alignments** bioRxiv. [![DOI:10.1101/2025.04.29.651261](https://img.shields.io/badge/DOI-10.1101%2F2025.04.29.651261-blue)](https://doi.org/10.1101/2025.04.29.651261)
 ## Credits and Acknowledgements
 
 This is a software developed by the [Steven Kelly Lab](http://www.stevekellylab.com/).

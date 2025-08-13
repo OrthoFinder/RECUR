@@ -280,13 +280,14 @@ def ParentChildRelation(treefile: str,
         return root_node, outgroup_squences, parent_list, child_list, error_msg
 
 
-def count_mutations(parent_list: List[str],
-                    child_list: List[str],
-                    sequence_dict: Dict[str, str],
-                    residue_dict: Dict[str, int],
-                    dash_exist: bool = False,
-                    binary_sequence_dict: Optional[Dict[str, str]] = None
-                    ) -> Counter[Tuple[int, int, int]]:
+def count_mutations(
+        parent_list: List[str],
+        child_list: List[str],
+        sequence_dict: Dict[str, str],
+        residue_dict: Dict[str, int],
+        dash_exist: bool = False,
+        binary_sequence_dict: Optional[Dict[str, str]] = None
+    ) -> Counter[Tuple[int, int, int]]:
 
     parent_num_list = [
         [residue_dict.get(res, 0) for res in sequence_dict[parent]]
@@ -907,7 +908,7 @@ def main(args: Optional[List[str]] = None):
                     restart_step1 = False
                     restart_step2 = False
                     restart_step3 = False
-                    override = options.override
+                    override = False if any(rs for rs in [restart_step1, restart_step2, restart_step3]) else options.override
 
                     gene_tree = options.gene_tree[gene] if isinstance(options.gene_tree, dict) else None
                     if gene_tree is not None:
@@ -980,10 +981,8 @@ def main(args: Optional[List[str]] = None):
                             if gene_tree is None:
                                 restart_step2 = True
 
-                        if restart_step1 or not override:
+                        if restart_step1 or override:
                             production_logger.info("### Restart RECUR from Step1 ###\n", extra={'to_file': True, 'to_console': True})
-
-                        if override or restart_step1:
                             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                             production_logger.info(prepend + "Running IQ-TREE to build the real phylogeny", extra={'to_file': True, 'to_console': True})
                             production_logger.info("Using %d RECUR thread(s), %d IQ-TREE thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads), extra={'to_file': True, 'to_console': True})
@@ -1385,26 +1384,27 @@ def main(args: Optional[List[str]] = None):
                         options.multi_stage = True if not options.user_multi_stage else False
                         options.disk_save = True if not options.user_disk_save else False
 
-
-                    filehandler.CreateMCSDirectories(options)
-                    mcs_faDir = filehandler.mcs_dir
-                    mcs_alnDir = options.usr_mcs_alnDir if options.usr_mcs_alnDir else mcs_faDir
-
-                    production_logger.info(step2_info, extra={'to_file': True, 'to_console': True})
-                    production_logger.info("="*len(step2_info), extra={'to_file': True, 'to_console': True})
-                    
-                    step2_results_info = f"Results Directory: {mcs_faDir[:-1]}_*" + os.sep + "\n" if options.multi_stage \
-                                         else f"Results Directory: {mcs_faDir}\n"
-                    production_logger.info(step2_results_info, extra={'to_file': True, 'to_console': True})
-
-
+     
                     num_mcs_files, mcs_count_file, mcs_fa_file, mcs_files, mcs_dirs = filereader.CheckMCSDir(base_dir)
 
-                    if num_mcs_files != options.nalign or \
-                        (restart_step1 or restart_step2 or restart_step3) or override:
+ 
+                    production_logger.info(step2_info, extra={'to_file': True, 'to_console': True})
+                    production_logger.info("="*len(step2_info), extra={'to_file': True, 'to_console': True})
+                   
 
-                        if num_mcs_files != options.nalign and num_mcs_files > 0:
-                            util.delete_files_in_directory(mcs_faDir)
+                    if (not mcs_count_file) and (not mcs_fa_file) or (restart_step1 or restart_step2 or restart_step3) or override:
+                        # if num_mcs_files != options.nalign and num_mcs_files > 0:
+                        if num_mcs_files > 0:
+                            util.delete_mcs_files_in_directory(results_dir)
+                            print()
+
+                        filehandler.CreateMCSDirectories(options)
+                        mcs_faDir = filehandler.mcs_dir
+                        mcs_alnDir = options.usr_mcs_alnDir if options.usr_mcs_alnDir else mcs_faDir
+
+                        step2_results_info = f"Results Directory: {mcs_faDir[:-1]}_*" + os.sep + "\n" if options.multi_stage \
+                                            else f"Results Directory: {mcs_faDir}\n"
+                        production_logger.info(step2_results_info, extra={'to_file': True, 'to_console': True})
 
                         # msg = (
                         #     f"MCS Parameters | num_rec_tests={M} | num_mc_sims={options.nalign} | "
@@ -1477,7 +1477,7 @@ def main(args: Optional[List[str]] = None):
                                 production_logger.info("### Restart RECUR from Step2 ###\n", extra={'to_file': True, 'to_console': True})
                         
                         restart_step3 = True
-
+                        
                         prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                         total_simulations = len(mcs_commands)
                         if total_simulations > 1:
@@ -1603,10 +1603,12 @@ def main(args: Optional[List[str]] = None):
                                 production_logger.info(smc_msg, extra={'to_file': True, 'to_console': True})
 
                     else:
-                            
+                        mcs_faDir = mcs_dirs[0]
+                        mcs_alnDir = options.usr_mcs_alnDir if options.usr_mcs_alnDir else mcs_faDir
+            
                         production_logger.info("NOTE: With the existing Monte-Carlo simulated files, RECUR will skip the MCS step.\n",
                                                 extra={'to_file': True, 'to_console': True})   
-                        
+                        options.nalign = num_mcs_files
                         if mcs_count_file and not mcs_fa_file:
                             mcs_results = filereader.ReadMCSRecurrenceCount(mcs_files)
 
@@ -1662,7 +1664,6 @@ def main(args: Optional[List[str]] = None):
                         production_logger.info(f"Results Directory: {recurrenceDir}\n", extra={'to_file': True, 'to_console': True})
 
                         if options.disk_save:
-
                             mcs_results = filereader.ReadMCSRecurrenceCount(mcs_files)
                         else:
                             prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
@@ -1766,8 +1767,6 @@ def main(args: Optional[List[str]] = None):
                     recurrence_count_file = filehandler.GetRecurrenceCountPhylogenyFN(base_dir)
                     recurrence_list_fn = filehandler.GetRecurrenceListRealPhylogenyFN(base_dir)
                     # os.remove(recurrence_count_file)
-                    # os.remove(recurrence_count_file)
-                
 
                     d_results = os.path.normpath(filehandler.GetResultsDirectory()) + os.path.sep
                     rec_results = os.path.normpath(filehandler.GetRecurrenceListFN(recurrenceDir))

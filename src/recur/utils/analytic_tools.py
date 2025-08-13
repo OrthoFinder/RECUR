@@ -65,7 +65,7 @@ def cp_ci_vec(R: List[int], B: int, alpha=0.05) -> Tuple[float, float]:
     lower = np.where(
         R == 0,
         0.0,                                     # CI lower bound is exactly 0
-        beta.ppf(alpha / 2,  R,     B - R + 1),
+        beta.ppf(alpha / 2,  R, B - R + 1),
     )
 
     upper = np.where(

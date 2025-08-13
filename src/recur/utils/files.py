@@ -43,11 +43,13 @@ class FileHandler(object):
         mcs_dir = self.rd1 + "Monte_Carlo_Simulation"
         
         if options.disk_save:
-            mcs_dir = util.CreateNewWorkingDirectory(mcs_dir,
-                                                    options.sequence_type,
-                                                    qDate=False,
-                                                    extended_filename=False,
-                                                    keepprev=True)
+            mcs_dir = util.CreateNewWorkingDirectory(
+                mcs_dir,
+                options.sequence_type,
+                qDate=False,
+                extended_filename=False,
+                keepprev=True
+            )
         self.mcs_dir = mcs_dir 
         if not os.path.exists(self.mcs_dir):
             os.makedirs(self.mcs_dir, exist_ok=True)

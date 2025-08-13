@@ -77,7 +77,7 @@ class Options(object):
         self.binary_blfix = False
         self.update_cycle = None
         self.system_info = False
-        self.override = True
+        self.override = False
         self.project_dir = None
         self.continue_on_error = False
         self.iqtree_cmd_dict = {}
@@ -278,8 +278,8 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
         elif arg == "-si" or arg == "--system-info":
             options.system_info = True
 
-        elif arg == "--skipall":
-            options.override = False
+        elif arg == "--override":
+            options.override = True
         
         elif arg == "--show-path":
             options.show_iqtree_path = True
