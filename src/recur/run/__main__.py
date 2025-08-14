@@ -904,6 +904,17 @@ def main(args: Optional[List[str]] = None):
                         elif file_extension == "iqtree":
                             exist_iqtree = True
                             check_exist += 1
+                    
+                    indel_exist_treefile = False
+                    indel_exist_state = False
+                    if dash_exist:
+                        indel_phyDir = filehandler.GetBinaryPhylogenyDir()
+                        for file in util.iter_dir(indel_phyDir):
+                            file_extension = file.rsplit(".", 1)[1]
+                            if file_extension == "state":
+                                indel_exist_state = True
+                            elif file_extension == "treefile":
+                                indel_exist_treefile = True
 
                     restart_step1 = False
                     restart_step2 = False
@@ -1133,38 +1144,44 @@ def main(args: Optional[List[str]] = None):
                     if not dash_exist:
                         binary_combined_seq_dict: Dict[str, str] = {}
                     else:
-                        prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                        production_logger.info(prepend + "Starting ancestral indel estimation.", extra={'to_file': True, 'to_console': True})
-
                         binary_alignment_dict = util.ConvertToBinary(alignment_dict)
                         binary_aln_path = filehandler.GetBinarySeqsFN()
-                        filewriter.WriteSeqsToAln(binary_alignment_dict, binary_aln_path)
+                        if restart_step1 or restart_step2 or not indel_exist_state or override:
+                            prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                            production_logger.info(prepend + "Starting ancestral indel estimation.", extra={'to_file': True, 'to_console': True})
+                            
+                            filewriter.WriteSeqsToAln(binary_alignment_dict, binary_aln_path)
 
-                        binary_tree_commands = run_commands.GetGeneTreeBuildCommands(
-                            [binary_aln_path],
-                            filehandler.GetBinaryPhylogenyDir(),
-                            options.binary_model,
-                            options.iqtree_nthreads,
-                            phy_seed=options.seed,
-                            gene_tree=treefile,
-                            asr=True,
-                            fix_branch_length=options.binary_blfix,
-                            iqtree_version=options.iqtree_version,
-                            iqtree_cmd_dict=options.iqtree_cmd_dict
-                        )
+                            binary_tree_commands = run_commands.GetGeneTreeBuildCommands(
+                                [binary_aln_path],
+                                filehandler.GetBinaryPhylogenyDir(),
+                                options.binary_model,
+                                options.iqtree_nthreads,
+                                phy_seed=options.seed,
+                                gene_tree=treefile,
+                                asr=True,
+                                fix_branch_length=options.binary_blfix,
+                                iqtree_version=options.iqtree_version,
+                                iqtree_cmd_dict=options.iqtree_cmd_dict
+                            )
 
-                        production_logger.info(f"{options.iqtree_version} ancestral indel estimation command: ",  extra={'to_file': True, 'to_console': False})
-                        production_logger.info(f"{binary_tree_commands[0]}\n", extra={'to_file': True, 'to_console': False})
+                            production_logger.info(f"{options.iqtree_version} ancestral indel estimation command: ",  extra={'to_file': True, 'to_console': False})
+                            production_logger.info(f"{binary_tree_commands[0]}\n", extra={'to_file': True, 'to_console': False})
 
-                        run_commands.RunCommand(
-                            binary_tree_commands,
-                            filehandler.GetBinaryPhylogenyDir(),
-                            env=my_env,
-                            nthreads=options.recur_nthreads,
-                            delete_files=True,
-                            files_to_keep=["state", "treefile", "aln"],
-                            fd_limit=options.fd_limit
-                        )
+                            run_commands.RunCommand(
+                                binary_tree_commands,
+                                filehandler.GetBinaryPhylogenyDir(),
+                                env=my_env,
+                                nthreads=options.recur_nthreads,
+                                delete_files=True,
+                                files_to_keep=["state", "treefile", "aln"],
+                                fd_limit=options.fd_limit
+                            )
+                            prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
+                            production_logger.info(prepend + "Ancestral indel estimation complete.\n", extra={'to_file': True, 'to_console': True})
+                        
+                        else:
+                            production_logger.info("NOTE: with the existing indel statefile, RECUR will skip ancestral indel estimation\n", extra={'to_file': True, 'to_console': True})
 
                         binary_statefile = filehandler.GetBinaryStateFileFN()
 
@@ -1174,8 +1191,6 @@ def main(args: Optional[List[str]] = None):
                         binary_node_seqs_fn = filehandler.GetBinaryNodeSeqsFN()
                         filewriter.WriteSeqsToAln(binary_node_seq_dict, binary_node_seqs_fn)
 
-                        prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
-                        production_logger.info(prepend + "Ancestral indel estimation complete.\n", extra={'to_file': True, 'to_console': True})
                     # # ------------------------------------------------------------
 
                     alignment_dict.clear()
