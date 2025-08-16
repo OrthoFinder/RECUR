@@ -582,10 +582,11 @@ class FileWriter(object):
                 rec_list[0] -= 1
 
     @staticmethod
-    def WriteRecurrenceList(recurrence_list: List[List[Union[str, int, float]]],
-                            outFilename: str,
-                            options: process_args.Options,
-                            ) -> None:
+    def WriteRecurrenceList(
+        recurrence_list: List[List[Union[str, int, float]]],
+        outFilename: str,
+        options: process_args.Options,
+    ) -> None:
         if options.pval_stats:
             colname = [
                 'Site', 'Parent', 'Child', 'Recurrence',

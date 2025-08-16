@@ -1281,7 +1281,7 @@ def main(args: Optional[List[str]] = None):
                         continue
 
                     res_loc_list = [int(res_list[0]) for res_list in recurrence_list]
-                    
+                    print(f"Number of recurrent list: {M}")
                     # if not restart_step3:
                     if options.nalign is None:
                         mcp_method, B = at.min_mcs(
@@ -1667,8 +1667,8 @@ def main(args: Optional[List[str]] = None):
                                 mcs_results.extend(imcs_results)
 
                     if restart_step3:
-                        _, _, _, mcs_files, mcs_dirs = filereader.CheckMCSDir(base_dir)
-
+                        num_mcs_files, _, _, mcs_files, mcs_dirs = filereader.CheckMCSDir(base_dir)
+                        options.nalign = num_mcs_files
                         if not gene_tree:
                             step3_info = f"\nStep4: Analysing recurrent substitutions"
                         else:
@@ -1748,16 +1748,19 @@ def main(args: Optional[List[str]] = None):
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Starting to compute p values.")
-
+                    print(f"Number fo mcs_results {len(mcs_results)}")
+                    print(f"Number of test {options.nalign}")
+                    
+                    B = len(mcs_results)
                     R = mcs_count_greater(
                         mcs_results,
                         recurrence_list,
                         residue_dict,
                     )
-
+                    print(f"Number of mcs_count_greater {len(R)}")
                     recurrence_list_updated = update_recurrence_list(
                         R, 
-                        options.nalign,
+                        B,
                         rec_loc_count_dict,
                         recurrence_list,
                         combined_prot_seqs_dict,
