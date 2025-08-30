@@ -148,9 +148,9 @@ def sitewise_decision(R, B, alpha=0.05, q=0.05, method="fdr_bh"):
         thresh = alpha
     else:
         thresh = q 
-        pvals      = np.clip(p_hat,  0.0, 1.0)
-        lo_clipped = np.clip(ci_lo,   0.0, 1.0)
-        hi_clipped = np.clip(ci_hi,   0.0, 1.0)
+        pvals = np.clip(p_hat, 0.0, 1.0)
+        lo_clipped = np.clip(ci_lo, 0.0, 1.0)
+        hi_clipped = np.clip(ci_hi, 0.0, 1.0)
 
         _, p_adj,  *_ = multipletests(pvals, alpha=thresh, method=method)
         _, ci_lo_adj, *_ = multipletests(lo_clipped, alpha=thresh, method=method)
@@ -483,7 +483,6 @@ def min_mcs(
     elif selected == "fdr_bh":
         threshold = q / M
     elif selected == "fdr_tsbh":
-
         threshold = q / (pi0 * M) # pi0 from pilot or worst-case 1.0
     else:   # "fdr_by"
         c_m = np.sum(1.0 / np.arange(1, M + 1)) # harmonic sum

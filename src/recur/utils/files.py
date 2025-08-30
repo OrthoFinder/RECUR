@@ -416,8 +416,28 @@ class FileReader(object):
                             mcs_files.append(file_path)
 
         return len(mcs_files), mcs_count_file, mcs_fa_file, mcs_files, mcs_dirs
-
     
+    @staticmethod
+    def ReadAdditionalMSCFiles(msc_dir: str) -> Tuple[int, bool, bool, List[str]]:
+        msc_files: List[str] = []
+        msc_count_file = False
+        msc_fa_file = False
+
+        with os.scandir(msc_dir) as entries:
+            for entry in entries:
+                if entry.is_file():
+                    file = entry.path
+                    _, ext = os.path.splitext(file)
+                    ext = ext.lstrip(".").lower()
+                    if ext == "tsv":
+                        msc_count_file = True
+                    elif ext in {"aln", "fasta", "fa", "faa"}:
+                        msc_fa_file = True
+                    msc_files.append(file)
+
+        return len(msc_files), msc_count_file, msc_fa_file, msc_files
+    
+
     @staticmethod    
     def ReadMCSRecurrenceCount(mcs_count_files: List[str]) -> List[Dict[Tuple[int, int, int], int]]:
 

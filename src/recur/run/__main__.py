@@ -650,19 +650,24 @@ def update_recurrence_list(
     for rec_loc, res in enumerate(zip(*extant_seq.values())):
         ident_dict[rec_loc] = res
     
-    precsion = len(str(B)) + 2
-
+    precision = len(str(B)) + 2
     for i, rec_list in enumerate(recurrence_list):
         res_loc = int(rec_list[0])
         parent_child = []
         counts = []
 
-        rec_list.append(float(str(p_hat[i])[:precsion]))
-        rec_list.append(float(str(p_adj[i])[:precsion]))
+        # rec_list.append(np.round(p_hat[i], precision))
+        # rec_list.append(np.round(p_adj[i], precision))
+
+        rec_list.append(float(str(p_hat[i])[:precision]))
+        rec_list.append(float(str(p_adj[i])[:precision]))
 
         if pval_stats:
-            lower_ci = float(str(ci_lo_adj[i])[:precsion])
-            upper_ci = float(str(ci_hi_adj[i])[:precsion])
+            # lower_ci = np.round(ci_lo_adj[i], precision)
+            # upper_ci = np.round(ci_hi_adj[i], precision)
+
+            lower_ci = float(str(ci_lo_adj[i])[:precision])
+            upper_ci = float(str(ci_hi_adj[i])[:precision])
 
             rec_list.append(lower_ci)
             rec_list.append(upper_ci)
@@ -1281,7 +1286,7 @@ def main(args: Optional[List[str]] = None):
                         continue
 
                     res_loc_list = [int(res_list[0]) for res_list in recurrence_list]
-                    print(f"Number of recurrent list: {M}")
+
                     # if not restart_step3:
                     if options.nalign is None:
                         mcp_method, B = at.min_mcs(
@@ -1399,15 +1404,15 @@ def main(args: Optional[List[str]] = None):
                         options.multi_stage = True if not options.user_multi_stage else False
                         options.disk_save = True if not options.user_disk_save else False
 
-     
                     num_mcs_files, mcs_count_file, mcs_fa_file, mcs_files, mcs_dirs = filereader.CheckMCSDir(base_dir)
 
- 
                     production_logger.info(step2_info, extra={'to_file': True, 'to_console': True})
                     production_logger.info("="*len(step2_info), extra={'to_file': True, 'to_console': True})
-                   
 
-                    if (not mcs_count_file) and (not mcs_fa_file) or (restart_step1 or restart_step2 or restart_step3) or override:
+                    if (not mcs_count_file) \
+                        and (not mcs_fa_file) \
+                        or (restart_step1 or restart_step2 or restart_step3) \
+                        or override:
                         # if num_mcs_files != options.nalign and num_mcs_files > 0:
                         if num_mcs_files > 0:
                             util.delete_mcs_files_in_directory(results_dir)
@@ -1668,7 +1673,81 @@ def main(args: Optional[List[str]] = None):
 
                     if restart_step3:
                         num_mcs_files, _, _, mcs_files, mcs_dirs = filereader.CheckMCSDir(base_dir)
-                        options.nalign = num_mcs_files
+                        
+                        if num_mcs_files < options.nalign:
+                            alignment_num_diff = options.nalign - num_mcs_files
+
+                            if options.multi_stage:
+                                mcs_seed = options.mcs_seed + nbatch + res_nbatch
+                            else:
+                                mcs_seed = options.mcs_seed + 1
+                            mcs_command = run_commands.GetMCsimulationCommand(
+                                output_prefix,
+                                options.iqtree_nthreads,
+                                mcs_seed,
+                                best_evolution_model,
+                                treefile,
+                                fn_root_node,
+                                alignment_num_diff,
+                                iqtree_version=options.iqtree_version,
+                                iqtree_cmd_dict=options.iqtree_cmd_dict
+                            )
+
+                            filehandler.CreateMCSDirectories(options)
+                            mcs_faDir = filehandler.mcs_dir
+                            mcs_alnDir = mcs_faDir
+                            
+                            output_prefix = os.path.join(mcs_faDir, identifier)
+                            mcs_cmd = mcs_command[0].replace(mcs_command[0].split()[2], output_prefix)
+
+                            run_commands.RunCommand(
+                                [mcs_cmd],
+                                mcs_faDir,
+                                env=my_env,
+                                nthreads=options.recur_nthreads,
+                                delete_files=True,
+                                files_to_keep=["aln", "fasta", "fa", "faa"],
+                                fd_limit=options.fd_limit,
+                            )
+
+                            if options.disk_save:
+                                
+                                afasta = random.choice(os.listdir(mcs_faDir))
+                                fasta_dict, _, _ = filereader.ReadAlignment(os.path.join(mcs_faDir, afasta))
+                                isnuc_fasta = util.CheckSequenceType([*fasta_dict.values()])
+
+                                imcs_results = parallel_task_manager.process_mcs_files_in_chunks(
+                                    mcs_alnDir,
+                                    parent_list,
+                                    child_list,
+                                    residue_dict,
+                                    options.nthreads,
+                                    isnuc_fasta,
+                                    options.sequence_type,
+                                    res_loc_list,
+                                    production_logger,
+                                    width,
+                                    dash_exist=dash_exist,
+                                    binary_sequence_dict=binary_combined_seq_dict,
+                                    update_cycle=options.update_cycle,
+                                    mcs_batch_size=options.mcs_batch_size
+                                )
+                                for file in util.iter_dir(mcs_alnDir):
+                                    file_path = os.path.join(mcs_alnDir, file)
+                                    if os.path.exists(file_path):
+                                        file_extension = file.rsplit(".")[-1]
+                                        if file_extension in {"aln", "fasta", "fa", "faa"}:
+                                            os.remove(file_path)
+                            
+                                filewriter.WriteMCSRecurrenceCountToFile(
+                                    imcs_results,
+                                    filehandler.mcs_dir
+                                )
+
+                                additional_num_mcs_files, _, _, additional_mcs_files = filereader.ReadAdditionalMSCFiles(filehandler.mcs_dir)
+                                num_mcs_files += additional_num_mcs_files
+                                mcs_files.extend(additional_mcs_files)
+                        # options.nalign = num_mcs_files
                         if not gene_tree:
                             step3_info = f"\nStep4: Analysing recurrent substitutions"
                         else:
@@ -1748,16 +1827,14 @@ def main(args: Optional[List[str]] = None):
 
                     prepend = str(datetime.datetime.now()).rsplit(".", 1)[0] + ": "
                     production_logger.info(prepend + "Starting to compute p values.")
-                    print(f"Number fo mcs_results {len(mcs_results)}")
-                    print(f"Number of test {options.nalign}")
-                    
+
                     B = len(mcs_results)
                     R = mcs_count_greater(
                         mcs_results,
                         recurrence_list,
                         residue_dict,
                     )
-                    print(f"Number of mcs_count_greater {len(R)}")
+
                     recurrence_list_updated = update_recurrence_list(
                         R, 
                         B,
