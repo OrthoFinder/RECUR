@@ -1463,7 +1463,6 @@ def main(args: Optional[List[str]] = None):
                             iqtree_version=options.iqtree_version,
                             iqtree_cmd_dict=options.iqtree_cmd_dict
                         )
-                        
                         if options.multi_stage:
                             cmd_tokens = mcs_commands[0].split()
                             mcs_seed_loc = cmd_tokens.index("--seed") + 1
@@ -1678,9 +1677,10 @@ def main(args: Optional[List[str]] = None):
                             alignment_num_diff = options.nalign - num_mcs_files
 
                             if options.multi_stage:
-                                mcs_seed = options.mcs_seed + nbatch + res_nbatch
+                                mcs_seed = options.mcs_seed + nbatch + 1
                             else:
                                 mcs_seed = options.mcs_seed + 1
+                            
                             mcs_command = run_commands.GetMCsimulationCommand(
                                 output_prefix,
                                 options.iqtree_nthreads,
