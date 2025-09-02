@@ -14,8 +14,8 @@ import sys
 import time
 import traceback
 import warnings
-from collections import Counter
-from collections import defaultdict
+from decimal import Decimal, ROUND_HALF_EVEN
+from collections import Counter, defaultdict
 # from concurrent.futures import ProcessPoolExecutor, as_completed
 # from functools import partial
 from typing import Dict, List, Optional, Tuple, Union
@@ -377,223 +377,6 @@ def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
 
     return recurrence_list
 
-# def WorkerProcessAndCount(file: str,
-#                           mcs_alnDir: str,
-#                           parent_list: List[str],
-#                           child_list: List[str],
-#                           isnuc_fasta: bool,
-#                           sequence_type: str,
-#                           residue_dict: Dict[str, int],
-#                           res_loc_list: List[int],
-#                           production_logger: logging.Logger,
-#                           dash_exist: bool = False,
-#                           binary_sequence_dict: Dict[str, str] = {},
-#                           ) -> Tuple[Dict[Tuple[int, int, int], int], str]:
-
-#     rec_loc_count_dict: Dict[Tuple[int, int, int], int] = {}
-#     error_msg = ""
-
-#     try:
-#         file_path = os.path.join(mcs_alnDir, file)
-#         mcs_combined_prot_seqs_dict, _, _ = files.FileReader.ReadAlignment(file_path)
-
-#         if isnuc_fasta:
-#             mcs_combined_prot_seqs_dict, _ = util.GetSeqsDict(mcs_combined_prot_seqs_dict, sequence_type)
-
-#         parent_num_list = [
-#             [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[parent]]
-#             for parent in parent_list
-#         ]
-#         child_num_list = [
-#             [residue_dict.get(res, 0) for res in mcs_combined_prot_seqs_dict[child]]
-#             for child in child_list
-#         ]
-
-#         parent_array = np.array(parent_num_list)
-#         child_array = np.array(child_num_list)
-
-#         del mcs_combined_prot_seqs_dict, parent_num_list, child_num_list
-
-#         if dash_exist:
-#             binary_parent_num_list = [
-#                 [1 if res == "1" else 0 for res in binary_sequence_dict[parent]]
-#                 for parent in parent_list
-#             ]
-#             binary_child_num_list = [
-#                 [1 if res == "1" else 0 for res in binary_sequence_dict[child]]
-#                 for child in child_list
-#             ]
-
-#             binary_parent_array = np.array(binary_parent_num_list)
-#             binary_child_array = np.array(binary_child_num_list)
-
-#             parent_array = parent_array * binary_parent_array
-#             child_array = child_array * binary_child_array
-
-#             del binary_parent_num_list, binary_child_num_list, \
-#                 binary_parent_array, binary_child_array
-
-#         parent_child_diff = parent_array != child_array
-#         row_indices, col_indices = np.where(parent_child_diff)
-
-#         mask = np.isin(col_indices, res_loc_list)
-#         col_idx = col_indices[mask]
-#         row_idx = row_indices[mask]
-
-#         parent_res_id = parent_array[row_idx, col_idx]
-#         child_res_id = child_array[row_idx, col_idx]
-
-#         # parent_mask = np.isin(parent_res_id, util.reserved_chars_index, invert=True)
-#         parent_mask = np.where(parent_res_id != 0)
-#         parent_res_id = parent_res_id[parent_mask]
-#         child_res_id = child_res_id[parent_mask]
-#         col_idx = col_idx[parent_mask]
-
-#         # child_mask = np.isin(child_res_id, util.reserved_chars_index, invert=True)
-#         child_mask = np.where(child_res_id != 0)
-#         parent_res_id = parent_res_id[child_mask]
-#         child_res_id = child_res_id[child_mask]
-#         col_idx = col_idx[child_mask]
-
-#         parent_child_tuples = [*zip(col_idx, parent_res_id, child_res_id)]
-#         rec_loc_count_dict = Counter(parent_child_tuples)
-#         del parent_child_diff, mask, row_idx, col_idx, row_indices, col_indices, \
-#             parent_res_id, child_res_id, parent_child_tuples, parent_array, child_array
-
-#     except BrokenPipeError:
-#         error_msg = "Broken pipe error while processing file."
-#         print(error_msg)
-
-#     except Exception as e:
-#         error_msg = f"ERROR in WorkerProcessAndCount for mcs task {file}: {e}"
-#         print(error_msg)
-#         print(traceback.format_exc())
-#         production_logger.error(error_msg)
-
-#     return rec_loc_count_dict, error_msg
-
-
-# def process_mcs_files_in_chunks(mcs_alnDir: str,
-#                                 parent_list: List[str],
-#                                 child_list: List[str],
-#                                 residue_dict: Dict[str, int],
-#                                 nthreads: int,
-#                                 isnuc_fasta: bool,
-#                                 sequence_type: str,
-#                                 res_loc_list: List[int],
-#                                 production_logger: logging.Logger,
-#                                 window_width: int,
-#                                 dash_exist: bool = False,
-#                                 binary_sequence_dict: Optional[Dict[str, str]] = None,
-#                                 update_cycle: Optional[int] = None,
-#                                 mcs_batch_size: Optional[int] = None
-#                                 ) -> List[Dict[Tuple[int, int, int], int]]:
-
-#     mcs_files = os.listdir(mcs_alnDir)
-#     total_file_count = len(mcs_files)
-
-#     results = []
-#     worker = partial(WorkerProcessAndCount,
-#                      mcs_alnDir=mcs_alnDir,
-#                      parent_list=parent_list,
-#                      child_list=child_list,
-#                      isnuc_fasta=isnuc_fasta,
-#                      sequence_type=sequence_type,
-#                      residue_dict=residue_dict,
-#                      res_loc_list=res_loc_list,
-#                      production_logger=production_logger,
-#                      dash_exist=dash_exist,
-#                      binary_sequence_dict=binary_sequence_dict,
-#                      )
-#     if mcs_batch_size is not None:
-#         batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
-
-#     if update_cycle is not None:
-#         mcs_progress = progress.Progress(
-#         progress.TextColumn("[progress.description]{task.description}"),
-#         progress.BarColumn(bar_width=window_width // 2),
-#         progress.SpinnerColumn(),
-#         progress.MofNCompleteColumn(),
-#         progress.TimeElapsedColumn(),
-#         transient=False,
-#         # progress.TextColumn("{task.completed}/{task.total}")
-#         )
-#         task = mcs_progress.add_task("[magenta]Processing...", total=total_file_count)
-
-#         mcs_progress.start()
-#     try:
-#         with ProcessPoolExecutor(max_workers=nthreads) as executor:
-
-#             if mcs_batch_size is not None:
-#                 futures = [executor.submit(worker, file_data) for batch in batches for file_data in batch]
-#             else:
-#                 futures = [executor.submit(worker, file_data) for file_data in mcs_files]
-
-
-#             for i, future in enumerate(as_completed(futures)):
-#                 try:
-#                     result, error_msg = future.result()
-#                     if error_msg:
-#                         print(error_msg)
-#                         production_logger.error(error_msg)
-#                         break
-
-#                     if result:
-#                         results.append(result)
-
-#                 except Exception as e:
-#                     error_msg = f"ERROR during processing: {e}"
-#                     print(error_msg)
-#                     print(traceback.format_exc())
-#                     production_logger.error(error_msg)
-#                     break
-
-#                 finally:
-#                     if update_cycle is not None:
-#                         if (i + 1) % update_cycle == 0:
-#                             mcs_progress.update(task, advance=update_cycle)
-
-#             if update_cycle is not None:
-#                 mcs_progress.stop()
-
-#     except Exception as e:
-#         error_msg = f"ERROR during processing files: {e}"
-#         print(error_msg)
-#         print(traceback.format_exc())
-#         production_logger.error(error_msg)
-
-#     return results
-
-# def mcs_count_greater(
-#         mcs_results: List[Dict[Tuple[int, int, int], int]],
-#         recurrence_list: List[List[Union[str, int, float]]],
-#         residue_dict: Dict[str, int],
-#     ) -> List[int]:
-#     try:
-#         count_greater_list = []
-#         for rec_list in recurrence_list:
-#             rec_loc = int(rec_list[0])
-#             parent = str(rec_list[1])
-#             child = str(rec_list[2])
-#             recurrence = int(rec_list[3])
-
-#             count_greater = 0
-#             for mcs_count_dict in mcs_results:
-#                 mcs_rec = mcs_count_dict.get((rec_loc, residue_dict[parent], residue_dict[child]))
-#                 if mcs_rec is not None:
-#                     if mcs_rec >= recurrence:
-#                         count_greater += 1
-            
-#             count_greater_list.append(count_greater)
-
-#     except Exception as e:
-#         error_msg = f"ERROR during compute_p_values: {e}"
-#         print(error_msg)
-#         print(traceback.format_exc())
-#     finally:
-#         return count_greater_list
-    
-
 def mcs_count_greater(
         mcs_results: List[Dict[Tuple[int, int, int], int]],
         recurrence_list: List[List[Union[str, int, float]]],
@@ -623,7 +406,10 @@ def mcs_count_greater(
         print(traceback.format_exc())
     finally:
         return count_greater_list
-    
+
+def round_decimal(x, places=2, rounding=ROUND_HALF_EVEN):
+    quantizer = Decimal("1").scaleb(-places)  # equivalent to 10^(-places)
+    return x.quantize(quantizer, rounding=rounding)
 
 def update_recurrence_list(
         R: List[int],
@@ -639,7 +425,9 @@ def update_recurrence_list(
         method: Optional[str] = "fdr_bh",
         pval_stats: bool = False,
     ) -> List[List[Union[str, int, float]]]:
-
+    
+    precision = len(str(B)) + 2
+    
     extant_seq = {species: seq for species, seq in combined_prot_seqs_dict.items() if species in species_of_interest}
     ident_dict = {}
     
@@ -650,24 +438,21 @@ def update_recurrence_list(
     for rec_loc, res in enumerate(zip(*extant_seq.values())):
         ident_dict[rec_loc] = res
     
-    precision = len(str(B)) + 2
     for i, rec_list in enumerate(recurrence_list):
         res_loc = int(rec_list[0])
         parent_child = []
         counts = []
-
-        # rec_list.append(np.round(p_hat[i], precision))
-        # rec_list.append(np.round(p_adj[i], precision))
-
-        rec_list.append(float(str(p_hat[i])[:precision]))
-        rec_list.append(float(str(p_adj[i])[:precision]))
+        
+        rec_list.append(f"{p_hat[i]:.3e}")
+        rec_list.append(round_decimal(Decimal(str(p_adj[i])), precision))
+        # rec_list.append(Decimal(p_adj[i]).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN))
 
         if pval_stats:
             # lower_ci = np.round(ci_lo_adj[i], precision)
             # upper_ci = np.round(ci_hi_adj[i], precision)
 
-            lower_ci = float(str(ci_lo_adj[i])[:precision])
-            upper_ci = float(str(ci_hi_adj[i])[:precision])
+            lower_ci = round_decimal(Decimal(str(ci_lo_adj[i])), precision)
+            upper_ci = round_decimal(Decimal(str(ci_hi_adj[i])), precision)
 
             rec_list.append(lower_ci)
             rec_list.append(upper_ci)
@@ -692,7 +477,7 @@ def update_recurrence_list(
         res_freq_str = ",".join([":".join((res, str(freq))) for res, freq in res_freq])
         rec_list.append(res_freq_str)
 
-    recurrence_list.sort(key=lambda x: (-float(x[6]), float(x[3])), reverse=True)
+    recurrence_list.sort(key=lambda x: (-x[6], x[3]), reverse=True)
 
     return recurrence_list
 
@@ -1505,7 +1290,7 @@ def main(args: Optional[List[str]] = None):
                             mcs_start_msg = prepend + "Starting Monte-Carlo Simulation."
                         production_logger.info(mcs_start_msg, extra={'to_file': True, 'to_console': True})
                         if len(mcs_commands) > 1 :
-                            production_logger.info("-" * len(mcs_start_msg) + "\n", extra={'to_file': True, 'to_console': True})
+                            production_logger.info("-" * len(mcs_start_msg), extra={'to_file': True, 'to_console': True})
                             
                         production_logger.info("Using %d RECUR thread(s), %d IQ-TREE thread(s)" % ( options.recur_nthreads, options.iqtree_nthreads),
                                             extra={'to_file': True, 'to_console': False})
