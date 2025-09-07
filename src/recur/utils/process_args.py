@@ -471,10 +471,25 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
             
             pval_adjust_method = args.pop(0)
 
-            if pval_adjust_method not in ["bonferroni", "holm", "fdr_bh", "fdr_by", "fdr_tsbh"]:
+            if pval_adjust_method not in \
+                [
+                    "bonferroni", 
+                    "holm", 
+                    "sidak", 
+                    "holm-sidak",
+                    "hochberg", 
+                    "hommel", 
+                    "fdr_bh", 
+                    "fdr_tsbky", 
+                    "fdr_tsbh", 
+                    "fdr_by"
+                ]:
+
                 pval_adjust_method = None
-                raise ValueError("Method must be bonferroni, holm, fdr_bh, "
-                             "fdr_by, or fdr_tsbh")
+                raise ValueError("method must be one of: "
+                                "bonferroni, holm, hochberg, hommel, "
+                                "sidak, holm-sidak, fdr_bh, fdr_tsbh, "
+                                "fdr_tsbky, or fdr_by")
 
             options.pval_adjust_method = pval_adjust_method
 
