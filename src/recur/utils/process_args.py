@@ -420,7 +420,13 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
             arg = args.pop(0).upper()
             try:
                 if len(arg) == len("CODON"):
-                    continue
+                    print("No CODON number is specified, 'CODON1' will be used.")
+                    print("To change the genetic codes, please append number after 'CODON', e.g., 'CODON2'. ")
+                    print("Valid options are for instance 'CODON[1-11]'")
+                    print("For more information please refer to http://www.iqtree.org/doc/Substitution-Models#codon-models")
+                    
+                    options.sequence_type = "CODON1"
+                    
                 elif "CODON" in arg and len(arg) > len("CODON"):
                     arg1, arg2 = arg[:5], int(arg[5:])
                     if arg1 == "CODON" and arg2 in [*range(1, 26)]:
