@@ -9,7 +9,7 @@ from rich.table import Table
 from rich.console import Console
 
 
-width = 25
+width = 28
 
 def PrintHelp(other_options: bool = False) -> None:
 
@@ -41,7 +41,7 @@ def PrintHelp(other_options: bool = False) -> None:
     table_options.add_row(
         "",
         "When no [dark_cyan]CODON[/dark_cyan] number is specified, [dark_cyan]CODON1[/dark_cyan] will be used. "
-        "To change the genetic codes, please append number after [dark_cyan]CODON[/dark_cyan]', e.g., [dark_cyan]CODON2[/dark_cyan]. "
+        "To change the genetic codes, please append number after [dark_cyan]CODON[/dark_cyan], e.g., [dark_cyan]CODON2[/dark_cyan]. "
         "Valid options are for instance [dark_cyan]CODON[1-11][/dark_cyan]. "
         "For more information please refer to http://www.iqtree.org/doc/Substitution-Models#codon-models"
     )
@@ -106,7 +106,7 @@ def PrintHelp(other_options: bool = False) -> None:
 
     table_options.add_row(
         "-pam <[bright_magenta]str[/bright_magenta]>",
-        f"P-Value adjustment method. Available methods: bonferroni, holm, fdr_bh, fdr_by, fdr_tsbh. [Default: [dark_cyan]None[/dark_cyan]]"
+        f"P-Value adjustment method. Available methods: bonferroni, holm, fdr_bh, fdr_by, fdr_tsbh, fdr_tsbky. [Default: [dark_cyan]None[/dark_cyan]]"
     )
 
     table_options.add_row(
