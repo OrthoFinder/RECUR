@@ -9,7 +9,7 @@ from rich.table import Table
 from rich.console import Console
 
 
-width = 28
+width = 25
 
 def PrintHelp(other_options: bool = False) -> None:
 
@@ -37,6 +37,15 @@ def PrintHelp(other_options: bool = False) -> None:
         "-st <[bright_magenta]str[/bright_magenta]>",
         f"<[dark_cyan]AA|CODON[/dark_cyan]> [orange3][Required][/orange3][Default: [dark_cyan]AA[/dark_cyan]]"
     )
+
+    table_options.add_row(
+        "",
+        "When no [dark_cyan]CODON[/dark_cyan] number is specified, [dark_cyan]CODON1[/dark_cyan] will be used. "
+        "To change the genetic codes, please append number after [dark_cyan]CODON[/dark_cyan]', e.g., [dark_cyan]CODON2[/dark_cyan]. "
+        "Valid options are for instance [dark_cyan]CODON[1-11][/dark_cyan]. "
+        "For more information please refer to http://www.iqtree.org/doc/Substitution-Models#codon-models"
+    )
+
 
     table_options.add_row(
         "--outgroups <[bright_magenta]dir/file/str[/bright_magenta]>",
@@ -72,7 +81,7 @@ def PrintHelp(other_options: bool = False) -> None:
     )
 
     table_options.add_row(
-        "-o <[bright_magenta]txt[/bright_magenta]>",
+        "--output <[bright_magenta]txt[/bright_magenta]>",
         f"Results directory [Default: [dark_cyan]same directory as MSA files[/dark_cyan]]"
     )
     table_options.add_row(
@@ -82,11 +91,11 @@ def PrintHelp(other_options: bool = False) -> None:
 
     table_options.add_row(
         "-bs <[bright_magenta]int[/bright_magenta]>",
-        f"Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: [dark_cyan]no batch processing[/dark_cyan]]"
+        f"Batch size for Monte Carlo Simulation analysis to limit ram usage [Default: [dark_cyan]no batch processing[/dark_cyan]]"
     )
 
     table_options.add_row(
-        "-iv <[bright_magenta]str[/bright_magenta]>",
+        "--iqtree-version <[bright_magenta]str[/bright_magenta]>",
         f"IQ-TREE version. [Default: [dark_cyan]iqtree2[/dark_cyan]]"
     )
 
@@ -105,13 +114,18 @@ def PrintHelp(other_options: bool = False) -> None:
         f"Fix branch lengths of tree. [Default: [dark_cyan]False[/dark_cyan]]"
     )
     table_options.add_row(
-        "-nbt",
-        f"Branch test control. [Default: [dark_cyan]True[/dark_cyan]]"
+        "--no-branch-test",
+        f"Branch support control. [Default: [dark_cyan]True[/dark_cyan]]"
     )
 
+    # table_options.add_row(
+    #     "-ps",
+    #     f"Return the P-values statistics in the recurrence list. [Default: [dark_cyan]False[/dark_cyan]]"
+    # )
+
     table_options.add_row(
-        "-ps",
-        f"Return the P-values statistics in the recurrence list. [Default: [dark_cyan]False[/dark_cyan]]"
+        "--help-verbose",
+        f"Show all the options."
     )
 
     print("")
@@ -125,50 +139,68 @@ def PrintHelp(other_options: bool = False) -> None:
         
         other_options_table.add_row(
             "-rs <[bright_magenta]int[/bright_magenta]>",
-            f"Restart [dark_goldenrod]RECUR[/dark_goldenrod] is a specified step. [Default: [deep_sky_blue2]1[/deep_sky_blue2]]"
+            f"Restart [dark_goldenrod]RECUR[/dark_goldenrod] at a specified step. [Default: [deep_sky_blue2]1[/deep_sky_blue2]]",
+            # "Without phylogenetic tree provided: 1) Inferring ancestral sequences, phylogenetic tree and model of evolution;"
+            # " 2) Inferring ancestral sequences; 3) Simulating sequence evolution; 4) Analysing recurrent substitutions",
+            # "With phylogenetic tree provided: 1) Inferring evolutionary parameters using tree provided;"
+            # " 2) Simulating sequence evolution; 3) Analysing recurrent substitutions"
         )
 
         other_options_table.add_row(
-            "-rl <[bright_magenta]int[/bright_magenta]>",
-            f"The number MCS that [dark_goldenrod]RECUR[/dark_goldenrod] can handle in a single stage. [Default: [dark_cyan]1000[/dark_cyan]]"
+            "",
+            "Without phylogenetic tree provided: 1) Inferring ancestral sequences, phylogenetic tree and model of evolution;"
+            " 2) Inferring ancestral sequences; 3) Simulating sequence evolution; 4) Analysing recurrent substitutions",
         )
 
         other_options_table.add_row(
-            "-ret <[bright_magenta]float[/bright_magenta]>",
-            f"Relative for the P-values which affects the number of MCS. [Default: [deep_sky_blue2]0.1[/deep_sky_blue2]]"
+            "",
+            "With phylogenetic tree provided: 1) Inferring evolutionary parameters using tree provided;"
+            " 2) Simulating sequence evolution; 3) Analysing recurrent substitutions"
         )
 
-        other_options_table.add_row(
-            "-mce",
-            f"Monte Carlo Error control. [Default: [dark_cyan]False[/dark_cyan]]"
-        )
-        other_options_table.add_row(
-            "-gc",
-            f"Grid cushion which will double the computed size of MCS. [Default: [dark_cyan]False[/dark_cyan]]"
-        )
 
         other_options_table.add_row(
-            "-ps",
-            f"Return the P-values statistics. [Default: [dark_cyan]False[/dark_cyan]]"
+            "--recur-limit <[bright_magenta]int[/bright_magenta]>",
+            f"The threshold for keeping simulated alignments. If the number of simulations exceed threshold simulated alignment files are deleted to protect disk space. [Default: [dark_cyan]1000[/dark_cyan]]"
         )
 
-        other_options_table.add_row(
-            "-jr",
-            f"Return only the reccurence list for the real phylogeny. [Default: [dark_cyan]False[/dark_cyan]]"
-        )
-        other_options_table.add_row(
-            "-ds",
-            f"Removes the MC simulated MSA files after extracting the recurrence count. [Default: [dark_cyan]False[/dark_cyan]]"
-        )
-        other_options_table.add_row(
-            "-ms",
-            f"Run [dark_goldenrod]RECUR[/dark_goldenrod] in multi stages. [Default: [dark_cyan]False[/dark_cyan]]"
-        )
+        # other_options_table.add_row(
+        #     "-ret <[bright_magenta]float[/bright_magenta]>",
+        #     f"Relative for the P-values which affects the number of MCS. [Default: [deep_sky_blue2]0.1[/deep_sky_blue2]]"
+        # )
+
+        # other_options_table.add_row(
+        #     "-mce",
+        #     f"Monte Carlo Error control. [Default: [dark_cyan]False[/dark_cyan]]"
+        # )
+
+        # other_options_table.add_row(
+        #     "-gc",
+        #     f"Grid cushion which will double the computed size of MCS. [Default: [dark_cyan]False[/dark_cyan]]"
+        # )
+
+        # other_options_table.add_row(
+        #     "-ps",
+        #     f"Return the P-values statistics. [Default: [dark_cyan]False[/dark_cyan]]"
+        # )
 
         other_options_table.add_row(
-            "-cr",
-            f"Compute recurrence based on the MC simulated MSA recurrence count file. Used in multi-stage [dark_goldenrod]RECUR[/dark_goldenrod]. [Default: [dark_cyan]False[/dark_cyan]]"
+            "--just-recurrence",
+            f"Return only the reccurence list for the real phylogeny, no Monte Carlo Simulation conducted. [Default: [dark_cyan]False[/dark_cyan]]"
         )
+        # other_options_table.add_row(
+        #     "-ds",
+        #     f"Removes the simulated MSA files after extracting the recurrence count. [Default: [dark_cyan]False[/dark_cyan]]"
+        # )
+        # other_options_table.add_row(
+        #     "-ms",
+        #     f"Run [dark_goldenrod]RECUR[/dark_goldenrod] in multi stages. [Default: [dark_cyan]False[/dark_cyan]]"
+        # )
+
+        # other_options_table.add_row(
+        #     "-cr",
+        #     f"Compute recurrence based on the MC simulated MSA recurrence count file. Used in multi-stage [dark_goldenrod]RECUR[/dark_goldenrod]. [Default: [dark_cyan]False[/dark_cyan]]"
+        # )
 
         print("")
         console.print("[bold]OTHER OPTIONS:[/bold]")

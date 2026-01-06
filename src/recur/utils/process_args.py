@@ -44,7 +44,7 @@ class Options(object):
         self.iqtree_version = "iqtree2"
         self.show_iqtree_path = False
         self.gene = None
-        self.alnpre = None
+        # self.alnpre = None
         self.name = ""  # name to identify this set of results
         self.extended_filename = False
         self.disk_save = False
@@ -90,8 +90,8 @@ class Options(object):
         self.fdr_level = 0.05
         self.site_dependence = False
         self.pval_stats = False
-        self.just_recurrence = False
-        self.nalign_batch = 1000
+        self.just_recurrence = False # add
+        self.nalign_batch = 1000 # --num-alignment
         self.recur_limit = 1000
         self.mc_error_control = False
 

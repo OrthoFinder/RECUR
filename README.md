@@ -3,7 +3,7 @@
 Finding Recurrent Substitutions from Multiple Sequence Alignments
 
 ## Introduction
-![RECUR method workflow](./docs/images/RECUR_workflow_figure.png)
+![RECUR method workflow](./docs/images/RECUR_workflow.png)
 
 <div align="center">
   Figure 1: The RECUR workflow
