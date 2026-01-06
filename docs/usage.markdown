@@ -41,21 +41,29 @@ The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format wi
 In this section, we will dive deep into the options you have to run RECUR. The commands shown in this section will assume that you have RECUR installed on your machine.
 
 ```bash
-  -f <dir/file>                Protein or codon alignment in FASTA format [Required]
+  -f <dir/file>                 Protein or codon alignment in FASTA format [Required]
   -st <str>                     <AA|CODON> [Required][Default: AA]
-  --outgroups <dir/file/str>   List of outgroup sequences [Required]
-  --num-alignments <int>       Number of simulated alignments for p-value estimation [Default: 1000]
-  -te <dir/file>               Complete constraint tree [Default: Estimated from alignment]
-  -m <str>                     Model of sequence evolution [Default: estimated from alignment]
-  -nt <int>                    Number of threads provided to IQ-TREE
-  -t <int>                     Number of threads used for RECUR internal processing
-  --seed <int>                 Random starting see number [Default: 8]
-  -o <txt>                     Results directory [Default: same directory as MSA files]
-  -uc <int>                    Update cycle used in progress bar [Default: no progress bar]
-  -bs <int>                    Batch size used in subsitution analysis of the Monte Carlo Simulated sequences [Default: no batch processing]
-  -iv <str>                    IQ-TREE version [Default: iqtree2]
-  -blfix                       Fix branch lengths of tree. [Default: False]
+                                When no CODON number is specified, CODON1 will be used. 
+                                To change the genetic codes, please append number after CODON, e.g., CODON2. 
+                                Valid options are for instance CODON[1-11]. 
+                                For more information please refer to http://www.iqtree.org/doc/Substitution-Models#codon-models  
+  --outgroups <dir/file/str>    List of outgroup sequences[Required]
+  --num-alignments <int>        Number of simulated alignments for p-value estimation [Default: 1000]
+  -te <dir/file>                Complete constraint tree [Default: estimated from alignment               
+  -m <str>                      Model of sequence evolution [Default: estimated from alignment]
+  -nt <int>                     Number of threads provided to IQ-TREE [Default: 1 (without alrt); 6 (with alrt)]
+  --seed <int>                  Random starting see number [Default: 8]
+  --output <txt>                Results directory [Default: same directory as MSA files]
+  -uc <int>                     Update cycle used in progress bar [Default: no progress bar]
+  -bs <int>                     Batch size for Monte Carlo Simulation analysis to limit ram usage [Default: no batch processing]
+  --iqtree-version <str>        IQ-TREE version. [Default: iqtree2]                 
+  -sl <float>                   Significance level. [Default: 0.05]
+  -pam <str>                    P-Value adjustment method. Available methods: bonferroni, holm, fdr_bh, fdr_by, fdr_tsbh, fdr_tsbky. [Default: None]
+  -blfix                        Fix branch lengths of tree. [Default: False]
+  --no-branch-test              Branch support control. [Default: True]
+  --help-verbose                Show all the options.    
 ```
+
 
 Please note that the default values for `-t`, `-nt` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
 
