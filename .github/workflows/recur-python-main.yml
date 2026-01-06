@@ -1,6 +1,5 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: RECUR
 
 on:
@@ -17,6 +16,7 @@ on:
       - 'DEVNOTES.md'
       - 'CONTRIBUTING.md'
       - 'CONDUCT.md'
+
   pull_request:
     branches:
       - "main"
@@ -24,8 +24,15 @@ on:
       - "feat/**"
     types:
       - opened
+      - synchronize
+      - reopened
     paths-ignore:
-      - ".github/workflows/*"
+      - '.gitignore'
+      - 'README.md'
+      - 'LICENSE'
+      - 'DEVNOTES.md'
+      - 'CONTRIBUTING.md'
+      - 'CONDUCT.md'
 
 jobs:
   build:
@@ -36,22 +43,28 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
         operating-system: [ubuntu-latest]
     runs-on: ${{ matrix.operating-system }}
+
     steps:
-    - name: Get Code
-      uses: actions/checkout@v4
+      - name: Get Code
+        uses: actions/checkout@v4
 
-    - name: Load & Cache Dependencies
-      id: cache-dependencies
-      uses: ./.github/actions/cached-dependencies
-      with:
-        caching: 'true' # default
+      - name: Load & Cache Dependencies
+        id: cache-dependencies
+        uses: ./.github/actions/cached-dependencies
+        with:
+          python-version: ${{ matrix.python-version }}
+          caching: "true"
 
-    - name: Output information
-      run: |
-        echo "Cache used? ${{ steps.cache-dependencies.outputs.used-cache}}"
+      - name: Output information
+        run: |
+          echo "Pip cache used? ${{ steps.cache-dependencies.outputs.used-cache }}"
+          echo "IQ-TREE2 cache hit? ${{ steps.cache-dependencies.outputs.iqtree2-cache-hit }}"
+          which python
+          python --version
+          which iqtree2 || true
 
-    - name: Test screen printout
-      run: python recur.py
+      - name: Test screen printout
+        run: python recur.py
 
   test:
     needs: build
@@ -61,106 +74,75 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
         operating-system: [ubuntu-latest]
     runs-on: ${{ matrix.operating-system }}
 
     steps:
-    - name: Get Code
-      uses: actions/checkout@v4
+      - name: Get Code
+        uses: actions/checkout@v4
 
-    - name: Load & Cache Dependencies
-      id: cache-dependencies
-      uses: ./.github/actions/cached-dependencies
-      with:
-        caching: 'true' # default
+      - name: Load & Cache Dependencies
+        id: cache-dependencies
+        uses: ./.github/actions/cached-dependencies
+        with:
+          python-version: ${{ matrix.python-version }}
+          caching: "true"
 
-    - name: Output information
-      run: |
-        echo "Cache used? ${{ steps.cache-dependencies.outputs.used-cache}}"
+      - name: Verify IQ-TREE2
+        run: |
+          which iqtree2
+          iqtree2 --version
 
-    # - name: Add iqtree2 to PATH
-    #   run: echo "$(pwd)/src/recur/bin" >> $GITHUB_PATH
+      # - name: Test with mypy
+      #   id: run-mypy
+      #   run: mypy src/
 
-    # - name: Ensure iqtree2 is executable
-    #   run: chmod +x src/recur/bin/iqtree2
+      - name: Run on ExampleData
+        # if: steps.run-mypy.outcome == 'success'
+        run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData
 
-    - name: Install iqtree2
-      run: |
-        make install_iqtree2
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExampleData-Output-${{ matrix.python-version }}
+          path: ExampleData/
 
-    - name: Add IQ-TREE2 to PATH
-      run: echo "/home/runner/local/bin" >> $GITHUB_PATH
+      - name: Test with pytest
+        run: |
+          pytest -sv tests/
 
-    - name: Start a new session
-      run: |
-        . ~/.bashrc
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Verify IQ-TREE2 in PATH
-      run: which iqtree2
+      - name: Update badge status to passing
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && success() }}
+        run: |
+          echo '{"schemaVersion": 1, "label": "Tested", "message": "passing", "color": "brightgreen"}' > badge-status.json
+          if ! git diff --quiet; then
+            git add badge-status.json
+            git commit -m "Update badge status to passing"
+            git push origin main
+          else
+            echo "No changes to commit"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Test run iqtree2
-      run: |
-        iqtree2 --version
 
-    - name: Test with mypy
-      id: run-mypy
-      run: mypy src/
+      - name: Update badge status to failing
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && failure() }}
+        run: |
+          echo '{"schemaVersion": 1, "label": "Tested", "message": "failing", "color": "red"}' > badge-status.json
+          if ! git diff --quiet; then
+            git add badge-status.json
+            git commit -m "Update badge status to failing"
+            git push origin main
+          else
+            echo "No changes to commit"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Run on ExampleData
-      if: steps.run-mypy.outcome == 'success'
-      run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ExampleData-Output-${{ matrix.python-version }}
-        path: ExampleData/
-
-    - name: Get artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: ExampleData-Output-${{ matrix.python-version }}
-        path: ExampleData/
-
-    - name: Output contents
-      run: |
-        ls -al
-        ls -al ExampleData/
-
-    - name: Test with pytest
-      run: |
-        pytest -sv tests/
-
-    - name: Configure Git
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-    - name: Update badge status to passing
-      if: ${{ job.status == 'success' }}
-      run: |
-        echo '{"schemaVersion": 1, "label": "Tested", "message": "passing", "color": "brightgreen"}' > badge-status.json
-        if ! git diff --quiet; then
-          git add badge-status.json
-          git commit -m "Update badge status to passing"
-          git push origin main
-        else
-          echo "No changes to commit"
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Update badge status to failing
-      if: ${{ job.status == 'failure' }}
-      run: |
-        echo '{"schemaVersion": 1, "label": "Tested", "message": "failing", "color": "red"}' > badge-status.json
-        if ! git diff --quiet; then
-          git add badge-status.json
-          git commit -m "Update badge status to failing"
-          git push origin main
-        else
-          echo "No changes to commit"
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
