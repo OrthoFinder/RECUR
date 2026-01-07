@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
         operating-system: [ubuntu-latest]
     runs-on: ${{ matrix.operating-system }}
 
@@ -68,7 +68,7 @@ jobs:
 
   test:
     needs: build
-    continue-on-error: true
+    # continue-on-error: true
     permissions:
       contents: write
     strategy:
@@ -100,7 +100,7 @@ jobs:
 
       - name: Run on ExampleData
         # if: steps.run-mypy.outcome == 'success'
-        run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData -
+        run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -112,37 +112,29 @@ jobs:
         run: |
           pytest -sv tests/
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+  badge:
+    name: Update CI badge
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Update badge status to passing
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && success() }}
+      - name: Set badge content
+        id: badge
         run: |
-          echo '{"schemaVersion": 1, "label": "Tested", "message": "passing", "color": "brightgreen"}' > badge-status.json
-          if ! git diff --quiet; then
-            git add badge-status.json
-            git commit -m "Update badge status to passing"
-            git push origin main
+          if [ "${{ needs.test.result }}" = "success" ]; then
+            echo '{"schemaVersion":1,"label":"Tested","message":"passing","color":"brightgreen"}' > badge-status.json
           else
-            echo "No changes to commit"
+            echo '{"schemaVersion":1,"label":"Tested","message":"failing","color":"red"}' > badge-status.json
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-      - name: Update badge status to failing
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && failure() }}
+      - name: Commit & push badge (if changed)
         run: |
-          echo '{"schemaVersion": 1, "label": "Tested", "message": "failing", "color": "red"}' > badge-status.json
-          if ! git diff --quiet; then
-            git add badge-status.json
-            git commit -m "Update badge status to failing"
-            git push origin main
-          else
-            echo "No changes to commit"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add badge-status.json
+          git commit -m "Update badge status" || exit 0
+          git push origin main
