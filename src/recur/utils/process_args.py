@@ -1,7 +1,7 @@
 import os
 import fnmatch
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Set
 import multiprocessing as mp
 
 
@@ -94,6 +94,7 @@ class Options(object):
         self.nalign_batch = 1000 # --num-alignment
         self.recur_limit = 1000
         self.mc_error_control = False
+        self.leaves_of_interest=None
 
 
     def what(self) -> None:
@@ -404,6 +405,60 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
                 options.outgroups = outgroups_dict
             elif outgroups_list:
                 options.outgroups = outgroups_list
+
+        elif arg == "-loi" or arg == "--leaves-of-interest":
+            arg_leaves_of_interest = arg
+            if len(args) == 0:
+                print("Missing option for command line argument %s\n" % arg)
+                util.Fail()
+            isfile = False
+            isdir = False
+            arg = args.pop(0)
+            leaves_of_interest_list: List[str] = []
+            leaves_of_interest_dict: Dict[str, Union[str, List[str]]] = {}
+            try:
+                if os.path.isfile(arg):
+                    isfile = True
+                    leaves_of_interest_path = GetFileArgument(arg)
+                    with open(leaves_of_interest_path) as reader:
+                        for line in reader:
+                            line = line.replace("\n", "").strip()
+                            leaves_of_interest_list.append(line)
+
+                elif os.path.isdir(arg):
+                    isdir = True
+                    leaves_of_interest_dir = GetDirectoryArgument(arg)
+                    leaves_of_interest_dict = {}
+                    for file in os.listdir(leaves_of_interest_dir):
+                        if fnmatch.fnmatch(file, "*.leaves*"):
+                            leaves_of_interest_path = os.path.join(leaves_of_interest_dir, file)
+                            with open(leaves_of_interest_path) as reader:
+                                leaves_of_interest = {}
+                                for line in reader:
+                                    line = line.replace("\n", "").strip()
+                                    leaves_of_interest.append(line)
+                            leaves_of_interest_dict[file.split(".", 1)[0]] = leaves_of_interest
+
+                else:
+                    if "," in arg:
+                        leaves_of_interest_list = [og.strip() for og in arg.split(",")]
+                    elif "|" in arg:
+                        leaves_of_interest_list = [og.strip() for og in arg.split("|")]
+                    else:
+                        leaves_of_interest_list = [arg]
+            except:
+                print("Invalid argument for option %s: %s" % (arg_leaves_of_interest, arg))
+                print('Valid options are for instance "Nuphar japonica,Nymphaea jamesoniana"\n')
+                util.Fail()
+
+            if len(leaves_of_interest_list) == 0 and len(leaves_of_interest_dict) == 0 and not isfile and not isdir:
+                print("Missing option for command line argument from file %s\n" % arg)
+                util.Fail()
+
+            if leaves_of_interest_dict:
+                options.leaves_of_interest = leaves_of_interest_dict
+            elif leaves_of_interest_list:
+                options.leaves_of_interest = leaves_of_interest_list
 
         elif arg == "-rd":
             if len(args) == 0:

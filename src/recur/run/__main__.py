@@ -206,15 +206,18 @@ def kill_child_processes(parent_pid: int, sig: signal.Signals = signal.SIGTERM, 
 def ParentChildRelation(treefile: str,
                         outgroup_squences: List[str],
                         n_species: int,
-                        preserve_underscores: bool
+                        preserve_underscores: bool,
+                        leaves_of_interest: Optional[List[str]] = None,
                         ) -> Tuple[Optional[str], List[str], List[str], List[str], str]:
     try:
 
         with open(treefile, 'r') as f:
-            t = dendropy.Tree.get(file=f,
-                                  schema="newick",
-                                  preserve_underscores=preserve_underscores,
-                                  case_sensitive_taxon_labels=False)
+            t = dendropy.Tree.get(
+                file=f,
+                schema="newick",
+                preserve_underscores=preserve_underscores,
+                case_sensitive_taxon_labels=False
+            )
 
         t.is_rooted = True
         if len(outgroup_squences) == 1:
@@ -239,8 +242,8 @@ def ParentChildRelation(treefile: str,
         branch_count = 0
         parent_list: List[str] = []
         child_list: List[str] = []
-        for nd in root_of_interest.postorder_iter():
 
+        for nd in root_of_interest.postorder_iter():
             if nd.parent_node is None:
                 continue
 
@@ -253,11 +256,11 @@ def ParentChildRelation(treefile: str,
                 parent = nd.parent_node.label
                 child = child if "/" not in child else child.split("/")[0]
                 parent = parent if "/" not in parent else parent.split("/")[0]
-
                 parent_list.append(parent)
                 child_list.append(child)
 
                 branch_count += 1
+       
 
         if len(outgroup_subtree_species) != len(outgroup_squences):
             outgroup_squences = outgroup_subtree_species
@@ -268,6 +271,26 @@ def ParentChildRelation(treefile: str,
         if branch_count != expected_relationships:
             return root_node, outgroup_squences, parent_list, child_list, \
                 f"Taxon count {branch_count} does not match expected relationships {expected_relationships}."
+        
+        if leaves_of_interest is not None or len(leaves_of_interest) != 0:
+            edges = list(zip(parent_list, child_list))
+            parent_of = defaultdict(set)
+            for p, c in edges:
+                parent_of[c].add(p)
+
+            keep_edges = set()
+
+            for leaf in leaves_of_interest:
+                stack = [leaf]
+                while stack:
+                    node = stack.pop()
+                    for p in parent_of.get(node, []):
+                        edge = (p, node)
+                        if edge not in keep_edges:
+                            keep_edges.add(edge)
+                            stack.append(p)
+
+            parent_list, child_list = zip(*list(keep_edges))
 
         return root_node, outgroup_squences, parent_list, child_list, ""
     except BrokenPipeError:
@@ -993,6 +1016,7 @@ def main(args: Optional[List[str]] = None):
                             outgroup_mrca,
                             n_species,
                             preserve_underscores,
+                            leaves_of_interest=options.leaves_of_interest
                         )
 
                     if error_msg:
