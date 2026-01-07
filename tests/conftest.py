@@ -20,7 +20,7 @@ def get_recurrence_list(test_data):
     with open(test_data) as reader:
         for line in reader:
             if "Site" not in line:
-                line = line.strip().split("\t")[:5] + line.strip().split("\t")[6:]
+                line = line.strip().split("\t")[:5] + line.strip().split("\t")[7:]
                 recurrance_list.append(" ".join(line))
                 print(" ".join(line))
     return recurrance_list

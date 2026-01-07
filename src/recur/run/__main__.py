@@ -437,7 +437,7 @@ def update_recurrence_list(
     res_loc_info_dict= util.get_sorted_res_loc_info(res_loc_count_dict, protein_len)
     for rec_loc, res in enumerate(zip(*extant_seq.values())):
         ident_dict[rec_loc] = res
-    
+
     for i, rec_list in enumerate(recurrence_list):
         res_loc = int(rec_list[0])
         parent_child = []

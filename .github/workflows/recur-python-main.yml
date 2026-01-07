@@ -100,7 +100,7 @@ jobs:
 
       - name: Run on ExampleData
         # if: steps.run-mypy.outcome == 'success'
-        run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData
+        run: python3 recur.py -f ExampleData -st AA --outgroups ExampleData -
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

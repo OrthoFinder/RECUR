@@ -320,8 +320,10 @@ def iter_dir(d: Optional[str] = None) -> Iterator[str]:
             if entry.is_file():
                 yield entry.name
 
-def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int],
-                            protein_len: int) -> Dict[int, List[Tuple[int, int, int]]]:
+def get_sorted_res_loc_info(
+        res_loc_count_dict: Dict[Tuple[int, int, int], int],
+        protein_len: int
+    ) -> Dict[int, List[Tuple[int, int, int]]]:
 
 
     res_loc_info_dict: Dict[int, List[Tuple[int, int, int]]] = {
@@ -335,7 +337,7 @@ def get_sorted_res_loc_info(res_loc_count_dict: Dict[Tuple[int, int, int], int],
         res_loc: sorted(val, key=lambda x: x[-1], reverse=True) if val else []
         for res_loc, val in res_loc_info_dict.items()
     }
-
+    
     return res_loc_info_dict_sorted
 
 def CheckOutgroups(outgroups_mrca: List[str], alignment_dict: Dict[str, str]) -> Tuple[List[str], bool]:

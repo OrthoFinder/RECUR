@@ -55,7 +55,6 @@ runs:
         BIN_DIR="${{ runner.temp }}/recur-bin"
         mkdir -p "$BIN_DIR"
 
-        # Run from repo root (where your Makefile lives)
         make install_iqtree2 \
           SYSTEM_WIDE=false \
           USER_INSTALL_DIR="$BIN_DIR" \
