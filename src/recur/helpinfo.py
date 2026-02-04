@@ -69,6 +69,11 @@ def PrintHelp(other_options: bool = False) -> None:
 
 
     table_options.add_row(
+        "-t <[bright_magenta]int[/bright_magenta]>",
+        f"Number of threads used for RECUR internal processing [Default: [deep_sky_blue2]{recur_nthreads}[/deep_sky_blue2]]"
+    )
+
+    table_options.add_row(
         "-nt <[bright_magenta]int[/bright_magenta]>",
         f"Number of threads provided to IQ-TREE [Default: [deep_sky_blue2]1[/deep_sky_blue2] (without alrt); [deep_sky_blue2]{iqtree_nthreads}[/deep_sky_blue2] (with alrt)]"
     )
@@ -226,7 +231,3 @@ def PrintHelp(other_options: bool = False) -> None:
     print("[bold]LICENSE:[/bold]")
     print(" Distributed under the [dodger_blue1]GNU General Public License (GPLv3)[/dodger_blue1]. See License.md")
     print(print_citation)
-    table_options.add_row(
-        "-t <[bright_magenta]int[/bright_magenta]>",
-        f"Number of threads used for RECUR internal processing [Default: [deep_sky_blue2]{recur_nthreads}[/deep_sky_blue2]]"
-    )
