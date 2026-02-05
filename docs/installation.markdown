@@ -31,11 +31,11 @@ permalink: /installation/
   conda install bioconda::recur 
   recur --version
   ```
-  To test your installation, you can download an example dataset from our [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.0.0), or run the following command to download the example dataset directly into a directory called `ExampleData` in your current working directory via a command line first.
+  To test your installation, you can download an example dataset from our [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.1.0), or run the following command to download the example dataset directly into a directory called `ExampleData` in your current working directory via a command line first.
 
   ```bash
   mkdir ExampleData && \
-      wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/ExampleData.tar.gz | \
+      wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.1.0/ExampleData.tar.gz | \
       tar -xz --strip-components=1 -C ExampleData
   ```
   Having downloaded the example dataset, you can run the following command to test RECUR in your conda environment on the `ExampleData` dataset.
@@ -59,7 +59,7 @@ permalink: /installation/
 #### Conventional Installation
 
   **Download the source code directly**
-  Pre-compiled RECUR v1.0.0 archives are available for all major operating systems and CPU architectures. For the full list of files and step-by-step installation instructions, visit the [RECUR v1.0.0](https://orthofinder.github.io/RECUR/release/31/03/2025/RECUR-v1.0.0.html)
+  Pre-compiled RECUR v1.1.0 archives are available for all major operating systems and CPU architectures. For the full list of files and step-by-step installation instructions, visit the [RECUR v1.1.0](https://orthofinder.github.io/RECUR/release/31/03/2025/RECUR-v1.1.0.html)
 
   **Install directly from GitHub**
 
@@ -70,7 +70,7 @@ permalink: /installation/
   recur --version
   ```
   To test your installation via this method, you can download an example dataset from the 
-  [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.0.0). Please checkout the **Run RECUR in conda** section for more information.
+  [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.1.0). Please checkout the **Run RECUR in conda** section for more information.
 
   To remove RECUR, you can simply deactivate the virtual environment and remove it. 
   ```bash
@@ -180,7 +180,7 @@ permalink: /installation/
 
   With either Docker Desktop or Docker Engine installed on your machine, you can simply run the following command to test if you can run the RECUR container after you have logged in. 
   ```
-  docker container run -it --rm orthofinder/recur:v1.0.0
+  docker container run -it --rm orthofinder/recur:v1.1.0
   ```
   To run the RECUR container on your dataset, you will need to create a folder which contains your data in your current working directory. For instance, you have a data folder called MyData which contains a protein alignment file called `my_alignment.aln` and a file called `my_alignment.outgroups.txt` that contains all the outgroups. Optionally you can also provide a tree file, e.g., `MyData/my_alignments.tree.txt`. With all the required inputs, you can run the following command to start the RECUR container and make it run your dataset.
 
@@ -188,16 +188,16 @@ permalink: /installation/
   docker run -it --rm \
       -v $(pwd)/MyData:/usr/src/recur/MyData \
       -e LOCAL_UID=$(id -u) -e LOCAL_GID=$(id -g) \
-      orthofinder/recur:v1.0.0 \
+      orthofinder/recur:v1.1.0 \
       -f MyData/my_alignments.aln \
       -st AA \
       --outgroups MyData/my_alignments.outgroups.txt \
       -te MyData/my_alignments.tree.txt
   ```
-  Please note that arguments behind `orthofinder/recur:v1.0.0` will be the same as you run RECUR directly as we mentioned previous sections.
+  Please note that arguments behind `orthofinder/recur:v1.1.0` will be the same as you run RECUR directly as we mentioned previous sections.
 
   Here the `--rm` flag tells Docker to automatically remove the container once it exits, ensuring no leftover container remains after the run. If you wish you remove the RECUR image, please run 
 
   ```bash
-  docker rmi orthofinder/recur:v1.0.0
+  docker rmi orthofinder/recur:v1.1.0
   ```

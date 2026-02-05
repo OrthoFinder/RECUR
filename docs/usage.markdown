@@ -11,6 +11,8 @@ permalink: /usage/
   - [Options Overview](#options-overview)
   - [Using a constraint tree](#using-a-constraint-tree)
   - [Providing a model of evolution](#providing-a-model-of-evolution)
+  - [P-value adjustment](#p-value-adjustment)
+  - [Multi-stage computation](#multi-stage-computation)
   - [Running RECUR on a directory](#running-recur-on-a-directory)
 - [RECUR Results](#recur-results)
   - [Recurrence List](#recurrence-list)
@@ -41,6 +43,7 @@ The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format wi
 In this section, we will dive deep into the options you have to run RECUR. The commands shown in this section will assume that you have RECUR installed on your machine.
 
 ```bash
+OPTIONS:
   -f <dir/file>                 Protein or codon alignment in FASTA format [Required]
   -st <str>                     <AA|CODON> [Required][Default: AA]
                                 When no CODON number is specified, CODON1 will be used. 
@@ -51,6 +54,7 @@ In this section, we will dive deep into the options you have to run RECUR. The c
   --num-alignments <int>        Number of simulated alignments for p-value estimation [Default: 1000]
   -te <dir/file>                Complete constraint tree [Default: estimated from alignment               
   -m <str>                      Model of sequence evolution [Default: estimated from alignment]
+  -t <int>                      Number of threads used for RECUR internal processing [Default: 24]
   -nt <int>                     Number of threads provided to IQ-TREE [Default: 1 (without alrt); 6 (with alrt)]
   --seed <int>                  Random starting see number [Default: 8]
   --output <txt>                Results directory [Default: same directory as MSA files]
@@ -64,8 +68,29 @@ In this section, we will dive deep into the options you have to run RECUR. The c
   --help-verbose                Show all the options.    
 ```
 
-
 Please note that the default values for `-t`, `-nt` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
+
+If you run RECUR with `--help-verbose`, additional configuration options and detailed explanations will be shown:
+
+```bash
+
+OTHER OPTIONS:
+ -rs <int>                     Restart RECUR at a specified step. [Default: 1]                          
+                               Without phylogenetic tree provided: 
+                               1) Inferring ancestral sequences, phylogenetic tree and model of evolution; 
+                               2)Inferring ancestral sequences; 
+                               3) Simulating sequence evolution; 
+                               4) Analysing recurrent substitutions
+                               With phylogenetic tree provided: 
+                               1) Inferring evolutionary parameters using tree provided; 
+                               2) Simulating sequence evolution; 
+                               3) Analysing recurrent substitutions                                                              
+ --recur-limit <int>           The threshold for keeping simulated alignments. If the number of simulations exceed threshold simulated alignment files
+                               are deleted to protect disk space. [Default: 1000]
+ -nb <int>                     Batch size for Monte Carlo simulations, controlling the number of stages in multi-stage analysis [Default: no batch processing]
+ --just-recurrence             Return only the reccurence list for the real phylogeny, no Monte Carlo Simulation conducted. [Default: False] 
+
+ ```
 
 ```bash
 recur
@@ -87,6 +112,45 @@ A model of sequence evolution (as long as it is supported by IQ-TREE) can be pro
 ```bash
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> -m <model_of_evolution>
 ```
+
+#### P-value adjustment
+To address p-value inflation arising from multiple hypothesis testing, p-value adjustment was introduced in v1.1.0. The required number of Monte Carlo simulations is automatically determined based on the number of hypothesis tests, denoted by 𝑀 (i.e., the length of the recurrent list). By default, the p-value adjustment method is automatically selected according to 𝑀, balancing statistical rigor and computational feasibility:
+
+```bash
+  if M ≤ 50:
+      Use Bonferroni correction
+      (Strong FWER control; avoids false positives at all costs)
+
+  elif M ≤ 200:
+      Use Holm correction
+      (Strong FWER control with improved power over Bonferroni)
+
+  elif M ≤ 2000:
+      Use Benjamini–Hochberg (BH)
+      (Controls the false discovery rate; suitable for large-scale testing)
+
+  else:
+      Use two-stage Benjamini–Hochberg (fdr_tsbh)
+      (Assumes most hypotheses are null; maximizes power while controlling FDR)
+
+```
+This strategy avoids overly conservative corrections when the number of tests is large, thereby preventing an excessive increase in the required number of Monte Carlo simulations, while still providing appropriate error-rate control.
+
+The p-value adjustment is performed using a default significance level of 0.05.
+Both the significance level and the p-value adjustment method can be overridden by the user via the command-line flags `-sl` (significance level) and `-pam` (p-value adjustment method), respectively.
+
+#### Multi-stage computation
+The introduction of multi-stage computation in RECUR v1.1.0 is a necessary upgrade to support p-value adjustment procedures that may require an excessively large number of Monte Carlo simulations. As the size of the input alignments increases, the disk space required to store simulated alignments can grow rapidly, potentially leading to prohibitive storage demands.
+
+To mitigate this issue, RECUR automatically enables multi-stage execution when the required number of Monte Carlo simulations exceeds an internal threshold (the RECUR limit). By default, this limit is set to 1000 simulations. For example, if 8800 Monte Carlo simulations are required, RECUR will split the computation into 9 batches, corresponding to 9 calls to iqtree alisim. In this case, the first 8 calls use `--num-alignments` 1000, and the final call uses `--num-alignments` 800.
+
+This batching strategy prevents excessive disk usage while ensuring that the total number of simulations is satisfied.
+
+When multi-stage execution is triggered, users may control the batch size by specifying the `-nb` option, which determines the value passed to --num-alignments in each iqtree alisim call. For instance, if `-nb` is set to 2000, then 8800 simulations will be executed in 5 batches instead of 9.
+
+When multi-stage computation is enabled, simulated alignment files are automatically converted into count files to further reduce disk usage. If the required number of Monte Carlo simulations does not exceed the RECUR limit, alignment files are preserved as usual.
+
+If retaining all simulated alignment files is necessary, users may increase the internal threshold using the `--recur-limit` option. By setting this limit higher than the required number of simulations, RECUR will execute the simulations in a single stage and preserve all alignment files.
 
 #### Running RECUR on a directory
 
