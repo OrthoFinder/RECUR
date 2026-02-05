@@ -179,34 +179,39 @@ def sitewise_decision(R, B, alpha=0.05, q=0.05, method="fdr_bh"):
 
 def method_selection(M: int, suspect_dependence: bool = False) -> str:
     """
-    Heuristic chooser for multiple-testing methods.
+    Heuristic chooser for multiple-testing methods (keeps Bonferroni).
 
-    - 1–5: control FWER with Bonferroni
-    - 6–20: control FWER with Holm (uniformly better than Bonferroni)
-    - 21–200: use BH unless you suspect dependence (then Holm)
-    - 201–2000: use BH if dependence seems mild; otherwise BKY (two-stage)
-    - >2000: use 2-stage BH for extra power if dependence is mild;
-             otherwise BKY (safer two-stage)
+    Goals:
+    - Keep Bonferroni for very small M (ultra-conservative, simple).
+    - Allow Holm for small/moderate M when you still want FWER but Bonferroni is too harsh.
+    - For larger M, switch to FDR methods to avoid Monte Carlo simulation blow-up.
+    - If dependence is suspected, prefer BKY (two-stage FDR) rather than reverting to FWER.
 
-    Note: BY is not auto-selected; use it only if worst-case arbitrary
-    dependence guarantees are explicitly required.
+    Rules:
+    - 1–50: Bonferroni (FWER, avoid any false positive)
+    - 51–200: Holm (FWER, less harsh than Bonferroni)
+    - 201–2000:
+        * if suspect_dependence: BKY two-stage FDR
+        * else: BH FDR
+    - >2000:
+        * if suspect_dependence: BKY two-stage FDR
+        * else: two-stage BH (extra power)
+
+    Note: BY is not auto-selected; use it only if worst-case arbitrary dependence
+    guarantees are explicitly required (very conservative).
     """
-    if M < 1:
+    if not isinstance(M, int) or M < 1:
         raise ValueError("M must be a positive integer.")
 
-    if M <= 5:
-        return "bonferroni"                      # FWER
-
-    if M <= 20:
-        return "holm"                             # FWER
+    if M <= 50:
+        return "bonferroni"          # strong FWER
 
     if M <= 200:
-        return "holm" if suspect_dependence else "fdr_bh"     # FDR
+        return "holm"                # strong FWER, less harsh than Bonferroni
 
     if M <= 2000:
-        return "fdr_tsbky" if suspect_dependence else "fdr_bh"  # FDR
+        return "fdr_tsbky" if suspect_dependence else "fdr_bh"   # FDR
 
-    # M > 2000
     return "fdr_tsbky" if suspect_dependence else "fdr_tsbh"     # FDR
 
 
@@ -278,18 +283,6 @@ def min_mcs(
     B_required : int
         Minimum number of Monte Carlo simulations needed to meet the grid and/or
         MC error criteria under the specified correction method.
-    
-    M <= 50: Bonferroni
-    You need to avoid any false positive at all costs.
-
-    50 < M <= 500: Holm
-    You still want strong FWER control, but Bonferroni is too harsh.
-
-    500 < M <= 5000: BH
-    You're running many tests (e.g. microarrays), and FDR is acceptable.
-
-    M > 5000 and you believe most hypothesis are null: Storey's q-values
-    You want maximum power and don't mind a small number of false positives.
 
     """
     if method is not None:

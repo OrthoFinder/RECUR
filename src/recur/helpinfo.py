@@ -163,6 +163,11 @@ def PrintHelp(other_options: bool = False) -> None:
             " 2) Simulating sequence evolution; 3) Analysing recurrent substitutions"
         )
 
+        other_options_table.add_row(
+            "-nb <[bright_magenta]int[/bright_magenta]>",
+            "Batch size for Monte Carlo simulations, controlling the number of stages in multi-stage analysis "
+            "[Default: [dark_cyan]no batch processing[/dark_cyan]]"
+        )
 
         other_options_table.add_row(
             "--recur-limit <[bright_magenta]int[/bright_magenta]>",
