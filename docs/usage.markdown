@@ -60,7 +60,7 @@ OPTIONS:
   --output <txt>                Results directory [Default: same directory as MSA files]
   -uc <int>                     Update cycle used in progress bar [Default: no progress bar]
   -bs <int>                     Batch size for Monte Carlo Simulation analysis to limit ram usage [Default: no batch processing]
-  --iqtree-version <str>        IQ-TREE version. [Default: iqtree2]                 
+  --iqtree-version <str>        IQ-TREE version. [Default: iqtree3]                 
   -sl <float>                   Significance level. [Default: 0.05]
   -pam <str>                    P-Value adjustment method. Available methods: bonferroni, holm, fdr_bh, fdr_by, fdr_tsbh, fdr_tsbky. [Default: None]
   -blfix                        Fix branch lengths of tree. [Default: False]
