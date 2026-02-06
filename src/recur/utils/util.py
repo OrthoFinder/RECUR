@@ -244,7 +244,7 @@ def CreateNewFileName(baseFileName: str,
         dateStr = datetime.date.today().strftime("%b%d") if qDate else ""
         baseFileName = baseFileName  + "." + dateStr
         while os.path.exists(newFileName):
-            iAppend += 1.
+            iAppend += 1
             newFileName = GetFileName(baseFileName,
                                             iAppend,
                                             sequence_type,

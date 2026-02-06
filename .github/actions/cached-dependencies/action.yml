@@ -14,9 +14,9 @@ outputs:
   used-cache:
     description: "Whether the pip cache was used"
     value: ${{ steps.setup-python.outputs.cache-hit }}
-  iqtree2-cache-hit:
-    description: "Whether the iqtree2 cache was used"
-    value: ${{ steps.iqtree2-cache.outputs.cache-hit }}
+  iqtree3-cache-hit:
+    description: "Whether the iqtree3 cache was used"
+    value: ${{ steps.iqtree3-cache.outputs.cache-hit }}
 
 runs:
   using: "composite"
@@ -39,31 +39,31 @@ runs:
           python -m pip install -r requirements.txt
         fi
 
-    - name: Restore iqtree2 cache
-      id: iqtree2-cache
+    - name: Restore iqtree3 cache
+      id: iqtree3-cache
       if: inputs.caching == 'true'
       uses: actions/cache@v4
       with:
         path: ${{ runner.temp }}/recur-bin
-        key: ${{ runner.os }}-iqtree2-v1
+        key: ${{ runner.os }}-iqtree3-v1
 
-    - name: Install iqtree2 using Makefile
-      if: inputs.caching != 'true' || steps.iqtree2-cache.outputs.cache-hit != 'true'
+    - name: Install iqtree3 using Makefile
+      if: inputs.caching != 'true' || steps.iqtree3-cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
         set -euo pipefail
         BIN_DIR="${{ runner.temp }}/recur-bin"
         mkdir -p "$BIN_DIR"
 
-        make install_iqtree2 \
+        make install_iqtree3 \
           SYSTEM_WIDE=false \
           USER_INSTALL_DIR="$BIN_DIR" \
           FORCE=false \
           QUIET=true
 
-        "$BIN_DIR/iqtree2" --version
+        "$BIN_DIR/iqtree3" --version
 
-    - name: Add iqtree2 to PATH
+    - name: Add iqtree3 to PATH
       shell: bash
       run: |
         echo "${{ runner.temp }}/recur-bin" >> "$GITHUB_PATH"

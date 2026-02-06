@@ -1,7 +1,8 @@
+from __future__ import annotations
 import os
 import fnmatch
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, TypedDict
 import multiprocessing as mp
 
 
@@ -10,6 +11,11 @@ import dendropy
 
 from recur import __version__, helpinfo
 from recur.utils import util
+
+
+class IQTreeCmd(TypedDict):
+    asr_cmd: str
+    alisim_cmd: str
 
 
 class InvalidEntryException(Exception):
@@ -41,7 +47,7 @@ class Options(object):
         self.sequence_type = "AA" # "CODON1"
         self.evolution_model = "TEST"
         self.qStartFromMSA = False
-        self.iqtree_version = "iqtree2"
+        self.iqtree_version = "iqtree3"
         self.show_iqtree_path = False
         self.gene = None
         # self.alnpre = None
@@ -134,39 +140,38 @@ def validate_newick_tree(tree_file_path):
         return False
 
 
-def program_caller(config_file):
-    iqtree_cmd_dict = {}
+def program_caller(config_file: str | None) -> dict[str, IQTreeCmd]:
+    iqtree_cmd_dict: dict[str, IQTreeCmd] = {}
 
-    if config_file == None:
-        return
+    if config_file is None:
+        return iqtree_cmd_dict
+
     if not os.path.exists(config_file):
         print(
-            (
-                "WARNING: Configuration file, '%s', does not exist. No user-confgurable ancestral state reconstruction or Monte Carlo Simulation command have been added.\n"
-                % config_file
-            )
+            "WARNING: Configuration file, '%s', does not exist. "
+            "No user-configurable ancestral state reconstruction or Monte Carlo Simulation command have been added.\n"
+            % config_file
         )
-        return
+        return iqtree_cmd_dict
+
     with open(config_file, "r") as infile:
         try:
             d = json.load(infile)
         except ValueError:
             print(f"WARNING: Incorrectly formatted configuration file {config_file}")
             print(
-                "File is not in .json format. No user-confgurable multiple sequence alignment or tree inference methods have been added.\n"
+                "File is not in .json format. No user-configurable multiple sequence alignment or tree inference methods have been added.\n"
             )
-            return
+            return iqtree_cmd_dict
+
         for name, v in d.items():
             if name == "__comment":
                 continue
             if " " in name:
                 print(f"WARNING: Incorrectly formatted configuration file entry: {name}")
-                print(("No space is allowed in name: '%s'" % name))
+                print(f"No space is allowed in name: '{name}'")
                 continue
-
-            if "iqtree" in name:
-                iqtree_cmd_dict[name] = {}
-            else:
+            if "iqtree" not in name:
                 continue
 
             if "asr_cmd" not in v:
@@ -178,12 +183,11 @@ def program_caller(config_file):
                 print(f"WARNING: Incorrectly formatted configuration file entry: {name}")
                 print("'alisim_cmd' entry is missing")
                 util.Fail()
-            
-            try:
-                iqtree_cmd_dict[name]["asr_cmd"] = v["asr_cmd"]
-                iqtree_cmd_dict[name]["alisim_cmd"] = v["alisim_cmd"]
-            except InvalidEntryException:
-                pass
+
+            iqtree_cmd_dict[name] = {
+                "asr_cmd": v["asr_cmd"],
+                "alisim_cmd": v["alisim_cmd"],
+            }
 
     return iqtree_cmd_dict
 

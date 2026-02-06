@@ -58,10 +58,10 @@ jobs:
       - name: Output information
         run: |
           echo "Pip cache used? ${{ steps.cache-dependencies.outputs.used-cache }}"
-          echo "IQ-TREE2 cache hit? ${{ steps.cache-dependencies.outputs.iqtree2-cache-hit }}"
+          echo "IQ-TREE2 cache hit? ${{ steps.cache-dependencies.outputs.iqtree3-cache-hit }}"
           which python
           python --version
-          which iqtree2 || true
+          which iqtree3 || true
 
       - name: Test screen printout
         run: python recur.py
@@ -91,12 +91,12 @@ jobs:
 
       - name: Verify IQ-TREE2
         run: |
-          which iqtree2
-          iqtree2 --version
+          which iqtree3
+          iqtree3 --version
 
-      # - name: Test with mypy
-      #   id: run-mypy
-      #   run: mypy src/
+      - name: Test with mypy
+        id: run-mypy
+        run: mypy src/
 
       - name: Run on ExampleData
         # if: steps.run-mypy.outcome == 'success'

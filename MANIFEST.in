@@ -1,6 +1,7 @@
 include LICENSE
 include README.md
 include pyproject.toml
+include config.json
 
 recursive-include src/recur *.yaml
 recursive-include src/recur/genetic_codes *
@@ -9,6 +10,7 @@ recursive-include ExampleData *
 # prune docs
 prune tests
 prune .github
+# prune src/recur/bin
 
 exclude Dockerfile
 exclude .dockerignore
@@ -17,7 +19,6 @@ exclude .pre-commit-config.yaml
 exclude CHANGELOG.md
 exclude DEVNOTES.md
 
-# exclude src/recur/bin/iqtree2
 # exclude badge-status.json
 # global-exclude *.png *.svg
 

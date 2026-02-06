@@ -19,7 +19,8 @@ from collections import Counter, defaultdict
 # from concurrent.futures import ProcessPoolExecutor, as_completed
 # from functools import partial
 from typing import Dict, List, Optional, Tuple, Union
-
+from numpy.typing import NDArray
+from decimal import Decimal
 import dendropy
 import numpy as np
 import psutil
@@ -30,7 +31,7 @@ from recur.run import run_commands
 from recur.utils import files, process_args, util, parallel_task_manager
 from recur.utils import analytic_tools as at
 
-
+NumberLike = Union[int, float, str, Decimal]
 # warnings.filterwarnings("ignore", module='dendropy')
 
 
@@ -281,13 +282,17 @@ def ParentChildRelation(treefile: str,
 
 
 def count_mutations(
-        parent_list: List[str],
-        child_list: List[str],
-        sequence_dict: Dict[str, str],
-        residue_dict: Dict[str, int],
-        dash_exist: bool = False,
-        binary_sequence_dict: Optional[Dict[str, str]] = None
-    ) -> Counter[Tuple[int, int, int]]:
+    parent_list: List[str],
+    child_list: List[str],
+    sequence_dict: Dict[str, str],
+    residue_dict: Dict[str, int],
+    dash_exist: bool = False,
+    binary_sequence_dict: Optional[Dict[str, str]] = None,
+) -> Tuple[
+    Counter[Tuple[int, int, int]],
+    NDArray[np.int_],
+    NDArray[np.int_],
+]:
 
     parent_num_list = [
         [residue_dict.get(res, 0) for res in sequence_dict[parent]]
@@ -302,7 +307,7 @@ def count_mutations(
 
     del sequence_dict, parent_num_list, child_num_list
 
-    if dash_exist:
+    if dash_exist and binary_sequence_dict is not None:
         binary_parent_num_list = [
             [1 if res == "1" else 0 for res in binary_sequence_dict[parent]]
             for parent in parent_list
@@ -411,6 +416,12 @@ def round_decimal(x, places=2, rounding=ROUND_HALF_EVEN):
     quantizer = Decimal("1").scaleb(-places)  # equivalent to 10^(-places)
     return x.quantize(quantizer, rounding=rounding)
 
+def _as_float(v: NumberLike) -> float:
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return float("inf")
+
 def update_recurrence_list(
         R: List[int],
         B: int,
@@ -422,7 +433,7 @@ def update_recurrence_list(
         protein_len: int,
         alpha: float = 0.05,
         q: float = 0.05,
-        method: Optional[str] = "fdr_bh",
+        method: at.Method = "fdr_bh",
         pval_stats: bool = False,
     ) -> List[List[Union[str, int, float]]]:
     
@@ -430,7 +441,7 @@ def update_recurrence_list(
     
     extant_seq = {species: seq for species, seq in combined_prot_seqs_dict.items() if species in species_of_interest}
     ident_dict = {}
-    
+
     p_hat, p_adj, ci_lo_adj, ci_hi_adj, decision_sig, robust_sig = \
         at.sitewise_decision(R, B, alpha=alpha, q=q, method=method)
 
@@ -477,7 +488,8 @@ def update_recurrence_list(
         res_freq_str = ",".join([":".join((res, str(freq))) for res, freq in res_freq])
         rec_list.append(res_freq_str)
 
-    recurrence_list.sort(key=lambda x: (-x[6], x[3]), reverse=True)
+    # recurrence_list.sort(key=lambda x: (-x[6], x[3]), reverse=True)
+    recurrence_list.sort(key=lambda x: (_as_float(x[6]), -int(x[3])))
 
     return recurrence_list
 
@@ -544,6 +556,9 @@ def main(args: Optional[List[str]] = None):
                     util.print_centered_text(width, f"Processing gene {gene}")
                 count += 1
                 alnFN = os.path.basename(aln_path)
+                if options.project_dir is None:
+                    raise ValueError("options.project_dir must be set")
+
                 base_dir = os.path.join(options.project_dir, f"{alnFN}.recur")
 
                 filehandler = files.FileHandler(base_dir)
@@ -1144,9 +1159,14 @@ def main(args: Optional[List[str]] = None):
                         #     recurrence_count_file
                         # )
 
+                        recurrence_rows_phylo: list[tuple[int, str, str, int, int]] = [
+                            (int(r[0]), str(r[1]), str(r[2]), int(r[3]), int(r[4]))
+                            for r in recurrence_list
+                        ]
+
                         recurrence_list_fn = filehandler.GetRecurrenceListRealPhylogenyFN(recurrenceDir)
                         filewriter.WriteRecurrenceListRealPhylogeny(
-                            recurrence_list, 
+                            recurrence_rows_phylo, 
                             recurrence_list_fn
                         )
 

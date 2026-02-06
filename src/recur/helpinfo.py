@@ -1,4 +1,3 @@
-
 from recur.utils.process_args import iqtree_nthreads, recur_nthreads
 from recur.citation import print_citation
 try:

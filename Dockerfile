@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN chmod +x ./src/recur/bin/iqtree2 || true
+RUN chmod +x ./src/recur/bin/iqtree3 || true
 
 RUN cp -r ExampleData /usr/src/recur/default_exampledata
 

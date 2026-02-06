@@ -33,6 +33,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10", # base version
     "Programming Language :: Python :: 3.11", #
     "Programming Language :: Python :: 3.12", #
+    "Programming Language :: Python :: 3.13", #
+    "Programming Language :: Python :: 3.14", #
 ]
 dependencies = [
     "numpy",
@@ -99,13 +101,13 @@ include = [
 "ExampleData" = ["*"]
 
 #[tool.setuptools.data-files]
-#"bin" = ["recur.bin.iqtree2"]
+#"bin" = ["recur.bin.iqtree3"]
 
 [tool.setuptools.exclude-package-data]
 recur = [
     "**/__pycache__",
     "**/*.pyc",
-    # "src/bin/iqtree2"
+    # "src/bin/iqtree3"
 ]
 "*" = [
     ".github/**",

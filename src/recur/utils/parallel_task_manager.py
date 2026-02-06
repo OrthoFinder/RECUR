@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+from __future__ import annotations
 
 import concurrent.futures
 import contextlib
@@ -12,18 +12,21 @@ import logging
 from collections import Counter
 from functools import partial
 import platform
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Callable, Mapping, Any, TypedDict
+
+
+
+
 
 import numpy as np
 from rich import print, progress
 
 from recur.utils import util, files
 
-# uncomment to get round problem with python multiprocessing library that can set all cpu affinities to a single cpu
-# This can cause use of only a limited number of cpus in other cases so it has been commented out
-# if sys.platform.startswith("linux"):
-#     with open(os.devnull, "w") as f:
-#         subprocess.call("taskset -p 0xffffffffffff %d" % os.getpid(), shell=True, stdout=f)
+Env = Mapping[str, str]
+
+class PopenKwargs(TypedDict, total=False):
+    preexec_fn: Callable[[], Any]
 
 
 lock = threading.RLock()
@@ -36,13 +39,12 @@ def drop_privileges():
         os.setuid(os.getuid())
 
 def RunCommand(
-        command: str,
-        env: Optional[Dict[str, str]] = None,
-        qPrintOnError: bool = False,
-        qPrintStderr: bool = True
-    ) -> int:
-    
-    kwargs = {}
+    command: str,
+    env: Optional[Env] = None,
+    qPrintOnError: bool = False,
+    qPrintStderr: bool = True,
+) -> int:
+    kwargs: PopenKwargs = {}
     if platform.system() != "Windows":
         kwargs["preexec_fn"] = drop_privileges
 
@@ -53,14 +55,19 @@ def RunCommand(
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            **kwargs 
+            **kwargs,
         )
-        
+
         stdout, stderr = popen.communicate()
 
-        if qPrintOnError and popen.returncode != 0:
+        rc = popen.returncode
+        if rc is None:
+            # communicate() should have waited, but keep mypy/runtime safe
+            rc = popen.wait()
+
+        if qPrintOnError and rc != 0:
             with lock:
-                print(f"\nERROR: external program returned an error code: {popen.returncode}")
+                print(f"\nERROR: external program returned an error code: {rc}")
                 print(f"\nCommand: {command}")
                 print(f"\nstdout:\n{stdout.decode()}")
                 print(f"stderr:\n{stderr.decode()}")
@@ -72,13 +79,14 @@ def RunCommand(
                 print(f"\nstdout:\n{stdout.decode()}")
                 print(f"stderr:\n{stderr.decode()}")
 
-        return popen.returncode
+        return int(rc)
 
     except Exception as e:
         with lock:
             print(f"Exception occurred while running command: {command}")
             print(f"Exception: {e}")
         return -1
+    
 
 def clean_up_files(fileDir: str,
                    processed_files: Set[str],
@@ -183,7 +191,7 @@ def WorkerProcessAndCount(file: str,
                           res_loc_list: List[int],
                           production_logger: logging.Logger,
                           dash_exist: bool = False,
-                          binary_sequence_dict: Dict[str, str] = {},
+                          binary_sequence_dict: Optional[Dict[str, str]] = None,
                           ) -> Tuple[Dict[Tuple[int, int, int], int], str]:
 
     rec_loc_count_dict: Dict[Tuple[int, int, int], int] = {}
@@ -210,7 +218,7 @@ def WorkerProcessAndCount(file: str,
 
         del mcs_combined_prot_seqs_dict, parent_num_list, child_num_list
 
-        if dash_exist:
+        if dash_exist and binary_sequence_dict is not None:
             binary_parent_num_list = [
                 [1 if res == "1" else 0 for res in binary_sequence_dict[parent]]
                 for parent in parent_list
@@ -301,6 +309,7 @@ def process_mcs_files_in_chunks(mcs_alnDir: str,
                      dash_exist=dash_exist,
                      binary_sequence_dict=binary_sequence_dict,
                      )
+
     if mcs_batch_size is not None:
         batches = [mcs_files[i:i + mcs_batch_size] for i in range(0, total_file_count, mcs_batch_size)]
 

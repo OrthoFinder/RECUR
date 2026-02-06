@@ -4,7 +4,7 @@
 import os
 import sys
 import traceback
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union, Sequence, TypeAlias
 
 import dendropy
 import numpy as np
@@ -14,12 +14,17 @@ from recur import __version__
 from recur.utils import process_args, util
 
 
+RowValue: TypeAlias = Union[int, str, float, bool]
+RecurrenceRow: TypeAlias = Sequence[RowValue]
+RecurrenceRowPhylo = Tuple[int, str, str, int, int]
+
+
 class FileHandler(object):
 
     def __init__(self, results_dir: str = ""):
         self.wd_current = ""
         self.rd1 = results_dir
-        self.gene_of_interest = None
+        self.gene_of_interest: str | None = None
 
     def CreateOutputDirectories(self, options: process_args.Options, base_dir: str) -> None:
 
@@ -469,23 +474,31 @@ class FileReader(object):
 
         return recurrence_count_dict
     
-    @staticmethod    
-    def ReadRecurrenceList(recurrence_list_fn: str) -> List[List[Union[str, int]]]:
 
-        recurrence_list = []
+    @staticmethod
+    def ReadRecurrenceList(
+        recurrence_list_fn: str,
+    ) -> List[List[RowValue]]:
+
+        recurrence_list: List[List[RowValue]] = []
+
         with open(recurrence_list_fn) as reader:
             for i, line in enumerate(reader):
                 if i == 0:
                     continue
+
                 res_loc, parent, child, recurrence, reversion = line.strip().split("\t")
-                recurrence_list.append([
-                    int(res_loc) - 1,
-                    parent,
-                    child,
-                    int(recurrence),
-                    int(reversion)
-                ])
-        
+
+                recurrence_list.append(
+                    [
+                        int(res_loc) - 1,
+                        parent,
+                        child,
+                        int(recurrence),
+                        int(reversion),
+                    ]
+                )
+
         return recurrence_list
     
 
@@ -586,24 +599,25 @@ class FileWriter(object):
                 rec_loc, parent, child = key 
                 writer.write("\t".join((str(rec_loc), str(parent), str(child), str(val))) + "\n")
 
-
     @staticmethod
     def WriteRecurrenceListRealPhylogeny(
-            recurrence_list: List[List[Union[str, int]]],
-            outFilename: str,
-        ) -> None:
-        colname = ['Site', 'Parent', 'Child', 'Recurrence', "Reversion"]
+        recurrence_list: Sequence[RecurrenceRowPhylo],
+        outFilename: str,
+    ) -> None:
+        colname = ['Site', 'Parent', 'Child', 'Recurrence', 'Reversion']
+
         with open(outFilename, "w") as writer:
             writer.write("\t".join(colname) + "\n")
-            for rec_list in recurrence_list:
-                if isinstance(rec_list[0], int):
-                    rec_list[0] += 1
-                writer.write("\t".join(map(str, rec_list)) + "\n")
-                rec_list[0] -= 1
+
+            for site, parent, child, recurrence, reversion in recurrence_list:
+                writer.write(
+                    f"{site + 1}\t{parent}\t{child}\t{recurrence}\t{reversion}\n"
+                )
+
 
     @staticmethod
     def WriteRecurrenceList(
-        recurrence_list: List[List[Union[str, int, float]]],
+        recurrence_list: Sequence[RecurrenceRow],
         outFilename: str,
         options: process_args.Options,
     ) -> None:
@@ -638,7 +652,9 @@ class FileWriter(object):
         with open(outFilename, "w") as writer:
             writer.write("\t".join(colname) + "\n")
             for rec_list in recurrence_list:
-                if isinstance(rec_list[0], int):
-                    rec_list[0] += 1
-                writer.write("\t".join(map(str, rec_list)) + "\n")
-                rec_list[0] -= 1
+                site = rec_list[0]
+                if not isinstance(site, int):
+                    raise TypeError("First column (Site) must be int (0-based).")
+
+                out_row = [site + 1, *rec_list[1:]]
+                writer.write("\t".join(map(str, out_row)) + "\n")

@@ -1,11 +1,17 @@
-import os
-import math
-from typing import Dict, List, Optional, Tuple, Union, Sequence
+from __future__ import annotations
 
-import numpy as np 
+import math
+from typing import Literal, Optional, Tuple, Union
+
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from scipy.stats import beta
 from statsmodels.stats.multitest import multipletests
 
+
+MethodFWER = Literal["bonferroni", "holm"]
+MethodFDR = Literal["fdr_bh", "fdr_tsbh", "fdr_tsbky"]
+Method = Union[MethodFWER, MethodFDR]
 
 
 """
@@ -54,7 +60,11 @@ METHODS_FWER = {"bonferroni", "holm"}
 METHODS_FDR  = {"fdr_bh", "fdr_tsbky", "fdr_tsbh"}   # alias for Storey
 
 
-def cp_ci_vec(R: List[int], B: int, alpha=0.05) -> Tuple[float, float]:
+def cp_ci_vec(
+    R: ArrayLike,
+    B: int,
+    alpha: float = 0.05,
+) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     """
     Exact Clopper-Pearson confidence interval (CI) for a Monte-Carlo p-value.
     
@@ -72,22 +82,37 @@ def cp_ci_vec(R: List[int], B: int, alpha=0.05) -> Tuple[float, float]:
     If the whole interval is below the threshold, the conclusion is robust to MC error.
 
     """
-    R = np.asarray(R)
+    Rv = np.asarray(R, dtype=np.int64)
+
     lower = np.where(
-        R == 0,
-        0.0,                                     # CI lower bound is exactly 0
-        beta.ppf(alpha / 2,  R, B - R + 1),
-    )
+        Rv == 0,
+        0.0,
+        beta.ppf(alpha / 2.0, Rv, B - Rv + 1),
+    ).astype(np.float64)
 
     upper = np.where(
-        R == B,
-        1.0,                                     # CI upper bound is exactly 1
-        beta.ppf(1 - alpha / 2, R + 1, B - R),
-    )
+        Rv == B,
+        1.0,
+        beta.ppf(1.0 - alpha / 2.0, Rv + 1, B - Rv),
+    ).astype(np.float64)
 
     return lower, upper
 
-def sitewise_decision(R, B, alpha=0.05, q=0.05, method="fdr_bh"):
+
+def sitewise_decision(
+    R: ArrayLike,
+    B: int,
+    alpha: float = 0.05,
+    q: float = 0.05,
+    method: Method = "fdr_bh",
+) -> Tuple[
+    NDArray[np.float64],  # p_hat
+    NDArray[np.float64],  # p_adj
+    NDArray[np.float64],  # ci_lo_adj
+    NDArray[np.float64],  # ci_hi_adj
+    NDArray[np.bool_],    # decision_sig
+    NDArray[np.bool_],    # robust
+]:
     """
     Perform site-wise hypothesis testing with Monte Carlo p-values,
     multiple testing correction, and confidence interval analysis.
@@ -142,42 +167,58 @@ def sitewise_decision(R, B, alpha=0.05, q=0.05, method="fdr_bh"):
 
     """
 
-    method = method.lower()
-    if method not in {"bonferroni", "holm", "fdr_bh", "fdr_by", "fdr_tsbh"}:
-        raise ValueError("method must be bonferroni, holm, fdr_bh, fdr_by, or fdr_tsbh")
+    method_lc = method.lower()
+    if method_lc not in METHODS_FWER | METHODS_FDR:
+        raise ValueError(f"Unsupported method: {method}")
 
-    R_vec = np.asarray(R)
-    M  = len(R_vec)
+    R_vec = np.asarray(R, dtype=np.int64)
+    M = int(R_vec.size)
 
-    p_hat = (R_vec + 1) / (B + 1) 
+    p_hat = (R_vec + 1) / (B + 1)
     ci_lo, ci_hi = cp_ci_vec(R_vec, B, alpha)
 
-    if method == "bonferroni":
+    if method_lc == "bonferroni":
         p_adj = np.minimum(1.0, M * p_hat)
         ci_lo_adj = np.minimum(1.0, M * ci_lo)
         ci_hi_adj = np.minimum(1.0, M * ci_hi)
         thresh = alpha
-    else:
-        thresh = q 
+    elif method_lc == "holm":
+        # Holm is FWER with familywise alpha, not q
+        thresh = alpha
         pvals = np.clip(p_hat, 0.0, 1.0)
-        lo_clipped = np.clip(ci_lo, 0.0, 1.0)
-        hi_clipped = np.clip(ci_hi, 0.0, 1.0)
+        lo = np.clip(ci_lo, 0.0, 1.0)
+        hi = np.clip(ci_hi, 0.0, 1.0)
+        _, p_adj, *_ = multipletests(pvals, alpha=thresh, method="holm")
+        _, ci_lo_adj, *_ = multipletests(lo, alpha=thresh, method="holm")
+        _, ci_hi_adj, *_ = multipletests(hi, alpha=thresh, method="holm")
+    else:
+        # FDR methods use q
+        thresh = q
+        pvals = np.clip(p_hat, 0.0, 1.0)
+        lo = np.clip(ci_lo, 0.0, 1.0)
+        hi = np.clip(ci_hi, 0.0, 1.0)
+        _, p_adj, *_ = multipletests(pvals, alpha=thresh, method=method_lc)
+        _, ci_lo_adj, *_ = multipletests(lo, alpha=thresh, method=method_lc)
+        _, ci_hi_adj, *_ = multipletests(hi, alpha=thresh, method=method_lc)
 
-        _, p_adj,  *_ = multipletests(pvals, alpha=thresh, method=method)
-        _, ci_lo_adj, *_ = multipletests(lo_clipped, alpha=thresh, method=method)
-        _, ci_hi_adj, *_ = multipletests(hi_clipped, alpha=thresh, method=method)
-
-    decision_sig = p_adj < thresh  # point-estimate verdict
-
-    robust_sig = ci_hi_adj < thresh  # always significant
-    robust_nonsig= ci_lo_adj > thresh    # always non-significant
+    decision_sig = (p_adj < thresh)
+    robust_sig = (ci_hi_adj < thresh)
+    robust_nonsig = (ci_lo_adj > thresh)
     robust = robust_sig | robust_nonsig
-    # unstable = ~(robust_sig | robust_nonsig)   # CI crosses threshold
 
-    return p_hat, p_adj, ci_lo_adj, ci_hi_adj, decision_sig, robust
+    # Casts for stable dtypes
+    return (
+        np.asarray(p_hat, dtype=np.float64),
+        np.asarray(p_adj, dtype=np.float64),
+        np.asarray(ci_lo_adj, dtype=np.float64),
+        np.asarray(ci_hi_adj, dtype=np.float64),
+        np.asarray(decision_sig, dtype=np.bool_),
+        np.asarray(robust, dtype=np.bool_),
+    )
 
 
-def method_selection(M: int, suspect_dependence: bool = False) -> str:
+
+def method_selection(M: int, suspect_dependence: bool = False) -> Method:
     """
     Heuristic chooser for multiple-testing methods (keeps Bonferroni).
 
@@ -214,21 +255,20 @@ def method_selection(M: int, suspect_dependence: bool = False) -> str:
 
     return "fdr_tsbky" if suspect_dependence else "fdr_tsbh"     # FDR
 
-
 def min_mcs(
-        M,
-        method="fdr_bh",
-        *,
-        alpha=0.05,
-        q=0.05,
-        pi0=1.0, 
-        p_expected=None,
-        eps=None,
-        rel_tol=0.1,
-        extra_grid_cushion=False,
-        suspect_dependence=False,
-        mc_error_control=False,
-    ):
+    M: int,
+    method: Optional[Method] = "fdr_bh",
+    *,
+    alpha: float = 0.05,
+    q: float = 0.05,
+    pi0: float = 1.0,
+    p_expected: Optional[float] = None,
+    eps: Optional[float] = None,
+    rel_tol: float = 0.1,
+    extra_grid_cushion: bool = False,
+    suspect_dependence: bool = False,
+    mc_error_control: bool = False,
+) -> Tuple[Method, int]:
     
     """
     Estimate the minimum number of Monte Carlo simulations (B) required to control
@@ -280,58 +320,42 @@ def min_mcs(
 
     Returns
     -------
+    selected: str
+        Selected p-value adjustment method
     B_required : int
         Minimum number of Monte Carlo simulations needed to meet the grid and/or
         MC error criteria under the specified correction method.
+    
 
     """
-    if method is not None:
-        if method not in (METHODS_FWER | METHODS_FDR):
-            raise ValueError("method must be one of: "
-                             "bonferroni, holm, hochberg, hommel, "
-                             "sidak, holm-sidak, fdr_bh, fdr_tsbh, "
-                             "fdr_tsbky, or fdr_by")
-        selected = method
+    if method is None:
+        selected: Method = method_selection(M, suspect_dependence)
     else:
-        selected = method_selection(M, suspect_dependence)
+        method_lc = method.lower()
+        if method_lc not in METHODS_FWER | METHODS_FDR:
+            raise ValueError(
+                "method must be one of: bonferroni, holm, fdr_bh, fdr_tsbh, fdr_tsbky"
+            )
+        selected = method_lc  # type: ignore[assignment]
 
-    if selected in {"bonferroni", "holm", "hochberg", "hommel"}:
-        threshold = alpha / M    # smallest cutoff among these FWER methods
-
-    elif selected == "sidak":
-        threshold = 1.0 - (1.0 - alpha)**(1.0 / M)
-
-    elif selected == "holm-sidak":
-        threshold = 1.0 - (1.0 - alpha)**(1.0 / M)
-
+    # smallest relevant cutoff (grid resolution target)
+    if selected in {"bonferroni", "holm"}:
+        threshold = alpha / M
     elif selected == "fdr_bh":
         threshold = q / M
-
-    elif selected in ["fdr_tsbh", "fdr_tsbky"]:
-        threshold = q / (pi0 * M) # pi0 from pilot or worst-case 1.0
-
-    elif selected == "fdr_by":
-        c_m = np.sum(1.0 / np.arange(1, M + 1)) # harmonic sum
-        threshold = q / (M * c_m)
+    else:  # fdr_tsbh or fdr_tsbky
+        threshold = q / (pi0 * M)
 
     if extra_grid_cushion:
         threshold /= 2.0
 
-    # grid-resolution
-    B_grid = math.ceil(1 / threshold)
+    B_grid = math.ceil(1.0 / threshold)
     B_required = B_grid
-    
+
     if mc_error_control:
-        # Monte-Carlo standard-error requirement (optional)
-        if p_expected is None:
-            p_expected = threshold 
-        
-        if eps is None:                  
-            eps = rel_tol * p_expected 
-
-        B_error = math.ceil(p_expected * (1 - p_expected) / eps**2)
-        B_error = max(B_error, 0)      # just in case
-
+        pe = threshold if p_expected is None else float(p_expected)
+        e = (rel_tol * pe) if eps is None else float(eps)
+        B_error = math.ceil(pe * (1.0 - pe) / (e * e))
         B_required = max(B_grid, B_error)
 
-    return selected, B_required
+    return selected, int(B_required)
