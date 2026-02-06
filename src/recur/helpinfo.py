@@ -100,7 +100,7 @@ def PrintHelp(other_options: bool = False) -> None:
 
     table_options.add_row(
         "--iqtree-version <[bright_magenta]str[/bright_magenta]>",
-        f"IQ-TREE version. [Default: [dark_cyan]iqtree2[/dark_cyan]]"
+        f"IQ-TREE version. [Default: [dark_cyan]iqtree3[/dark_cyan]]"
     )
 
     table_options.add_row(
