@@ -176,6 +176,7 @@ myanalysis/
 ExampleData/*.recur
 ExampleData/*.recur.tsv
 Species*/
+ExampleData*
 hooks/
 PEPC/
 TestData/

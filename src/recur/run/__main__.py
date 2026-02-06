@@ -383,10 +383,12 @@ def get_recurrence_list(rec_loc_count_dict: Counter[Tuple[int, int, int]],
     return recurrence_list
 
 def mcs_count_greater(
-        mcs_results: List[Dict[Tuple[int, int, int], int]],
-        recurrence_list: List[List[Union[str, int, float]]],
-        residue_dict: Dict[str, int],
-    ) -> List[int]:
+    mcs_results: List[Dict[Tuple[int, int, int], int]],
+    recurrence_list: List[List[Union[str, int, float]]],
+    residue_dict: Dict[str, int],
+) -> List[int]:
+
+    count_greater_list: List[int] = []
 
     try:
         key2counts: Dict[Tuple[int, int, int], List[int]] = defaultdict(list)
@@ -394,7 +396,6 @@ def mcs_count_greater(
             for key, value in d.items():
                 key2counts[key].append(value)
 
-        count_greater_list: List[int] = []
         for rec_list in recurrence_list:
             key = (
                 int(rec_list[0]),
@@ -402,15 +403,17 @@ def mcs_count_greater(
                 residue_dict[str(rec_list[2])],
             )
             counts = key2counts.get(key, [])
-            count_greater_list.append(sum(c >= int(rec_list[3]) for c in counts))
-        return count_greater_list
+            count_greater_list.append(
+                sum(c >= int(rec_list[3]) for c in counts)
+            )
 
     except Exception as e:
         error_msg = f"ERROR during compute_p_values: {e}"
         print(error_msg)
         print(traceback.format_exc())
-    finally:
-        return count_greater_list
+
+    return count_greater_list
+
 
 def round_decimal(x, places=2, rounding=ROUND_HALF_EVEN):
     quantizer = Decimal("1").scaleb(-places)  # equivalent to 10^(-places)
