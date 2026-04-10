@@ -130,7 +130,7 @@ permalink: /installation/
   ```
   When you run `make install USE_CONDA=false`, a prompt message will pop up on your terminal and ask your permission to use or create a `~/local/bin` under your home directory. If `y`, IQ-TREE and RECUR binaries will be saved in that directory on completion of the installation process. If `n`, you will need to provide a name of the directory you wish to create or use relative to your home directory.
 
-  Please note that even if RECUR has a IQ-TREE binary shipped with it, running `make install USE_CONDA=false` will reinstall IQ-TREE to `~/local/bin` if you do not have IQ-TREE installed globally. If you already have IQ-TREE installed globally, the isntallation of IQ-TREE will be skipped. The same as RECUR. By default, `make install USE_CONDA=false` will install the latest version of IQ-TREE and RECUR. If you wish to override your older version of those two softwares, you can run `make install USE_CONDA=false FORCE=true`. 
+  Please note that even if RECUR has an IQ-TREE binary shipped with it, running `make install USE_CONDA=false` will reinstall IQ-TREE to `~/local/bin` if you do not have IQ-TREE installed globally. If you already have IQ-TREE installed globally, the installation of IQ-TREE will be skipped. The same as RECUR. By default, `make install USE_CONDA=false` will install the latest version of IQ-TREE and RECUR. If you wish to override your older version of those two softwares, you can run `make install USE_CONDA=false FORCE=true`. 
 
   You can also utilise the Makefile to only update the IQ-TREE binary. Running `make install_iqtree3 USE_CONDA=false FORCE=true` will only force to install/update the IQ-TREE binary inside the `~/local/bin`. If you have `sudo` access, you can also run `make install_iqtree3 USE_CONDA=false FORCE=true SYSTEM_WIDE=true` to install IQ-TREE inside `/usr/local/bin`. The default IQ-TREE version is `3.0.1`.
 
@@ -155,7 +155,7 @@ permalink: /installation/
   make clean_iqtree3
   ``` 
 
-  > You can also run `make conda_install` to install RECUR inside the `recur_env` namespace inside conda (**NOT AVAILABEL at the moment**). 
+  > You can also run `make conda_install` to install RECUR inside the `recur_env` namespace inside conda. 
   > To remove the `recur_env` namespace, you can simply run `make clean_conda_env`
 
 ### Run RECUR in a Docker Container
