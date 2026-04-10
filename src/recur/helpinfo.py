@@ -52,8 +52,8 @@ def PrintHelp(other_options: bool = False) -> None:
     )
 
     table_options.add_row(
-        "--num-alignments <[bright_magenta]int[/bright_magenta]>",
-        f"Number of simulated alignments for p-value estimation [Default: [deep_sky_blue2]1000[/deep_sky_blue2]]"
+        "--num-alignments <[bright_magenta]int[/bright_magenta]>", 
+        f"Number of simulated alignments for p-value estimation [Default: Auto-set to ensure the test can detect sufficiently small p-values]"
     )
 
     table_options.add_row(
@@ -81,7 +81,7 @@ def PrintHelp(other_options: bool = False) -> None:
 
     table_options.add_row(
         "--seed <[bright_magenta]int[/bright_magenta]>",
-        f"Random starting see number [Default: [deep_sky_blue2]8[/deep_sky_blue2]]"
+        f"Random starting seed number [Default: [deep_sky_blue2]8[/deep_sky_blue2]]"
     )
 
     table_options.add_row(
@@ -110,12 +110,12 @@ def PrintHelp(other_options: bool = False) -> None:
 
     table_options.add_row(
         "-pam <[bright_magenta]str[/bright_magenta]>",
-        f"P-Value adjustment method. Available methods: bonferroni, holm, fdr_bh, fdr_by, fdr_tsbh, fdr_tsbky. [Default: [dark_cyan]None[/dark_cyan]]"
+        f"P-Value adjustment method. Available methods: bonferroni, holm, fdr_bh, fdr_by, fdr_tsbh, fdr_tsbky. [Default: [dark_cyan]Auto-set based on --num-alignments[/dark_cyan]]"
     )
 
     table_options.add_row(
         "-blfix",
-        f"Fix branch lengths of tree. [Default: [dark_cyan]False[/dark_cyan]]"
+        f"Fix branch lengths of constraint tree. [Default: [dark_cyan]False[/dark_cyan]]"
     )
     table_options.add_row(
         "--no-branch-test",
@@ -152,7 +152,7 @@ def PrintHelp(other_options: bool = False) -> None:
 
         other_options_table.add_row(
             "",
-            "Without phylogenetic tree provided: 1) Inferring ancestral sequences, phylogenetic tree and model of evolution;"
+            "Without phylogenetic tree provided: 1) Inferring phylogenetic tree and model of evolution;"
             " 2) Inferring ancestral sequences; 3) Simulating sequence evolution; 4) Analysing recurrent substitutions",
         )
 
@@ -163,15 +163,17 @@ def PrintHelp(other_options: bool = False) -> None:
         )
 
         other_options_table.add_row(
+            "--recur-limit <[bright_magenta]int[/bright_magenta]>",
+            f"The threshold for keeping simulated alignment files. If the number of simulations exceed threshold simulated alignment files are deleted to protect disk space. [Default: [dark_cyan]1000[/dark_cyan]]"
+        )
+
+        other_options_table.add_row(
             "-nb <[bright_magenta]int[/bright_magenta]>",
             "Batch size for Monte Carlo simulations, controlling the number of stages in multi-stage analysis "
             "[Default: [dark_cyan]no batch processing[/dark_cyan]]"
         )
 
-        other_options_table.add_row(
-            "--recur-limit <[bright_magenta]int[/bright_magenta]>",
-            f"The threshold for keeping simulated alignments. If the number of simulations exceed threshold simulated alignment files are deleted to protect disk space. [Default: [dark_cyan]1000[/dark_cyan]]"
-        )
+
 
         # other_options_table.add_row(
         #     "-ret <[bright_magenta]float[/bright_magenta]>",
