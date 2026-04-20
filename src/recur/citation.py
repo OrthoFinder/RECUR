@@ -3,7 +3,7 @@ print_citation = """
 CITATION:
 When publishing work that uses [dark_goldenrod]RECUR[/dark_goldenrod] please cite:
 
-Robbins EHJ, Liu Y, Kelly S. 2025. [dark_goldenrod]RECUR[/dark_goldenrod]: Identifying recurrent amino acid substitutions from multiple sequence alignments 
+Elizabeth H J Robbins, Yi Liu, Steven Kelly, RECUR: identifying recurrent amino acid substitutions from multiple sequence alignments, Molecular Biology and Evolution, Volume 43, Issue 2, February 2026, msag036, https://doi.org/10.1093/molbev/msag036
 """
 
 # Citation

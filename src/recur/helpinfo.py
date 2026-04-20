@@ -29,7 +29,7 @@ def PrintHelp(other_options: bool = False) -> None:
 
     table_options.add_row(
         "-f <[bright_magenta]dir/file[/bright_magenta]>",
-        f"Protein or codon alignment in [red1]FASTA[/red1] format [orange3][Required][/orange3]"
+        f"Protein or codon alignment in [red1]FASTA[/red1] format. [orange3][Required][/orange3]"
     )
 
     table_options.add_row(
@@ -42,60 +42,60 @@ def PrintHelp(other_options: bool = False) -> None:
         "When no [dark_cyan]CODON[/dark_cyan] number is specified, [dark_cyan]CODON1[/dark_cyan] will be used. "
         "To change the genetic codes, please append number after [dark_cyan]CODON[/dark_cyan], e.g., [dark_cyan]CODON2[/dark_cyan]. "
         "Valid options are for instance [dark_cyan]CODON[1-11][/dark_cyan]. "
-        "For more information please refer to http://www.iqtree.org/doc/Substitution-Models#codon-models"
+        "For more information please refer to [dodger_blue1]http://www.iqtree.org/doc/Substitution-Models#codon-models[/dodger_blue1]."
     )
 
 
     table_options.add_row(
         "--outgroups <[bright_magenta]dir/file/str[/bright_magenta]>",
-        f"List of outgroup sequences [orange3][Required][/orange3]"
+        f"List of outgroup sequences. [orange3][Required][/orange3]"
     )
 
     table_options.add_row(
         "--num-alignments <[bright_magenta]int[/bright_magenta]>", 
-        f"Number of simulated alignments for p-value estimation [Default: Auto-set to ensure the test can detect sufficiently small p-values]"
+        f"Number of simulated alignments for p-value estimation. [Default: [dark_cyan]Auto-set to ensure the test can detect sufficiently small p-values[/dark_cyan]]"
     )
 
     table_options.add_row(
         "-te <[bright_magenta]dir/file[/bright_magenta]>",
-        f"Complete constraint tree [Default: [dark_cyan]estimated from alignment[/dark_cyan]]"
+        f"Complete constraint tree. [Default: [dark_cyan]estimated from alignment[/dark_cyan]]"
     )
 
     table_options.add_row(
         "-m <[bright_magenta]str[/bright_magenta]>",
-        f"Model of sequence evolution [Default: [dark_cyan]estimated from alignment[/dark_cyan]]"
+        f"Model of sequence evolution. [Default: [dark_cyan]estimated from alignment[/dark_cyan]]"
     )
 
 
     table_options.add_row(
         "-t <[bright_magenta]int[/bright_magenta]>",
-        f"Number of threads used for RECUR internal processing [Default: [deep_sky_blue2]{recur_nthreads}[/deep_sky_blue2]]"
+        f"Number of threads used for [dark_goldenrod]RECUR[/dark_goldenrod] internal processing. [Default: [deep_sky_blue2]{recur_nthreads}[/deep_sky_blue2]]"
     )
 
     table_options.add_row(
         "-nt <[bright_magenta]int[/bright_magenta]>",
-        f"Number of threads provided to IQ-TREE [Default: [deep_sky_blue2]1[/deep_sky_blue2] (without alrt); [deep_sky_blue2]{iqtree_nthreads}[/deep_sky_blue2] (with alrt)]"
+        f"Number of threads provided to IQ-TREE. [Default: [deep_sky_blue2]1[/deep_sky_blue2] (without alrt); [deep_sky_blue2]{iqtree_nthreads}[/deep_sky_blue2] (with alrt)]"
     )
 
 
 
     table_options.add_row(
         "--seed <[bright_magenta]int[/bright_magenta]>",
-        f"Random starting seed number [Default: [deep_sky_blue2]8[/deep_sky_blue2]]"
+        f"Random starting seed number. [Default: [deep_sky_blue2]8[/deep_sky_blue2]]"
     )
 
     table_options.add_row(
         "--output <[bright_magenta]txt[/bright_magenta]>",
-        f"Results directory [Default: [dark_cyan]same directory as MSA files[/dark_cyan]]"
+        f"Results directory. [Default: [dark_cyan]same directory as MSA files[/dark_cyan]]"
     )
     table_options.add_row(
         "-uc <[bright_magenta]int[/bright_magenta]>",
-        f"Update cycle used in progress bar [Default: [dark_cyan]no progress bar[/dark_cyan]]"
+        f"Update cycle used in progress bar. [Default: [dark_cyan]no progress bar[/dark_cyan]]"
     )
 
     table_options.add_row(
         "-bs <[bright_magenta]int[/bright_magenta]>",
-        f"Batch size for Monte Carlo Simulation analysis to limit ram usage [Default: [dark_cyan]no batch processing[/dark_cyan]]"
+        f"Batch size for Monte Carlo Simulation analysis to limit ram usage. [Default: [dark_cyan]no batch processing[/dark_cyan]]"
     )
 
     table_options.add_row(
@@ -153,13 +153,13 @@ def PrintHelp(other_options: bool = False) -> None:
         other_options_table.add_row(
             "",
             "Without phylogenetic tree provided: 1) Inferring phylogenetic tree and model of evolution;"
-            " 2) Inferring ancestral sequences; 3) Simulating sequence evolution; 4) Analysing recurrent substitutions",
+            " 2) Inferring ancestral sequences; 3) Simulating sequence evolution; 4) Analysing recurrent substitutions.",
         )
 
         other_options_table.add_row(
             "",
             "With phylogenetic tree provided: 1) Inferring evolutionary parameters using tree provided;"
-            " 2) Simulating sequence evolution; 3) Analysing recurrent substitutions"
+            " 2) Simulating sequence evolution; 3) Analysing recurrent substitutions."
         )
 
         other_options_table.add_row(
@@ -169,11 +169,15 @@ def PrintHelp(other_options: bool = False) -> None:
 
         other_options_table.add_row(
             "-nb <[bright_magenta]int[/bright_magenta]>",
-            "Batch size for Monte Carlo simulations, controlling the number of stages in multi-stage analysis "
+            "Batch size for Monte Carlo simulations, controlling the number of stages in multi-stage analysis. "
             "[Default: [dark_cyan]no batch processing[/dark_cyan]]"
         )
 
-
+        other_options_table.add_row(
+            "-iv <[bright_magenta]str[/bright_magenta]>",
+            "IQ-TREE version.  "
+            "[Default: [dark_cyan]iqtree3[/dark_cyan]]"
+        )
 
         # other_options_table.add_row(
         #     "-ret <[bright_magenta]float[/bright_magenta]>",
