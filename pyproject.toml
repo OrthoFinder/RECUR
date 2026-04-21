@@ -76,7 +76,7 @@ test = ["pytest", "pytest-cov[all]"]
 # pipdeptree -p recur --graph-output png > dependency-graph.png
 
 [project.scripts]
-recur = "recur.run.__main__:main"
+recur = "recur.run.main:main"
 
 [tool.semantic_release]
 version_variable = "pyproject.toml:version"

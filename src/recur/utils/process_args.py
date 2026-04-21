@@ -305,6 +305,8 @@ def ProcessArgs(args: List[Any]) -> Tuple[Options, str, Optional[str], Optional[
 
         elif arg == "-iv" or arg == "--iqtree-version":
             options.iqtree_version = args.pop(0)
+            print()
+            print(f"### You are now switched to {options.iqtree_version} ###")
 
         elif arg == "-una" or arg == "--usr-node-aln":
             if len(args) == 0:

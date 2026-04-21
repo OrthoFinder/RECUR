@@ -164,7 +164,7 @@ def PrintHelp(other_options: bool = False) -> None:
 
         other_options_table.add_row(
             "--recur-limit <[bright_magenta]int[/bright_magenta]>",
-            f"The threshold for keeping simulated alignment files. If the number of simulations exceed threshold simulated alignment files are deleted to protect disk space. [Default: [dark_cyan]1000[/dark_cyan]]"
+            f"The threshold for keeping simulated alignment files. If the number of simulations exceed threshold simulated alignment files are deleted to protect disk space. [Default: [deep_sky_blue2]1000[/deep_sky_blue2]]"
         )
 
         other_options_table.add_row(

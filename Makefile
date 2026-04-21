@@ -57,24 +57,13 @@ IQTREE_DEFAULT_VERSION := 2.4.0
 IQTREE_VERSION ?= $(IQTREE_DEFAULT_VERSION)
 IQTREE3_VERSION := 3.0.1
 
-# URLs for IQ-TREE2 urlS
-IQTREE2_LINUX_INTEL := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-Linux-intel.tar.gz
-IQTREE2_LINUX_ARM := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-Linux-arm.tar.gz
-
-IQTREE2_MACOS_UNIVERSAL := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-macOS.zip
-IQTREE2_MACOS_INTEL := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-macOS-intel.zip
-IQTREE2_MACOS_ARM := https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-macOS-arm.zip
-
-IQTREE2_BINARY := $(BINARY_INSTALL_DIR)/iqtree2
-
 # URLs for IQ-TREE3 urlS
-IQTREE3_LINUX_UNIVERSAL := https://github.com/iqtree/iqtree3/releases/download/v3.0.1/iqtree-3.0.1-Linux.tar.gz
-IQTREE3_LINUX_INTEL := https://github.com/iqtree/iqtree3/releases/download/v3.0.1/iqtree-3.0.1-Linux-intel.tar.gz
-IQTREE3_LINUX_ARM := https://github.com/iqtree/iqtree3/releases/download/v3.0.1/iqtree-3.0.1-Linux-arm.tar.gz
+IQTREE3_LINUX_INTEL := https://github.com/iqtree/iqtree3/releases/download/v3.1.1/iqtree-3.1.1-Linux-intel.tar.gz
+IQTREE3_LINUX_ARM := https://github.com/iqtree/iqtree3/releases/download/v3.1.1/iqtree-3.1.1-Linux-arm.tar.gz
 
-IQTREE3_MACOS_UNIVERSAL := https://github.com/iqtree/iqtree3/releases/download/v3.0.1/iqtree-3.0.1-macOS.zip
-IQTREE3_MACOS_INTEL := https://github.com/iqtree/iqtree3/releases/download/v3.0.1/iqtree-3.0.1-macOS-intel.zip
-IQTREE3_MACOS_ARM := https://github.com/iqtree/iqtree3/releases/download/v3.0.1/iqtree-3.0.1-macOS-arm.zip
+IQTREE3_MACOS_UNIVERSAL := https://github.com/iqtree/iqtree3/releases/download/v3.1.1/iqtree-3.1.1-macOS.zip
+IQTREE3_MACOS_INTEL := https://github.com/iqtree/iqtree3/releases/download/v3.1.1/iqtree-3.1.1-macOS-intel.zip
+IQTREE3_MACOS_ARM := https://github.com/iqtree/iqtree3/releases/download/v3.1.1/iqtree-3.1.1-macOS-arm.zip
 
 IQTREE3_BINARY := $(BINARY_INSTALL_DIR)/iqtree3
 
@@ -108,19 +97,6 @@ create_conda_env: check_conda
 		echo "Conda environment $(ENV_NAME) with Python $(CONDA_PYTHON_VERSION) created successfully."; \
 	fi
 
-conda_install_iqtree2: create_conda_env
-	@echo "Checking global paths for IQ-TREE2..."; \
-	iqtree2_exists=$$(command -v iqtree2 > /dev/null && echo 1 || echo 0); \
-
-	if [ "$(FORCE)" = "true" ] || [ "$$iqtree2_exists" = "0" ]; then \
-		echo "Installing IQ-TREE2 version $(IQTREE_VERSION) in $(ENV_NAME)..."; \
-		. $(shell conda info --base)/etc/profile.d/conda.sh && \
-		conda activate $(ENV_NAME) && \
-		conda install bioconda::iqtree=$(IQTREE_VERSION) -y || { echo "Error: Failed to install IQ-TREE2. Exiting."; exit 1; }; \
-		echo "IQ-TREE2 version $(IQTREE_VERSION) installed successfully."
-	elif [ "$$iqtree2_exists" = "1" ]; then \
-		echo "IQ-TREE2 already exist globally. Skipping installation."; \
-	fi
 
 conda_install_iqtree3: create_conda_env
 	@echo "Checking global paths for IQ-TREE3..."; \
@@ -208,71 +184,6 @@ make_usr_bin:
 	fi
 
 
-install_iqtree2: make_usr_bin
-	@echo "Checking global paths for IQ-TREE2..."; \
-	iqtree2_exists=$$(command -v iqtree2 > /dev/null && echo 1 || echo 0); \
-
-	if [ "$(FORCE)" = "true" ] || [ "$$iqtree2_exists" = "0" ]; then \
-		echo "Detecting system architecture..."; \
-		OS=$$(uname -s); ARCH=$$(uname -m); \
-		if [ "$$OS" = "Linux" ]; then \
-			if [ "$$ARCH" = "x86_64" ]; then \
-				IQTREE_URL=$(IQTREE2_LINUX_INTEL); \
-			elif [ "$$ARCH" = "aarch64" ]; then \
-				IQTREE_URL=$(IQTREE2_LINUX_ARM); \
-			else \
-				echo "Error: Unsupported Linux architecture: $$ARCH"; exit 1; \
-			fi; \
-		elif [ "$$OS" = "Darwin" ]; then \
-			if [ "$$ARCH" = "arm64" ]; then \
-				IQTREE_URL=$(IQTREE2_MACOS_ARM); \
-			elif [ "$$ARCH" = "x86_64" ]; then \
-				IQTREE_URL=$(IQTREE2_MACOS_INTEL); \
-			else \
-				IQTREE_URL=$(IQTREE2_MACOS_UNIVERSAL); \
-			fi; \
-		else \
-			echo "Error: Unsupported operating system: $$OS"; exit 1; \
-		fi; \
-		echo "Downloading IQ-TREE2 from $$IQTREE_URL..."; \
-		temp_dir=$$(mktemp -d); \
-		download_path=$$temp_dir/iqtree2-src; \
-		if [ "$(QUIET)" = "true" ]; then \
-			wget -O $$download_path $$IQTREE_URL > /dev/null 2>&1 || { echo "Error: Failed to download IQ-TREE2."; rm -rf $$temp_dir; exit 1; }; \
-		else \
-			wget -O $$download_path $$IQTREE_URL || { echo "Error: Failed to download IQ-TREE2."; rm -rf $$temp_dir; exit 1; }; \
-		fi; \
-		echo "Extracting IQ-TREE2..."; \
-		if echo "$$IQTREE_URL" | grep -q '.tar.gz'; then \
-			if [ "$(QUIET)" = "true" ]; then \
-				tar -xzf $$download_path -C $$temp_dir > /dev/null 2>&1 || { echo "Error: Failed to extract IQ-TREE2 tar.gz file."; rm -rf $$temp_dir; exit 1; }; \
-			else \
-				tar -xzf $$download_path -C $$temp_dir || { echo "Error: Failed to extract IQ-TREE2 tar.gz file."; rm -rf $$temp_dir; exit 1; }; \
-			fi; \
-		elif echo "$$IQTREE_URL" | grep -q '.zip'; then \
-			if [ "$(QUIET)" = "true" ]; then \
-				unzip -o $$download_path -d $$temp_dir > /dev/null 2>&1 || { echo "Error: Failed to extract IQ-TREE2 zip file."; rm -rf $$temp_dir; exit 1; }; \
-			else \
-				unzip -o $$download_path -d $$temp_dir || { echo "Error: Failed to extract IQ-TREE2 zip file."; rm -rf $$temp_dir; exit 1; }; \
-			fi; \
-		else \
-			echo "Error: Unknown file format for IQ-TREE2."; rm -rf $$temp_dir; exit 1; \
-		fi; \
-		echo "Locating extracted IQ-TREE2 binary..."; \
-		iqtree2_binary=$$(find $$temp_dir -type f -name "iqtree*" -executable | head -1); \
-		if [ -z "$$iqtree2_binary" ]; then \
-			echo "Error: IQ-TREE2 binary not found after extraction."; rm -rf $$temp_dir; exit 1; \
-		fi; \
-		echo "Moving IQ-TREE2 binary to $(BINARY_INSTALL_DIR)..."; \
-		$(SUDO_PREFIX) mv $$iqtree2_binary $(BINARY_INSTALL_DIR) || { echo "Error: Failed to move IQ-TREE2 binary."; rm -rf $$temp_dir; exit 1; }; \
-		rm -rf $$temp_dir; \
-		echo "IQ-TREE2 installation completed successfully."; \
-	else \
-		iqtree2_path=$$(command -v iqtree2); \
-		echo "IQ-TREE2 already exists at: $$iqtree2_path. Skipping installation."; \
-	fi
-
-
 install_iqtree3: make_usr_bin
 	@echo "Checking global paths for IQ-TREE3..."; \
 	iqtree3_exists=$$(command -v iqtree3 > /dev/null && echo 1 || echo 0); \
@@ -285,8 +196,7 @@ install_iqtree3: make_usr_bin
 				IQTREE_URL=$(IQTREE3_LINUX_INTEL); \
 			elif [ "$$ARCH" = "aarch64" ]; then \
 				IQTREE_URL=$(IQTREE3_LINUX_ARM); \
-			else \
-				IQTREE_URL=$(IQTREE3_LINUX_UNIVERSAL); \
+				echo "Downloading IQ-TREE3 IQTREE3_LINUX_ARM version..."; \
 			fi; \
 		elif [ "$$OS" = "Darwin" ]; then \
 			if [ "$$ARCH" = "arm64" ]; then \
@@ -336,14 +246,6 @@ install_iqtree3: make_usr_bin
 		iqtree3_path=$$(command -v iqtree3); \
 		echo "IQ-TREE3 already exists at: $$iqtree3_path. Skipping installation."; \
 	fi
-
-
-
-clean_iqtree2:
-	@echo "Cleaning user-specific IQ-TREE2 installation..."; \
-	$(SUDO_PREFIX) rm -f "$(IQTREE2_BINARY)" && \
-	echo "User-specific IQ-TREE2 successfully removed." || \
-	{ echo "Error: Failed to remove user-specific IQ-TREE2 binary from $(IQTREE2_BINARY). Exiting."; exit 1; }; \
 
 
 clean_iqtree3:
