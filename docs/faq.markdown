@@ -14,7 +14,7 @@ permalink: /faq/
 #### **2. Can I use an different IQ-TREE version?**
    The short answer is, yes you can!
    
-   RECUR requires IQ-TREE version 2.0 or higher to function correctly. The default IQ-TREE version bundled with RECUR is 3.0.1, which uses the binary name `iqtree3`. If you're using a different version of IQ-TREE (e.g., IQ-TREE2), ensure that the corresponding binary is accessible in your environment. You can specify the binary name using the `-iv` or `--iqtree-version` flag when running RECUR. For example, to use IQ-TREE2, add `-iv iqtree2` to your command.
+   RECUR requires IQ-TREE version 2.0 or higher to function correctly. The default IQ-TREE version bundled with RECUR is 3.1.1, which uses the binary name `iqtree3`. If you're using a different version of IQ-TREE (e.g., IQ-TREE2), ensure that the corresponding binary is accessible in your environment. You can specify the binary name using the `-iv` or `--iqtree-version` flag when running RECUR. For example, to use IQ-TREE2, add `-iv iqtree2` to your command.
 
    Different versions of IQ-TREE may have variations in their command-line interfaces. To accommodate these differences, RECUR provides a [config.json](https://github.com/OrthoFinder/RECUR/releases/download/v1.1.0/config.json) file that allows users to define the appropriate command structure for their specific IQ-TREE version.
    

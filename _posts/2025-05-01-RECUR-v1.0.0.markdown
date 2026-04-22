@@ -93,37 +93,37 @@ No external installation of **IQ-TREE2** is required.
 
 - recur-iqtree2-linux-intel-1.0.0.tar.gz
 ```bash
-mkdir RECUR && \
-    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-intel-1.0.0.tar.gz | \
-    tar -xz --strip-components=1 -C RECUR
+mkdir RECUR 
+wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-intel-1.0.0.tar.gz
+tar -xz --strip-components=1 -C RECUR
 ```
 
 - recur-iqtree2-linux-arm-1.0.0.tar.gz
 ```bash
-mkdir RECUR && \
-    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-arm-1.0.0.tar.gz | \
-    tar -xz --strip-components=1 -C RECUR
+mkdir RECUR
+wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-linux-arm-1.0.0.tar.gz 
+tar -xz --strip-components=1 -C RECUR
 ```
 
 - recur-iqtree2-macos-arm-1.0.0.tar.gz
 ```bash
-mkdir RECUR && \
-    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-arm-1.0.0.tar.gz | \
-    tar -xz --strip-components=1 -C RECUR
+mkdir RECUR 
+wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-arm-1.0.0.tar.gz
+tar -xz --strip-components=1 -C RECUR
 ```
 
 - recur-iqtree2-macos-intel-1.0.0.tar.gz
 ```bash
-mkdir RECUR && \
-    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-intel-1.0.0.tar.gz | \
-    tar -xz --strip-components=1 -C RECUR
+mkdir RECUR 
+wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-intel-1.0.0.tar.gz
+tar -xz --strip-components=1 -C RECUR
 ```
 
 - recur-iqtree2-macos-universal-1.0.0.tar.gz
 ```bash
-mkdir RECUR && \
-    wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-universal-1.0.0.tar.gz | \
-    tar -xz --strip-components=1 -C RECUR
+mkdir RECUR 
+wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-macos-universal-1.0.0.tar.gz 
+tar -xz --strip-components=1 -C RECUR
 ```
 
 - recur-iqtree2-windows-1.0.0.tar.gz
@@ -131,10 +131,10 @@ mkdir RECUR && \
   - Command Prompt
 
     ```bash
-    mkdir RECUR && \
-        curl -L -o recur.tar.gz https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-windows-1.0.0.tar.gz && \
-        tar -xzf recur.tar.gz -C RECUR --strip-components=1 && \
-        del recur.tar.gz
+    mkdir RECUR
+    curl -L -o recur.tar.gz https://github.com/OrthoFinder/RECUR/releases/download/v1.0.0/recur-iqtree2-windows-1.0.0.tar.gz 
+    tar -xzf recur.tar.gz -C RECUR --strip-components=1 
+    del recur.tar.gz
     ```
   - PowerShell
     ```bash

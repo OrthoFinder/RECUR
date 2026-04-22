@@ -24,8 +24,14 @@ h2 {
 
 body {
     font-family: 'Roboto', sans-serif;
-    font-size: 1rem; // sets base font size
+    font-size: 1.3rem; // sets base font size
     line-height: 1.5; // improves readability
+    // font-size: 22px;
+    font-weight: normal;
+    text-transform: none;
+    color: #333;
+    text-decoration: none;
+    
 }
 
 p {
@@ -76,4 +82,9 @@ p {
     margin-left: 0.5em;
     font-size: 0.9em;
     color: #666;
+}
+
+.wrapper img {
+  max-width: 100%;
+  height: auto;
 }

@@ -14,12 +14,12 @@ permalink: /installation/
     - [Conventional Installation](#conventional-installation)
   - [Run RECUR in a Docker Container](#run-recur-in-a-docker-container)
 
-  The recurrence analysis implemented by RECUR utilises IQ-TREE (v3.0.1) phylogenomic software package to infer a phylogeny, the ancestral node sequences and to generate simulated alignments. Although IQ-TREE comes with three versions, i.e., Linux, MacOS and Windows, the prefered OS for RECUR is Linux. RECUR can be run with or without installation. In either case, it is recommended that it is run inside a virtual environment. If you wish to run RECUR on a Windows or a MacOS machine, you can either install [IQ-TREE](http://www.iqtree.org/#download) before launching RECUR, or download the source package of RECUR (bundled with a matching IQ-TREE3 build) from the [RECUR release page](https://github.com/OrthoFinder/RECUR/releases/)  or [Download page](https://orthofinder.github.io/RECUR/download/). 
+  The recurrence analysis implemented by RECUR utilises IQ-TREE (v3.1.1) phylogenomic software package to infer a phylogeny, the ancestral node sequences and to generate simulated alignments. Although IQ-TREE comes with three versions, i.e., Linux, MacOS and Windows, the prefered OS for RECUR is Linux. RECUR can be run with or without installation. In either case, it is recommended that it is run inside a virtual environment. If you wish to run RECUR on a Windows or a MacOS machine, you can either install [IQ-TREE](http://www.iqtree.org/#download) before launching RECUR, or download the source package of RECUR (bundled with a matching IQ-TREE3 build) from the [RECUR release page](https://github.com/OrthoFinder/RECUR/releases/)  or [Download page](https://orthofinder.github.io/RECUR/download/). 
 
-  >**⚠️ Note: RECUR requires IQ-TREE version 2.0 or higher to function correctly. Ensure that your environment meets this requirement before proceeding.**
+  > **Note: RECUR requires IQ-TREE version 2.0 or higher to function correctly. Ensure that your environment meets this requirement before proceeding.**
 
 
-### Run RECUR in conda
+## **Run RECUR in conda**
 
   The simplest way to use RECUR is to install it via conda. RECUR is available on the [bioconda channel](https://anaconda.org/bioconda/recur).
 
@@ -34,9 +34,9 @@ permalink: /installation/
   To test your installation, you can download an example dataset from our [release page](https://github.com/OrthoFinder/RECUR/releases/tag/v1.1.0), or run the following command to download the example dataset directly into a directory called `ExampleData` in your current working directory via a command line first.
 
   ```bash
-  mkdir ExampleData && \
-      wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.1.0/ExampleData.tar.gz | \
-      tar -xz --strip-components=1 -C ExampleData
+  mkdir ExampleData 
+  wget -qO- https://github.com/OrthoFinder/RECUR/releases/download/v1.1.0/ExampleData.tar.gz
+  tar -xz --strip-components=1 -C ExampleData
   ```
   Having downloaded the example dataset, you can run the following command to test RECUR in your conda environment on the `ExampleData` dataset.
 
@@ -55,8 +55,8 @@ permalink: /installation/
   ```
   The first command deactivates the environment, and the second one deletes it entirely. If you want to use RECUR again in the future, you’ll need to recreate the environment and reinstall the package.
 
-### Run RECUR on Linux 
-#### Conventional Installation
+## **Run RECUR on Linux**
+### **1. Conventional Installation**
 
   **Download the source code directly**
   Pre-compiled RECUR v1.1.0 archives are available for all major operating systems and CPU architectures. For the full list of files and step-by-step installation instructions, visit the [RECUR v1.1.0](https://orthofinder.github.io/RECUR/release/31/03/2025/RECUR-v1.1.0.html)
@@ -102,7 +102,7 @@ permalink: /installation/
   python3 recur.py -f ExampleData/example_alignments.aln -st AA --outgroups ExampleData/example_alignments.outgroups.txt
   ```
   
-  >Please note that the GitHub release of RECUR includes IQ-TREE v3.0.1 compiled for 64-bit Linux. If your system uses a different OS or CPU architecture, that binary won’t run and RECUR will fail to start. In that case, either install the appropriate IQ-TREE build for your platform from the official [IQ-TREE download page](http://www.iqtree.org/#download) before launching RECUR, or download the source package of RECUR (bundled with a matching IQ-TREE build) from the [RECUR release page](https://github.com/OrthoFinder/RECUR/releases/) or [Download page](https://orthofinder.github.io/RECUR/download/).
+  >**Please note that the GitHub release of RECUR includes IQ-TREE v3.1.1 compiled for 64-bit Linux. If your system uses a different OS or CPU architecture, that binary won’t run and RECUR will fail to start. In that case, either install the appropriate IQ-TREE build for your platform from the official [IQ-TREE download page](http://www.iqtree.org/#download) before launching RECUR, or download the source package of RECUR (bundled with a matching IQ-TREE build) from the [RECUR release page](https://github.com/OrthoFinder/RECUR/releases/) or [Download page](https://orthofinder.github.io/RECUR/download/).**
 
   To deactivate the virtual environment, please run:
   ```bash
@@ -119,7 +119,7 @@ permalink: /installation/
 
   > Note: If python3 doesn't work, try using python instead, or check your `/usr/bin` directory to determine which version of Python is installed on your system. Please note that the current version of RECUR requires Python version 3.9 or higher.
 
-#### Installation via make/gmake
+### **2. Installation via make/gmake**
 
   A Makefile is provided to simplify the installation process. Either `make` or `gmake` can be used to run it. Run the following commands to grab a copy of the RECUR scoure code from GitHub, and install RECUR inside a Python virtual enviroment. Again, if `git` is unavailable, please use other methods such as `wget` or `curl` to download the source code.
 
@@ -132,7 +132,7 @@ permalink: /installation/
 
   Please note that even if RECUR has an IQ-TREE binary shipped with it, running `make install USE_CONDA=false` will reinstall IQ-TREE to `~/local/bin` if you do not have IQ-TREE installed globally. If you already have IQ-TREE installed globally, the installation of IQ-TREE will be skipped. The same as RECUR. By default, `make install USE_CONDA=false` will install the latest version of IQ-TREE and RECUR. If you wish to override your older version of those two softwares, you can run `make install USE_CONDA=false FORCE=true`. 
 
-  You can also utilise the Makefile to only update the IQ-TREE binary. Running `make install_iqtree3 USE_CONDA=false FORCE=true` will only force to install/update the IQ-TREE binary inside the `~/local/bin`. If you have `sudo` access, you can also run `make install_iqtree3 USE_CONDA=false FORCE=true SYSTEM_WIDE=true` to install IQ-TREE inside `/usr/local/bin`. The default IQ-TREE version is `3.0.1`.
+  You can also utilise the Makefile to only update the IQ-TREE binary. Running `make install_iqtree3 USE_CONDA=false FORCE=true` will only force to install/update the IQ-TREE binary inside the `~/local/bin`. If you have `sudo` access, you can also run `make install_iqtree3 USE_CONDA=false FORCE=true SYSTEM_WIDE=true` to install IQ-TREE inside `/usr/local/bin`. The default IQ-TREE version is `3.1.1`.
 
   Once the IQ-TREE binary has installed, `make install USE_CONDA=false` will create a virtual enviroment named `recur_env` inside the `RECUR` scoure code directory, then install RECUR inside that virtual environment. Having installed RECUR, it will copy the recur binary file from the virtual environment to a `~/local/bin`.  
 
@@ -155,10 +155,9 @@ permalink: /installation/
   make clean_iqtree3
   ``` 
 
-  > You can also run `make conda_install` to install RECUR inside the `recur_env` namespace inside conda. 
-  > To remove the `recur_env` namespace, you can simply run `make clean_conda_env`
+  You can also run `make conda_install` to install RECUR inside the `recur_env` namespace inside conda. To remove the `recur_env` namespace, you can simply run `make clean_conda_env`.
 
-### Run RECUR in a Docker Container
+### **3. Run RECUR in a Docker Container**
 
   Apart from the above methods, you can also run RECUR inside a container. You can find the RECUR image on [Docker Hub](https://hub.docker.com/r/orthofinder/recur).
 

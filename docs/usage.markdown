@@ -20,7 +20,7 @@ permalink: /usage/
 - [A Note on Reproducibility](#a-note-on-reproducibility)
 - [References](#references)
 
-### Simple Usage
+## **Simple Usage**
 
 The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format with the sequence type specified and a defined outgroup species or clade. e.g.,
 
@@ -37,67 +37,162 @@ The minimal requirements of RECUR is a MSA (protein or codon) in FASTA format wi
 
 <!-- ### Options Overview -->
 
-### Advanced Usage
+## **Advanced Usage**
 
-#### Options Overview 
+### **1. Options Overview**
+
 In this section, we will dive deep into the options you have to run RECUR. The commands shown in this section will assume that you have RECUR installed on your machine.
 
-```bash
-OPTIONS:
-  -f <dir/file>                 Protein or codon alignment in FASTA format [Required]
-  -st <str>                     <AA|CODON> [Required][Default: AA]
-                                When no CODON number is specified, CODON1 will be used. 
-                                To change the genetic codes, please append number after CODON, e.g., CODON2. 
-                                Valid options are for instance CODON[1-11]. 
-                                For more information please refer to http://www.iqtree.org/doc/Substitution-Models#codon-models  
-  --outgroups <dir/file/str>    List of outgroup sequences[Required]
-  --num-alignments <int>        Number of simulated alignments for p-value estimation [Default: 1000]
-  -te <dir/file>                Complete constraint tree [Default: estimated from alignment               
-  -m <str>                      Model of sequence evolution [Default: estimated from alignment]
-  -t <int>                      Number of threads used for RECUR internal processing [Default: 24]
-  -nt <int>                     Number of threads provided to IQ-TREE [Default: 1 (without alrt); 6 (with alrt)]
-  --seed <int>                  Random starting see number [Default: 8]
-  --output <txt>                Results directory [Default: same directory as MSA files]
-  -uc <int>                     Update cycle used in progress bar [Default: no progress bar]
-  -bs <int>                     Batch size for Monte Carlo Simulation analysis to limit ram usage [Default: no batch processing]
-  --iqtree-version <str>        IQ-TREE version. [Default: iqtree3]                 
-  -sl <float>                   Significance level. [Default: 0.05]
-  -pam <str>                    P-Value adjustment method. Available methods: bonferroni, holm, fdr_bh, fdr_by, fdr_tsbh, fdr_tsbky. [Default: None]
-  -blfix                        Fix branch lengths of tree. [Default: False]
-  --no-branch-test              Branch support control. [Default: True]
-  --help-verbose                Show all the options.    
-```
++ ***Required Arguments***
+
+| Option | Description |
+|-------|-------------|
+| `-f <dir/file>` | **Protein or codon alignment** in FASTA format. |
+| `-st <str>` | Sequence type: `AA` or `CODON`. Default: `AA`. <br> If no codon number is specified, `CODON1` is used. To specify genetic codes, append a number (e.g. `CODON2`). Valid options include `CODON1–CODON11`. See [IQ-TREE codon models](http://www.iqtree.org/doc/Substitution-Models#codon-models). |
+| `--outgroups <dir/file/str>` | List of **outgroup sequence names**. |
+
+---
+
++ ***Simulation and Statistical Settings***
+
+| Option | Description |
+|-------|-------------|
+| `--num-alignments <int>` | Number of simulated alignments used for p-value estimation. Default: automatically determined to detect sufficiently small p-values. |
+| `-sl <float>` | Significance level. Default: `0.05`. |
+| `-pam <str>` | P-value adjustment method. Available methods: `bonferroni`, `holm`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`. Default: automatically selected based on `--num-alignments`. |
+| `-bs <int>` | Batch size for Monte Carlo simulations (reduces RAM usage). Default: disabled. |
+
+---
+
++ ***Tree and Model Options***
+
+| Option | Description |
+|-------|-------------|
+| `-te <dir/file>` | Provide a **constraint tree**. Default: tree estimated from alignment. |
+| `-m <str>` | Model of sequence evolution. Default: automatically selected from alignment. |
+| `-blfix` | Fix branch lengths of the constraint tree. Default: disabled. |
+| `--no-branch-test` | Disable branch support testing. Default: enabled. |
+
+---
+
++ ***Performance and Runtime Options***
+
+| Option | Description |
+|-------|-------------|
+| `-t <int>` | Number of threads used for **RECUR internal processing**. Default: `24`. |
+| `-nt <int>` | Number of threads provided to **IQ-TREE**. Default: `1` (without ALRT), `6` (with ALRT). |
+| `--seed <int>` | Random seed number. Default: `8`. |
+| `--iqtree-version <str>` | IQ-TREE executable name or version. Default: `iqtree3`. |
+
 
 Please note that the default values for `-t`, `-nt` are processor dependent. If you are following the installation step mentioned in the previous section, you can run one of the following commands to find out the actual default setting for your machine.
-
-If you run RECUR with `--help-verbose`, additional configuration options and detailed explanations will be shown:
-
-```bash
-
-OTHER OPTIONS:
- -rs <int>                     Restart RECUR at a specified step. [Default: 1]                          
-                               Without phylogenetic tree provided: 
-                               1) Inferring ancestral sequences, phylogenetic tree and model of evolution; 
-                               2)Inferring ancestral sequences; 
-                               3) Simulating sequence evolution; 
-                               4) Analysing recurrent substitutions
-                               With phylogenetic tree provided: 
-                               1) Inferring evolutionary parameters using tree provided; 
-                               2) Simulating sequence evolution; 
-                               3) Analysing recurrent substitutions                                                              
- --recur-limit <int>           The threshold for keeping simulated alignments. If the number of simulations exceed threshold simulated alignment files
-                               are deleted to protect disk space. [Default: 1000]
- -nb <int>                     Batch size for Monte Carlo simulations, controlling the number of stages in multi-stage analysis [Default: no batch processing]
- --just-recurrence             Return only the reccurence list for the real phylogeny, no Monte Carlo Simulation conducted. [Default: False] 
-
- ```
 
 ```bash
 recur
 python3 recur.py
 ```
 
-#### Using a constraint tree
+---
+
++ ***Output and Logging***
+
+| Option | Description |
+|-------|-------------|
+| `--output <txt>` | Output directory. Default: same directory as the input alignment. |
+| `-uc <int>` | Update cycle for progress bar display. Default: disabled. |
+
+---
+
++ ***Help***
+
+| Option | Description |
+|-------|-------------|
+| `--help-verbose` | Display full help with all available options. |
+
+---
+
+
+If you run RECUR with `--help-verbose`, additional configuration options and detailed explanations will be shown:
+
++ ***Advanced and Restart Options***
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 280px;">Option</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+
+    <tr>
+      <td><code>-rs &lt;int&gt;</code></td>
+      <td>
+        <b>Restart RECUR at a specified step.</b>
+        Default: <code>1</code>.
+        <br><br>
+
+        <b>Without phylogenetic tree provided:</b>
+        <ol>
+          <li>Infer phylogenetic tree and model of evolution</li>
+          <li>Infer ancestral sequences</li>
+          <li>Simulate sequence evolution</li>
+          <li>Analyse recurrent substitutions</li>
+        </ol>
+
+        <b>With phylogenetic tree provided:</b>
+        <ol>
+          <li>Infer evolutionary parameters using the provided tree</li>
+          <li>Simulate sequence evolution</li>
+          <li>Analyse recurrent substitutions</li>
+        </ol>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>--recur-limit &lt;int&gt;</code></td>
+      <td>
+        Threshold for retaining simulated alignment files.
+        If the number of simulations exceeds this threshold,
+        simulated alignment files are deleted to conserve disk space.
+        Default: <code>1000</code>.
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>-nb &lt;int&gt;</code></td>
+      <td>
+        Batch size for Monte Carlo simulations,
+        controlling the number of stages in multi-stage analysis.
+        Default: disabled.
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>-iv &lt;str&gt;</code></td>
+      <td>
+        IQ-TREE executable name or version.
+        Default: <code>iqtree3</code>.
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>--just-recurrence</code></td>
+      <td>
+        Return only the recurrence list for the real phylogeny.
+        <b>No Monte Carlo simulations are performed.</b>
+        Default: disabled.
+      </td>
+    </tr>
+
+  </tbody>
+</table>
+--- 
+
+
+### **2. Using a constraint tree**
 
 To specify the topology of the phylogeny used by RECUR the user can provide a constraint tree using the -te flag. The argument is a file containing a tree in Newick format. E.g.,
 
@@ -105,7 +200,7 @@ To specify the topology of the phylogeny used by RECUR the user can provide a co
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile>
 ```
 
-#### Providing a model of evolution
+### **3. Providing a model of evolution**
 
 A model of sequence evolution (as long as it is supported by IQ-TREE) can be provided using the `-m` flag. E.g.,
 
@@ -113,7 +208,7 @@ A model of sequence evolution (as long as it is supported by IQ-TREE) can be pro
 recur [options] -f <alignment_file> --outgroups <outgroup_species/file> -st <AA|CODON> -te <treefile> -m <model_of_evolution>
 ```
 
-#### P-value adjustment
+### **4. P-value adjustment**
 To address p-value inflation arising from multiple hypothesis testing, p-value adjustment was introduced in v1.1.0. The required number of Monte Carlo simulations is automatically determined based on the number of hypothesis tests, denoted by 𝑀 (i.e., the length of the recurrent list). By default, the p-value adjustment method is automatically selected according to 𝑀, balancing statistical rigor and computational feasibility:
 
 ```bash
@@ -139,7 +234,7 @@ This strategy avoids overly conservative corrections when the number of tests is
 The p-value adjustment is performed using a default significance level of 0.05.
 Both the significance level and the p-value adjustment method can be overridden by the user via the command-line flags `-sl` (significance level) and `-pam` (p-value adjustment method), respectively.
 
-#### Multi-stage computation
+### **5. Multi-stage computation**
 The introduction of multi-stage computation in RECUR v1.1.0 is a necessary upgrade to support p-value adjustment procedures that may require an excessively large number of Monte Carlo simulations. As the size of the input alignments increases, the disk space required to store simulated alignments can grow rapidly, potentially leading to prohibitive storage demands.
 
 To mitigate this issue, RECUR automatically enables multi-stage execution when the required number of Monte Carlo simulations exceeds an internal threshold (the RECUR limit). By default, this limit is set to 1000 simulations. For example, if 8800 Monte Carlo simulations are required, RECUR will split the computation into 9 batches, corresponding to 9 calls to iqtree alisim. In this case, the first 8 calls use `--num-alignments` 1000, and the final call uses `--num-alignments` 800.
@@ -152,7 +247,7 @@ When multi-stage computation is enabled, simulated alignment files are automatic
 
 If retaining all simulated alignment files is necessary, users may increase the internal threshold using the `--recur-limit` option. By setting this limit higher than the required number of simulations, RECUR will execute the simulations in a single stage and preserve all alignment files.
 
-#### Running RECUR on a directory
+### **6. Running RECUR on a directory**
 
 To free you from typing multiple commands in a terminal to run on multiple genes, RECUR provides an option to run on a folder. E.g.,
 
@@ -193,13 +288,13 @@ For instance, if your computer has 8 logical threads, you can have the following
 recur -f example_alignments.aln -st AA --outgroups example_alignments.outgroups.txt -t 8 -nt 8
 ```
 
-### RECUR Results
+## **RECUR Results**
 #### Recurrence List
 
 The main output file from RECUR is a list of all recurrent substitutions inferred to have occurred across the phylogeny, which is found in the `*.recur.tsv` file.
 
 <p align="center">
-  <img src="../assets/images/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="500"/>
+  <img src="../assets/images/RECUR_recurrence_list.PNG" alt="RECUR recurrence list" width="700"/>
 </p>
 
 The `*.recur.tsv` file contains a list of recurrent substitutions, i.e., an amino acid substitution that occurred more than once at a specific site, identified in the alignment. Here is the breakdown of each columns inside this output file:
@@ -221,7 +316,7 @@ RECUR outputs additional results files from each step in the analysis which can 
 <!-- If you do not specify the output folder using `-o`, the results are located in the same directory as the MSA files. -->
 
 <p align="center">
-  <img src="../assets/images/RECUR_output_structure.PNG" alt="RECUR output structure" width="500"/>
+  <img src="../assets/images/RECUR_output_structure.PNG" alt="RECUR output structure" width="750"/>
 </p>
 
  <!-- Additional results of intermediate steps can be found in the `.recur` folder. -->
@@ -234,7 +329,7 @@ Inside the `*.recur` folder, you will find two `*.txt` files, i.e., `Citation.tx
 
 For example, by running RECUR on the `example_alignments.aln` file, the `example_alignments.aln.substituion_matrix.tsv` would have the following content:
 <p align="center">
-  <img src="../assets/images/RECUR_substitution_matrices.PNG" alt="RECUR substitution matrices" width="300"/>
+  <img src="../assets/images/RECUR_substitution_matrices.PNG" alt="RECUR substitution matrices" width="450"/>
 </p>
 
 `Site` represents the position in the protein alignment. Please note that the sites of an alignment **start from 1** in RECUR. The `Parent>Child:MutCount` column contains a list of amino acid substitutions that occurred at that site. For example, at site 2 a lysine (K) mutated to a serine (S) twice. A dash signifies no substitution was inferred at that site.
@@ -242,15 +337,15 @@ For example, by running RECUR on the `example_alignments.aln` file, the `example
 As for the `RowIndex` and `ColIndex` columns, they index the substitution in a mutation matrix.  The arrangement of the mutation matrix is the same as that in the accumulated subsititon matrix. Here, the accumulated subsititon matrix is obtained by summing up all the mutation matrix at each site.
 
 <p align="center">
-  <img src="../assets/images/RECUR_accum_substitution_matrices.PNG" alt="RECUR accum substitution matrices" width="700"/>
+  <img src="../assets/images/RECUR_accum_substitution_matrices.PNG" alt="RECUR accum substitution matrices" width="1000"/>
 </p>
 
 - `Monte_Carlo_Simulation`: contains the simulated alignments based on the best model of evolution,  phylogeny and root sequence of the subtree excluding the outgroup. The number of alignment files in this directory will match the number of Monte Carlo Simulation used in your analysis. It can be adjusted by setting `--num-alignments` to a different value.
 
-### A Note on Reproducibility
+## **A Note on Reproducibility**
 
 According to Shen et al. (2020), irreproducibility in maximum likelihood phylogenetic inference is a significant issue [^1]. Regardless of the method related parameters that would affect the reproducibility of the final outputs, different random starting seed number, number of threads and processor type can also introduce uncertainties to the results. Such effect can be observed by setting different `-nt`, or setting different seed number using `--seed` in RECUR for each run. When running RECUR on different machine with different processor type even with the fixed `-nt` and `--seed`, the results can still be different. Nevertheless, the results should stay the same for each run when running RECUR on the same machine with the fixed input parameters.
 
-## References
+## **References**
 
 [^1]: *Shen, XX., Li, Y., Hittinger, C.T. et al.* **An investigation of irreproducibility in maximum likelihood phylogenetic inference.** Nat Commun 11, 6096 (2020). [![DOI:10.1038/s41467-020-20005-6](https://raw.githubusercontent.com/OrthoFinder/RECUR/main/docs/images/doi-badge.svg)](https://doi.org/10.1038/s41467-020-20005-6)

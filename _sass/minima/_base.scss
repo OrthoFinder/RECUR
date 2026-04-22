@@ -230,22 +230,48 @@ pre {
 /**
  * Wrapper
  */
+// .wrapper {
+//   max-width: calc(#{$content-width} - (#{$spacing-unit}));
+//   margin-right: auto;
+//   margin-left: auto;
+//   padding-right: $spacing-unit * .5;
+//   padding-left: $spacing-unit * .5;
+//   @extend %clearfix;
+
+//   @media screen and (min-width: $on-large) {
+//     max-width: calc(#{$content-width} - (#{$spacing-unit} * 2));
+//     padding-right: $spacing-unit;
+//     padding-left: $spacing-unit;
+//   }
+// }
 .wrapper {
-  max-width: calc(#{$content-width} - (#{$spacing-unit}));
-  margin-right: auto;
-  margin-left: auto;
-  padding-right: $spacing-unit * .5;
-  padding-left: $spacing-unit * .5;
+  // 1. Fluidity & Max Growth
+  width: 100%;
+  max-width: $max-width; 
+  
+  // 2. The "Centering" Secret Sauce
+  margin-left: auto !important;
+  margin-right: auto !important;
+  
+  // 3. Modern Layout Engine
+  display: flow-root;
+  // flex-direction: column;
+  // This ensures that if children have a width, they stay centered
+  align-items: center; 
+
+  // 4. Sizing & Spacing
+  box-sizing: border-box;
+  padding-left: $spacing-unit;
+  padding-right: $spacing-unit;
+
+  // 5. Cleanup
   @extend %clearfix;
 
   @media screen and (min-width: $on-large) {
-    max-width: calc(#{$content-width} - (#{$spacing-unit} * 2));
-    padding-right: $spacing-unit;
-    padding-left: $spacing-unit;
+    padding-left: $spacing-unit * 2;
+    padding-right: $spacing-unit * 2;
   }
 }
-
-
 
 /**
  * Clearfix

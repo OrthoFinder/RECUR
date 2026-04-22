@@ -61,6 +61,7 @@
   border: 1px solid $border-color-01;
   border-radius: 5px;
   text-align: right;
+  font-weight: bold;
 
   .nav-trigger {
     display: none;
@@ -233,6 +234,7 @@
 
 .page-content {
   padding-top: $spacing-unit * 1.865 + 50px; // Adjust the extra space as needed
+  width: 100%
 }
 
 .page-heading {
