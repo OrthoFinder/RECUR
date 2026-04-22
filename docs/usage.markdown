@@ -45,22 +45,124 @@ In this section, we will dive deep into the options you have to run RECUR. The c
 
 + ***Required Arguments***
 
-| Option | Description |
-|-------|-------------|
-| `-f <dir/file>` | **Protein or codon alignment** in FASTA format. |
-| `-st <str>` | Sequence type: `AA` or `CODON`. Default: `AA`. <br> If no codon number is specified, `CODON1` is used. To specify genetic codes, append a number (e.g. `CODON2`). Valid options include `CODON1–CODON11`. See [IQ-TREE codon models](http://www.iqtree.org/doc/Substitution-Models#codon-models). |
-| `--outgroups <dir/file/str>` | List of **outgroup sequence names**. |
+<table>
+  <thead>
+    <tr>
+      <th style="width: 350px;">Option</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+
+    <tr>
+      <td><code>-f &lt;dir/file&gt;</code></td>
+      <td>
+        <b>Protein or codon alignment</b> in FASTA format.
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>-st &lt;str&gt;</code></td>
+      <td>
+        Sequence type: <code>AA</code> or <code>CODON</code>.
+        Default: <code>AA</code>.
+        <br><br>
+
+        If no codon number is specified,
+        <code>CODON1</code> is used.
+
+        To specify genetic codes, append a number
+        (e.g. <code>CODON2</code>).
+
+        Valid options include:
+        <code>CODON1–CODON11</code>.
+
+        See:
+        <a href="http://www.iqtree.org/doc/Substitution-Models#codon-models">
+        IQ-TREE codon models
+        </a>.
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>--outgroups &lt;dir/file/str&gt;</code></td>
+      <td>
+        List of <b>outgroup sequence names</b>.
+      </td>
+    </tr>
+
+  </tbody>
+</table>
 
 ---
 
 + ***Simulation and Statistical Settings***
 
-| Option | Description |
-|-------|-------------|
-| `--num-alignments <int>` | Number of simulated alignments used for p-value estimation. Default: automatically determined to detect sufficiently small p-values. |
-| `-sl <float>` | Significance level. Default: `0.05`. |
-| `-pam <str>` | P-value adjustment method. Available methods: `bonferroni`, `holm`, `fdr_bh`, `fdr_by`, `fdr_tsbh`, `fdr_tsbky`. Default: automatically selected based on `--num-alignments`. |
-| `-bs <int>` | Batch size for Monte Carlo simulations (reduces RAM usage). Default: disabled. |
+<table>
+  <thead>
+    <tr>
+      <th style="width: 350px;">Option</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+
+    <tr>
+      <td><code>--num-alignments &lt;int&gt;</code></td>
+      <td>
+        Number of simulated alignments used for
+        p-value estimation.
+
+        Default:
+        automatically determined to detect
+        sufficiently small p-values.
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>-sl &lt;float&gt;</code></td>
+      <td>
+        Significance level.
+
+        Default:
+        <code>0.05</code>.
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>-pam &lt;str&gt;</code></td>
+      <td>
+        P-value adjustment method.
+
+        Available methods:
+        <code>bonferroni</code>,
+        <code>holm</code>,
+        <code>fdr_bh</code>,
+        <code>fdr_by</code>,
+        <code>fdr_tsbh</code>,
+        <code>fdr_tsbky</code>.
+
+        Default:
+        automatically selected based on
+        <code>--num-alignments</code>.
+      </td>
+    </tr>
+
+    <tr>
+      <td><code>-bs &lt;int&gt;</code></td>
+      <td>
+        Batch size for Monte Carlo simulations
+        (reduces RAM usage).
+
+        Default:
+        disabled.
+      </td>
+    </tr>
+
+  </tbody>
+</table>
 
 ---
 
@@ -256,13 +358,13 @@ recur [options] -f <directory> --outgroups <directory> -st <AA|CODON> -te <direc
 ```
 For example, if you have three genes files, each have a different set of outgroups and tree files. You can place those outgroups files and tree files with the corresponding gene names inside the same MSA data folder. E.g.,
 <p align="center">
-  <img src="../assets/images/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="250"/>
+  <img src="../assets/images/RECUR_input_structure_1.PNG" alt="RECUR input structure 1" width="350"/>
 </p>
 
 If your genes share the same outgroups and tree, you only need to create a single outgroups file and tree file in your data folder. Those two files will be share by all the genes for your RECUR analysis. E.g.,
 
 <p align="center">
-  <img src="../assets/images/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="250"/>
+  <img src="../assets/images/RECUR_input_structure_2.PNG" alt="RECUR input structure 2" width="350"/>
 </p>
 
 > **Important Information when running RECUR on a directory**:
