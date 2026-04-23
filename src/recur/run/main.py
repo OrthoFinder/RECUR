@@ -39,7 +39,7 @@ def CanRunCommand(
         command: str, 
         env: Optional[Dict[str, str]] = None, 
         print_info: bool = False,
-        iqtree_version: str = "iqtree2"
+        iqtree_version: str = "iqtree3"
     ) -> bool:
     try:
         process = subprocess.Popen(
@@ -83,13 +83,16 @@ def setup_environment() -> Dict[str, str]:
 
     my_env = os.environ.copy()
     local_bin_dir = os.path.join(__location__, 'bin')  # Make sure __location__ is defined
-
+    
     if os.name == "nt":
         # Windows-specific directories
         bin_dirs = [
+            local_bin_dir,
             os.path.expanduser(r"~/bin"),
             os.path.expanduser(r"~\AppData\Local\Programs\Python\Scripts"),
             r"C:\Program Files\SomeExecutableDir",
+            r"C:\Program Files\IQ-TREE\bin",
+            r"C:\Program Files (x86)\IQ-TREE\bin",
         ]
     else:
         # Unix-like directories
@@ -113,7 +116,7 @@ def setup_environment() -> Dict[str, str]:
     
     return my_env
 
-def initialise_recur(show_iqtree_path: bool = False, iqtree_version: str = "iqtree2") -> Dict[str, str]:
+def initialise_recur(show_iqtree_path: bool = False, iqtree_version: str = "iqtree3") -> Dict[str, str]:
     my_env = setup_environment()
     system = platform.system()
 

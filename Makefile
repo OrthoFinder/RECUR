@@ -53,9 +53,9 @@ else
     SUDO_PREFIX :=
 endif
 
-IQTREE_DEFAULT_VERSION := 2.4.0
+IQTREE_DEFAULT_VERSION := 3.1.1
 IQTREE_VERSION ?= $(IQTREE_DEFAULT_VERSION)
-IQTREE3_VERSION := 3.0.1
+IQTREE3_VERSION := 3.1.1
 
 # URLs for IQ-TREE3 urlS
 IQTREE3_LINUX_INTEL := https://github.com/iqtree/iqtree3/releases/download/v3.1.1/iqtree-3.1.1-Linux-intel.tar.gz

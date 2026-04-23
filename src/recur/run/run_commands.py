@@ -3,8 +3,8 @@ from typing import Dict, List, Optional
 
 from recur.utils import parallel_task_manager, util
 
-# asr_command_str = "iqtree2 -s alignment_file -redo -T iqtree_nthreads -m evolution_model -pre path_to_output --seed phy_seed -safe"
-# Monte_Carlo_simulation_command_str = "iqtree2 --alisim output_prefix -T iqtree_nthreads -m best_evolution_model -te gene_tree --keep-seq-order --root-seq root_node --num-alignments nalign --seed mcs_seed --write-all --out-format fasta -safe"
+# asr_command_str = "iqtree3 -s alignment_file -redo -T iqtree_nthreads -m evolution_model -pre path_to_output --seed phy_seed -safe"
+# Monte_Carlo_simulation_command_str = "iqtree3 --alisim output_prefix -T iqtree_nthreads -m best_evolution_model -te gene_tree --keep-seq-order --root-seq root_node --num-alignments nalign --seed mcs_seed --write-all --out-format fasta -safe"
 
 asr_command = lambda iqtree_version: f"{iqtree_version} -s alignment_file -redo -T iqtree_nthreads -m evolution_model -pre path_to_output --seed phy_seed -safe"
 Monte_Carlo_simulation_command = lambda iqtree_version: f"{iqtree_version} --alisim output_prefix -T iqtree_nthreads -m best_evolution_model -te gene_tree --keep-seq-order --root-seq root_node --num-alignments nalign --seed mcs_seed --write-all --out-format fasta -safe"
@@ -23,7 +23,7 @@ def GetGeneTreeBuildCommands(
         sh_alrt: Optional[int] = None,
         branch_test: bool = True,
         fix_branch_length: bool = False,
-        iqtree_version: str = "iqtree2",
+        iqtree_version: str = "iqtree3",
         iqtree_cmd_dict: Dict[str, Dict[str, str]] = {}
     ) -> list[str]:
 
@@ -68,7 +68,7 @@ def GetGeneTreeBuildCommand(
         sh_alrt: Optional[int] = None,
         branch_test: bool = True,
         fix_branch_length: bool = False,
-        iqtree_version: str = "iqtree2",
+        iqtree_version: str = "iqtree3",
         iqtree_cmd_dict: Dict[str, Dict[str, str]] = {}
     ) -> str:
     
@@ -123,7 +123,7 @@ def GetMCsimulationCommand(
         gene_tree: str,
         root_node: str,
         nalign: int,
-        iqtree_version: str = "iqtree2",
+        iqtree_version: str = "iqtree3",
         iqtree_cmd_dict: Dict[str, Dict[str, str]] = {}
     ) -> List[str]:
     
