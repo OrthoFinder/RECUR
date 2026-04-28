@@ -1,8 +1,6 @@
 numpy
 dendropy
 pyyaml
-types-PyYAML
-resource
 psutil
 rich
 statsmodels

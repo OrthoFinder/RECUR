@@ -11,7 +11,7 @@ authors = [
 description = "recurrant evolution"
 readme = "README.md"
 dynamic = ["version"]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 keywords = ["Reccurant Evolution", "Monte-Carlo", "Phylogeneticrelationships"]
 license = "LGPL-3.0-only"
 classifiers = [
@@ -29,8 +29,6 @@ classifiers = [
     # 'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
 
     # Specify the Python versions you support here.
-    'Programming Language :: Python :: 3.9',  #
-    "Programming Language :: Python :: 3.10", # base version
     "Programming Language :: Python :: 3.11", #
     "Programming Language :: Python :: 3.12", #
     "Programming Language :: Python :: 3.13", #
@@ -40,8 +38,6 @@ dependencies = [
     "numpy",
     "dendropy",
     "pyyaml",
-    "types-PyYAML",
-    "resource",
     "psutil",
     "rich",
     "statsmodels",
@@ -63,6 +59,7 @@ build = [
 ]
 dev = [
     "python-semantic-release",
+    "types-PyYAML",
     "mypy",
     "memory_profiler",
     "ruff",

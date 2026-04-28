@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim-bookworm AS builder
 
 WORKDIR /usr/src/recur
 
@@ -12,7 +12,7 @@ RUN chmod +x ./src/recur/bin/iqtree3 || true
 
 RUN cp -r ExampleData /usr/src/recur/default_exampledata
 
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 WORKDIR /usr/src/recur
 

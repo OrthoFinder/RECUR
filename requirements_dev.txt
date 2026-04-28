@@ -5,6 +5,6 @@ pytest-cov
 memory_profiler
 build
 wheel
-setuptools>=64
+setuptools>=77
 setuptools_scm>=8
 packaging
