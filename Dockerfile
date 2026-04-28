@@ -4,7 +4,13 @@ WORKDIR /usr/src/recur
 
 # Copy and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+ARG PIP_DEFAULT_TIMEOUT=120
+RUN pip install \
+    --no-cache-dir \
+    --index-url https://pypi.org/simple \
+    --default-timeout=${PIP_DEFAULT_TIMEOUT} \
+    --retries 10 \
+    -r requirements.txt
 
 COPY . .
 
@@ -22,7 +28,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /usr/src/recur /usr/src/recur
 
 # Install gosu for UID/GID switching
-RUN apt-get update && apt-get install -y gosu && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gosu \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN chmod -R a+rX /usr/src/recur
 
