@@ -22,6 +22,7 @@ import numpy as np
 import psutil
 from rich import print
 
+from recur import helpinfo
 from recur.run import run_commands
 from recur import __version__, __location__
 from recur.utils import util, process_args, files, parallel_task_manager
