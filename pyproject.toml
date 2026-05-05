@@ -38,6 +38,7 @@ dependencies = [
     "numpy",
     "dendropy",
     "pyyaml",
+    "types-PyYAML",
     "psutil",
     "rich",
     "statsmodels",
